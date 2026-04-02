@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratus — Component Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F5F7;
+    --dark: #3A3A3C;
+    --yellow: #FFD60A;
+    --yellow-hover: #FFDF3A;
+    --white: #FFFFFF;
+    --success: #34C759;
+    --error: #FF3B30;
+    --warning: #FF9500;
+    --grey-100: #F5F5F7;
+    --grey-200: #E5E5EA;
+    --grey-300: #C7C7CC;
+    --grey-400: #8E8E93;
+    --grey-500: #636366;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .page-header {
+    background: var(--dark);
+    padding: 48px 80px 40px;
+  }
+  .page-header .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey-400);
+    margin-bottom: 10px;
+  }
+  .page-header h1 {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .page-header p {
+    font-size: 16px;
+    color: var(--grey-400);
+    margin-top: 8px;
+    font-weight: 400;
+  }
+
+  .content {
+    padding: 64px 80px;
+    max-width: 1280px;
+  }
+
+  .section {
+    margin-bottom: 72px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey-400);
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--grey-200);
+  }
+
+  /* ── Color Swatches ── */
+  .swatches {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .swatch-color {
+    width: 100px;
+    height: 80px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+  .swatch-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .swatch-hex {
+    font-size: 11px;
+    color: var(--grey-400);
+    font-weight: 500;
+    margin-top: -6px;
+  }
+
+  /* ── Typography ── */
+  .type-row {
+    display: flex;
+    align-items: baseline;
+    gap: 32px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--grey-200);
+  }
+  .type-meta {
+    width: 160px;
+    flex-shrink: 0;
+  }
+  .type-meta .name { font-size: 12px; font-weight: 700; color: var(--dark); }
+  .type-meta .spec { font-size: 11px; color: var(--grey-400); margin-top: 2px; }
+  .type-display { color: var(--dark); }
+
+  /* ── Buttons ── */
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Geist', sans-serif;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: all 0.15s ease;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  /* sizes */
+  .btn-sm { padding: 8px 16px; font-size: 13px; border-radius: var(--radius-sm); }
+  .btn-md { padding: 12px 22px; font-size: 14px; }
+  .btn-lg { padding: 16px 32px; font-size: 16px; border-radius: var(--radius-lg); }
+  /* variants */
+  .btn-primary { background: var(--dark); color: var(--white); }
+  .btn-primary:hover { background: #2a2a2c; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(58,58,60,0.3); }
+  .btn-featured { background: var(--yellow); color: var(--dark); }
+  .btn-featured:hover { background: var(--yellow-hover); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255,214,10,0.4); }
+  .btn-secondary { background: var(--white); color: var(--dark); border: 1.5px solid var(--grey-200); box-shadow: var(--shadow-sm); }
+  .btn-secondary:hover { border-color: var(--grey-300); box-shadow: var(--shadow-md); }
+  .btn-danger { background: var(--error); color: var(--white); }
+  .btn-danger:hover { background: #E0352B; transform: translateY(-1px); }
+  .btn-disabled { background: var(--grey-200); color: var(--grey-400); cursor: not-allowed; }
+
+  /* ── Inputs ── */
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .input-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  .input-sublabel {
+    font-size: 11px;
+    color: var(--grey-400);
+    margin-bottom: 2px;
+  }
+  .input {
+    font-family: 'Geist', sans-serif;
+    font-size: 14px;
+    padding: 11px 14px;
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--dark);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+  }
+  .input-default { border: 1.5px solid var(--grey-200); }
+  .input-hover { border: 1.5px solid var(--grey-300); }
+  .input-focus { border: 1.5px solid var(--dark); box-shadow: 0 0 0 3px rgba(58,58,60,0.10); }
+  .input-error { border: 1.5px solid var(--error); }
+  .input-success { border: 1.5px solid var(--success); }
+  .input-disabled { border: 1.5px solid var(--grey-200); background: var(--grey-100); color: var(--grey-400); cursor: not-allowed; }
+  .helper-text { font-size: 11px; margin-top: 4px; }
+  .helper-error { color: var(--error); }
+  .helper-success { color: var(--success); }
+  .helper-default { color: var(--grey-400); }
+
+  /* ── Cards ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+  }
+  .card-default { box-shadow: var(--shadow-sm); }
+  .card-elevated { box-shadow: var(--shadow-lg); }
+  .card-bordered { box-shadow: none; border: 1.5px solid var(--grey-200); }
+  .card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey-400);
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .card-body {
+    font-size: 13px;
+    color: var(--grey-500);
+    line-height: 1.5;
+  }
+
+  /* ── Badges ── */
+  .badges-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .badge-green { background: rgba(52,199,89,0.12); color: #1D7A37; }
+  .badge-yellow { background: rgba(255,149,0,0.12); color: #8A4500; }
+  .badge-red { background: rgba(255,59,48,0.12); color: #C0140C; }
+  .badge-grey { background: var(--grey-200); color: var(--grey-500); }
+  .badge-dark { background: var(--dark); color: var(--white); }
+  .badge-blue { background: rgba(0,122,255,0.10); color: #0055C7; }
+
+  /* ── Status Dots ── */
+  .dots-row {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+  }
+  .dot-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-online {
+    background: var(--yellow);
+    box-shadow: 0 0 0 3px rgba(255,214,10,0.25);
+    animation: pulse 2s infinite;
+  }
+  .dot-offline { background: var(--grey-300); }
+  .dot-error {
+    background: var(--error);
+    box-shadow: 0 0 0 3px rgba(255,59,48,0.2);
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(255,214,10,0.25); }
+    50% { box-shadow: 0 0 0 5px rgba(255,214,10,0.12); }
+  }
+  .dot-label { font-size: 13px; font-weight: 500; color: var(--dark); }
+  .dot-sublabel { font-size: 11px; color: var(--grey-400); }
+
+  /* ── Navigation ── */
+  .nav-preview {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  .nav-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 60px;
+    border-bottom: 1px solid var(--grey-200);
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+    font-weight: 900;
+    color: var(--dark);
+    letter-spacing: -0.02em;
+  }
+  .nav-logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--white);
+    opacity: 0.5;
+  }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-link {
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--grey-500);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .nav-link.active {
+    background: var(--bg);
+    color: var(--dark);
+    font-weight: 600;
+  }
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--dark);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--yellow);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  /* ── Sidebar preview ── */
+  .sidebar-preview {
+    display: flex;
+  }
+  .sidebar {
+    width: 220px;
+    background: var(--dark);
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 200px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    cursor: pointer;
+  }
+  .sidebar-item.active {
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    font-weight: 600;
+  }
+  .sidebar-item .icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+  }
+  .sidebar-item.active .icon { opacity: 1; }
+  .sidebar-item.active .sidebar-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--yellow);
+    margin-left: auto;
+  }
+  .sidebar-content {
+    flex: 1;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--grey-400);
+    font-size: 13px;
+    padding: 20px;
+  }
+
+  /* ── Loading States ── */
+  .skeleton-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--grey-200) 25%, var(--grey-100) 50%, var(--grey-200) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Modal Preview ── */
+  .modal-preview {
+    background: rgba(0,0,0,0.35);
+    border-radius: var(--radius-lg);
+    padding: 60px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    width: 380px;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .modal-title { font-size: 18px; font-weight: 800; color: var(--dark); letter-spacing: -0.02em; }
+  .modal-close {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--grey-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--grey-500);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .modal-body { font-size: 14px; color: var(--grey-500); line-height: 1.55; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ── Two column layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+
+  /* SVG icons inline */
+  .icon-svg { width: 16px; height: 16px; display: inline-block; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="label">Stratus Design System</div>
+  <h1>Component Library</h1>
+  <p>Every UI element. Build once, use everywhere.</p>
+</div>
+
+<div class="content">
+
+  <!-- COLOURS -->
+  <div class="section">
+    <div class="section-title">Colour System</div>
+    <div class="swatches">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F5F5F7; border: 1px solid #E5E5EA;"></div>
+        <div class="swatch-name">Background</div>
+        <div class="swatch-hex">#F5F5F7</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#3A3A3C;"></div>
+        <div class="swatch-name">Graphite</div>
+        <div class="swatch-hex">#3A3A3C</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#FFD60A;"></div>
+        <div class="swatch-name">Yellow</div>
+        <div class="swatch-hex">#FFD60A</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#FFFFFF; border: 1px solid #E5E5EA;"></div>
+        <div class="swatch-name">White</div>
+        <div class="swatch-hex">#FFFFFF</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#34C759;"></div>
+        <div class="swatch-name">Success</div>
+        <div class="swatch-hex">#34C759</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#FF3B30;"></div>
+        <div class="swatch-name">Error</div>
+        <div class="swatch-hex">#FF3B30</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#FF9500;"></div>
+        <div class="swatch-name">Warning</div>
+        <div class="swatch-hex">#FF9500</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E5E5EA;"></div>
+        <div class="swatch-name">Grey 200</div>
+        <div class="swatch-hex">#E5E5EA</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#8E8E93;"></div>
+        <div class="swatch-name">Grey 400</div>
+        <div class="swatch-hex">#8E8E93</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <div class="section">
+    <div class="section-title">Typography — Geist</div>
+    <div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="name">Display</div>
+          <div class="spec">56px / Black 900 / −0.03em</div>
+        </div>
+        <div class="type-display" style="font-size:56px; font-weight:900; letter-spacing:-0.03em; line-height:1.05;">Hire your first AI employee</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="name">Heading 1</div>
+          <div class="spec">36px / Black 900 / −0.02em</div>
+        </div>
+        <div class="type-display" style="font-size:36px; font-weight:900; letter-spacing:-0.02em;">Your Team</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="name">Heading 2</div>
+          <div class="spec">24px / Bold 700 / −0.02em</div>
+        </div>
+        <div class="type-display" style="font-size:24px; font-weight:700; letter-spacing:-0.02em;">LinkedIn Post Agent</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="name">Heading 3</div>
+          <div class="spec">18px / SemiBold 600 / −0.01em</div>
+        </div>
+        <div class="type-display" style="font-size:18px; font-weight:600; letter-spacing:-0.01em;">Recent Activity</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="name">Body</div>
+          <div class="spec">14px / Regular 400</div>
+        </div>
+        <div class="type-display" style="font-size:14px; font-weight:400; line-height:1.6; color:#636366; max-width:480px;">Your AI staff is always on. No sick days, no salary, no onboarding. Each agent handles a specific job and reports back to you in real time.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="name">Label</div>
+          <div class="spec">11px / Bold 700 / 0.10em UC</div>
+        </div>
+        <div class="type-display" style="font-size:11px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; color:#8E8E93;">Component Library</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="name">Caption</div>
+          <div class="spec">12px / Medium 500</div>
+        </div>
+        <div class="type-display" style="font-size:12px; font-weight:500; color:#8E8E93;">Last active 2 minutes ago</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="section">
+    <div class="section-title">Buttons</div>
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--grey-400); margin-bottom:6px;">Primary — Graphite</div>
+        <div style="font-size:11px; color:var(--grey-400); margin-bottom:12px;">Used for nav CTAs, hero CTAs, and all standard actions</div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-sm">Small</button>
+          <button class="btn btn-primary btn-md">Medium</button>
+          <button class="btn btn-primary btn-lg">Large</button>
+          <button class="btn btn-primary btn-md">
+            <svg style="margin-right:7px;" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="white" stroke-width="1.5"/><path d="M7 4.5v5M4.5 7h5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Hire Agent
+          </button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--grey-400); margin-bottom:6px;">Featured — Yellow</div>
+        <div style="font-size:11px; color:var(--grey-400); margin-bottom:12px;">Only for featured pricing plan CTA. Yellow rule: 3 uses only.</div>
+        <div class="btn-group">
+          <button class="btn btn-featured btn-sm">Hire Now</button>
+          <button class="btn btn-featured btn-md">Hire Now</button>
+          <button class="btn btn-featured btn-lg">Get Started — $50/mo</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--grey-400); margin-bottom:12px;">Secondary</div>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm">Small</button>
+          <button class="btn btn-secondary btn-md">Medium</button>
+          <button class="btn btn-secondary btn-lg">Large</button>
+          <button class="btn btn-secondary btn-md">View Details</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--grey-400); margin-bottom:12px;">Danger & Disabled</div>
+        <div class="btn-group">
+          <button class="btn btn-danger btn-sm">Kill Agent</button>
+          <button class="btn btn-danger btn-md">Delete</button>
+          <button class="btn btn-disabled btn-md" disabled>Disabled</button>
+          <button class="btn btn-disabled btn-md" disabled>Unavailable</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="section">
+    <div class="section-title">Input Fields</div>
+    <div class="input-grid">
+      <div class="input-wrap">
+        <div class="input-label">Default</div>
+        <div class="input-sublabel">Ready for input</div>
+        <input class="input input-default" placeholder="Enter email address" value="">
+        <div class="helper-text helper-default">Helper text goes here</div>
+      </div>
+      <div class="input-wrap">
+        <div class="input-label">Hover</div>
+        <div class="input-sublabel">On mouse over</div>
+        <input class="input input-hover" placeholder="Enter email address" value="">
+        <div class="helper-text helper-default">Helper text goes here</div>
+      </div>
+      <div class="input-wrap">
+        <div class="input-label">Focus</div>
+        <div class="input-sublabel">Active / selected</div>
+        <input class="input input-focus" value="eyad@stratus.ai">
+        <div class="helper-text helper-default">Helper text goes here</div>
+      </div>
+      <div class="input-wrap">
+        <div class="input-label">Error</div>
+        <div class="input-sublabel">Validation failed</div>
+        <input class="input input-error" value="invalid@">
+        <div class="helper-text helper-error">Please enter a valid email</div>
+      </div>
+      <div class="input-wrap">
+        <div class="input-label">Success</div>
+        <div class="input-sublabel">Validated</div>
+        <input class="input input-success" value="eyad@stratus.ai">
+        <div class="helper-text helper-success">Email confirmed ✓</div>
+      </div>
+      <div class="input-wrap">
+        <div class="input-label">Disabled</div>
+        <div class="input-sublabel">Non-interactive</div>
+        <input class="input input-disabled" value="readonly@stratus.ai" disabled>
+        <div class="helper-text helper-default">Field is read-only</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="section">
+    <div class="section-title">Cards</div>
+    <div class="cards-grid">
+      <div class="card card-default">
+        <div class="card-label">Default</div>
+        <div class="card-title">LinkedIn Post Agent</div>
+        <div class="card-body">Posts 2 articles per day to LinkedIn. Tracks engagement and reports weekly.</div>
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <span class="badge badge-green">Active</span>
+          <span class="badge badge-grey">LinkedIn</span>
+        </div>
+      </div>
+      <div class="card card-elevated">
+        <div class="card-label">Elevated</div>
+        <div class="card-title">AI Receptionist</div>
+        <div class="card-body">Handles inbound WhatsApp enquiries 24/7. Qualifies leads and books appointments.</div>
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <span class="badge badge-green">Active</span>
+          <span class="badge badge-grey">WhatsApp</span>
+        </div>
+      </div>
+      <div class="card card-bordered">
+        <div class="card-label">Bordered</div>
+        <div class="card-title">Car Market Intel</div>
+        <div class="card-body">Monitors Dubai car market daily. Sends morning briefings with pricing intel.</div>
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <span class="badge badge-yellow">Paused</span>
+          <span class="badge badge-grey">Telegram</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="section">
+    <div class="section-title">Badges</div>
+    <div class="badges-row">
+      <span class="badge badge-green">Active</span>
+      <span class="badge badge-yellow">Paused</span>
+      <span class="badge badge-red">Error</span>
+      <span class="badge badge-grey">Offline</span>
+      <span class="badge badge-dark">Featured</span>
+      <span class="badge badge-blue">LinkedIn</span>
+      <span class="badge badge-grey">WhatsApp</span>
+      <span class="badge badge-grey">Telegram</span>
+      <span class="badge badge-green">Paid</span>
+      <span class="badge badge-red">Failed</span>
+      <span class="badge badge-yellow">Pending</span>
+      <span class="badge badge-dark">Admin Only</span>
+    </div>
+  </div>
+
+  <!-- STATUS DOTS -->
+  <div class="section">
+    <div class="section-title">Status Dots</div>
+    <div class="dots-row">
+      <div class="dot-item">
+        <div class="dot dot-online"></div>
+        <div>
+          <div class="dot-label">Online</div>
+          <div class="dot-sublabel">Agent running</div>
+        </div>
+      </div>
+      <div class="dot-item">
+        <div class="dot dot-offline"></div>
+        <div>
+          <div class="dot-label">Offline</div>
+          <div class="dot-sublabel">Agent paused</div>
+        </div>
+      </div>
+      <div class="dot-item">
+        <div class="dot dot-error"></div>
+        <div>
+          <div class="dot-label">Error</div>
+          <div class="dot-sublabel">Admin visibility only</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <div class="section">
+    <div class="section-title">Navigation</div>
+    <div class="nav-preview">
+      <div class="nav-top">
+        <div class="nav-logo">
+          <div class="nav-logo-dot"></div>
+          Stratus
+        </div>
+        <div class="nav-links">
+          <span class="nav-link active">Dashboard</span>
+          <span class="nav-link">Marketplace</span>
+          <span class="nav-link">Billing</span>
+        </div>
+        <div class="nav-actions">
+          <button class="btn btn-primary btn-sm">Hire Agent</button>
+          <div class="nav-avatar">EI</div>
+        </div>
+      </div>
+      <div class="sidebar-preview">
+        <div class="sidebar">
+          <div class="sidebar-item active">
+            <svg class="icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="white"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity="0.4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity="0.4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity="0.4"/></svg>
+            Your Team
+            <div class="sidebar-dot"></div>
+          </div>
+          <div class="sidebar-item">
+            <svg class="icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/><path d="M8 5v4l2.5 1.5" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Marketplace
+          </div>
+          <div class="sidebar-item">
+            <svg class="icon" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="13" height="9" rx="1.5" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/></svg>
+            Billing
+          </div>
+          <div class="sidebar-item" style="margin-top:auto;">
+            <svg class="icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/><path d="M2.5 13.5C2.5 11 5 9 8 9s5.5 2 5.5 4.5" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Settings
+          </div>
+        </div>
+        <div class="sidebar-content">← Page content renders here</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING STATES -->
+  <div class="section">
+    <div class="section-title">Loading States</div>
+    <div class="two-col">
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--grey-400); margin-bottom:16px;">Skeleton Screens</div>
+        <div class="card card-default">
+          <div style="display:flex; gap:12px; align-items:center; margin-bottom:16px;">
+            <div class="skeleton" style="width:40px; height:40px; border-radius:50%;"></div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+              <div class="skeleton" style="height:13px; width:60%;"></div>
+              <div class="skeleton" style="height:11px; width:40%;"></div>
+            </div>
+          </div>
+          <div class="skeleton-demo">
+            <div class="skeleton" style="height:11px; width:100%;"></div>
+            <div class="skeleton" style="height:11px; width:85%;"></div>
+            <div class="skeleton" style="height:11px; width:70%;"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; font-weight:600; color:var(--grey-400); margin-bottom:16px;">Spinner</div>
+        <div class="card card-default" style="display:flex; align-items:center; justify-content:center; min-height:120px; gap:14px;">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style="animation: spin 0.8s linear infinite;">
+            <circle cx="14" cy="14" r="11" stroke="#E5E5EA" stroke-width="2.5"/>
+            <path d="M14 3C14 3 22 6 24.5 14" stroke="#3A3A3C" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+          <span style="font-size:14px; color:var(--grey-400); font-weight:500;">Loading agents...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="section">
+    <div class="section-title">Modals</div>
+    <div class="modal-preview">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Cancel Subscription?</div>
+          <div class="modal-close">✕</div>
+        </div>
+        <div class="modal-body">
+          This will immediately deactivate your <strong>LinkedIn Post Agent</strong>. All scheduled posts will be cancelled. You'll lose access at the end of your billing period.
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary btn-sm">Keep Agent</button>
+          <button class="btn btn-danger btn-sm">Cancel Subscription</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

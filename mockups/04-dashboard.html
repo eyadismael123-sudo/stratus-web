@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratus — Your Team</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F5F5F7;
+  --graphite: #3A3A3C;
+  --graphite-mid: #6A6A6E;
+  --graphite-light: #D2D2D7;
+  --white: #FFFFFF;
+  --yellow: #FFD60A;
+  --success: #34C759;
+  --error: #FF3B30;
+  --sidebar-w: 240px;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --card-shadow-hover: 0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
+  --easing: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--graphite);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ─── LAYOUT ─── */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--white);
+  border-right: 1px solid var(--graphite-light);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  z-index: 100;
+  padding: 0;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--graphite);
+  letter-spacing: -0.04em;
+  border-bottom: 1px solid var(--bg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.sidebar-logo span {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--white);
+  background: var(--success);
+  border-radius: 4px;
+  padding: 2px 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--graphite-mid);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover { background: var(--bg); color: var(--graphite); }
+
+.nav-item.active {
+  background: #EFEFEF;
+  color: var(--graphite);
+  font-weight: 600;
+}
+
+.nav-item svg { flex-shrink: 0; opacity: 0.6; }
+.nav-item.active svg { opacity: 1; }
+
+.nav-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #AEAEB2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 16px 12px 4px;
+}
+
+.sidebar-footer {
+  border-top: 1px solid var(--bg);
+  padding: 16px 12px;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.user-row:hover { background: var(--bg); }
+
+.user-avatar {
+  width: 34px; height: 34px;
+  background: var(--graphite);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white;
+  flex-shrink: 0;
+}
+
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 600; color: var(--graphite); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: var(--graphite-mid); }
+
+.logout-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  font-family: 'Geist', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--graphite-mid);
+  background: none; border: none;
+  cursor: pointer; border-radius: 7px;
+  width: 100%; text-align: left;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+.logout-btn:hover { color: var(--error); background: rgba(255,59,48,0.05); }
+
+/* ─── MAIN ─── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(245,245,247,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--graphite-light);
+  padding: 0 32px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--graphite);
+  letter-spacing: -0.03em;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-primary {
+  display: flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 16px;
+  font-family: 'Geist', sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: white; background: var(--graphite);
+  border: none; border-radius: 8px;
+  cursor: pointer; transition: all 0.2s var(--easing);
+  white-space: nowrap;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-secondary {
+  display: flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 16px;
+  font-family: 'Geist', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: var(--graphite); background: var(--white);
+  border: 1.5px solid var(--graphite-light);
+  border-radius: 8px; cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-secondary:hover { background: var(--bg); border-color: #AEAEB2; }
+
+.icon-btn {
+  width: 36px; height: 36px;
+  background: var(--white);
+  border: 1.5px solid var(--graphite-light);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--graphite-mid);
+  transition: all 0.15s;
+}
+.icon-btn:hover { background: var(--bg); color: var(--graphite); }
+
+/* ─── CONTENT ─── */
+.content {
+  padding: 28px 32px;
+  flex: 1;
+}
+
+/* ─── SEARCH ─── */
+.search-wrap {
+  position: relative;
+  margin-bottom: 24px;
+  max-width: 420px;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--graphite-mid);
+  pointer-events: none;
+}
+.search-wrap input {
+  width: 100%; height: 42px;
+  font-family: 'Geist', sans-serif;
+  font-size: 14px; font-weight: 400;
+  color: var(--graphite);
+  background: var(--white);
+  border: 1.5px solid var(--graphite-light);
+  border-radius: 10px;
+  padding: 0 14px 0 40px;
+  outline: none;
+  transition: all 0.2s;
+}
+.search-wrap input::placeholder { color: #A8A8AD; }
+.search-wrap input:focus { border-color: var(--graphite); box-shadow: 0 0 0 3px rgba(58,58,60,0.07); }
+
+/* ─── SECTION HEADER ─── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 13px; font-weight: 700;
+  color: var(--graphite-mid);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.section-count {
+  font-size: 12px; font-weight: 600;
+  color: var(--graphite-mid);
+  background: #EFEFEF;
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+
+/* ─── AGENT GRID ─── */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+/* ─── AGENT CARD ─── */
+.agent-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  transition: all 0.25s var(--easing);
+  position: relative;
+  border: 1.5px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.agent-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+  border-color: var(--graphite-light);
+}
+
+/* Status dot */
+.status-dot {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #D2D2D7;
+}
+.status-dot.online {
+  background: var(--yellow);
+  box-shadow: 0 0 0 0 rgba(255,214,10,0.5);
+  animation: pulse-dot 2s infinite;
+}
+.status-dot.error { background: var(--error); }
+
+@keyframes pulse-dot {
+  0%   { box-shadow: 0 0 0 0 rgba(255,214,10,0.5); }
+  70%  { box-shadow: 0 0 0 7px rgba(255,214,10,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,214,10,0); }
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.agent-icon {
+  width: 44px; height: 44px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.agent-icon.linkedin { background: #E8F0FE; }
+.agent-icon.telegram { background: #E1F5FE; }
+.agent-icon.whatsapp { background: #E8F8ED; }
+
+.agent-name {
+  font-size: 15px; font-weight: 700;
+  color: var(--graphite);
+  letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+.agent-role {
+  font-size: 12px; font-weight: 500;
+  color: var(--graphite-mid);
+}
+
+.platform-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+  color: var(--graphite-mid);
+  background: var(--bg);
+  border: 1px solid var(--graphite-light);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.activity-line {
+  font-size: 12px; font-weight: 400;
+  color: var(--graphite-mid);
+  font-style: italic;
+  line-height: 1.5;
+}
+.activity-line strong {
+  font-style: normal; font-weight: 500;
+  color: var(--graphite);
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--bg);
+  padding-top: 12px;
+  margin-top: auto;
+}
+.timestamp {
+  font-size: 11px; font-weight: 500;
+  color: #AEAEB2;
+}
+.view-link {
+  font-size: 12px; font-weight: 700;
+  color: var(--graphite);
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex; align-items: center; gap: 3px;
+}
+.agent-card:hover .view-link { opacity: 1; }
+
+/* ─── ADD CARD ─── */
+.add-card {
+  border: 2px dashed var(--graphite-light);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 180px;
+  background: transparent;
+}
+.add-card:hover {
+  border-color: var(--graphite-mid);
+  background: rgba(58,58,60,0.03);
+}
+.add-icon {
+  width: 40px; height: 40px;
+  background: var(--bg);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--graphite-mid);
+  transition: all 0.2s;
+}
+.add-card:hover .add-icon {
+  background: var(--graphite);
+  color: white;
+}
+.add-label {
+  font-size: 13px; font-weight: 600;
+  color: var(--graphite-mid);
+  transition: color 0.2s;
+}
+.add-card:hover .add-label { color: var(--graphite); }
+.add-sub {
+  font-size: 11px; font-weight: 400;
+  color: #AEAEB2;
+  text-align: center;
+}
+
+/* ─── EMPTY STATE TOGGLE ─── */
+.state-toggle {
+  display: flex; gap: 8px;
+  margin-bottom: 24px;
+}
+.state-btn {
+  font-family: 'Geist', sans-serif;
+  font-size: 12px; font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1.5px solid var(--graphite-light);
+  background: var(--white);
+  color: var(--graphite-mid);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.state-btn.active {
+  background: var(--graphite);
+  border-color: var(--graphite);
+  color: white;
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+.empty-state.visible { display: flex; }
+
+.empty-illustration {
+  width: 120px; height: 120px;
+  margin-bottom: 28px;
+}
+
+.empty-title {
+  font-size: 22px; font-weight: 900;
+  color: var(--graphite);
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.empty-body {
+  font-size: 14px; font-weight: 400;
+  color: var(--graphite-mid);
+  max-width: 280px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+/* ─── STATS STRIP ─── */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--white);
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: var(--card-shadow);
+}
+.stat-label {
+  font-size: 11px; font-weight: 600;
+  color: var(--graphite-mid);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-size: 24px; font-weight: 900;
+  color: var(--graphite);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.stat-change {
+  font-size: 11px; font-weight: 500;
+  color: var(--success);
+  margin-top: 4px;
+}
+
+/* ─── MOBILE ─── */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .main { margin-left: 0; padding-bottom: 72px; }
+  .agent-grid { grid-template-columns: 1fr; }
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .content { padding: 20px 16px; }
+  .topbar { padding: 0 16px; }
+}
+
+/* ─── BOTTOM TAB BAR ─── */
+.mobile-tabbar { display: none; }
+@media (max-width: 768px) {
+  .mobile-tabbar {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: #fff;
+    border-top: 1px solid rgba(58,58,60,0.1);
+    z-index: 999;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: #8E8E93;
+    font-size: 10px;
+    font-weight: 500;
+    font-family: 'Geist', sans-serif;
+    letter-spacing: 0.02em;
+    transition: color 0.15s;
+  }
+  .tab-item.active { color: #3A3A3C; }
+  .tab-item svg { width: 22px; height: 22px; }
+}
+@media (min-width: 769px) and (max-width: 1100px) {
+  .agent-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="/">
+      stratus
+      <span>BETA</span>
+    </a>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a class="nav-item active" href="#">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Your Team
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
+        Marketplace
+      </a>
+
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+        Billing
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="user-avatar">E</div>
+        <div class="user-info">
+          <div class="user-name">Eyad Ismael</div>
+          <div class="user-role">Founder · Admin</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" stroke-width="2">
+          <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+        </svg>
+      </div>
+      <button class="logout-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Log out
+      </button>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title">Your Team</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" title="Notifications" aria-label="Notifications">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </button>
+        <button class="btn-primary" onclick="switchState('filled')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Member
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stats -->
+      <div class="stats-strip" id="stats-strip">
+        <div class="stat-card">
+          <div class="stat-label">Active Members</div>
+          <div class="stat-value">1</div>
+          <div class="stat-change">LinkedIn Post Agent</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Posts Generated</div>
+          <div class="stat-value">14</div>
+          <div class="stat-change">↑ This month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Runs This Week</div>
+          <div class="stat-value">7</div>
+          <div class="stat-change">Daily at 8 AM</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Monthly Cost</div>
+          <div class="stat-value">$50</div>
+          <div class="stat-change" style="color:var(--graphite-mid)">1 × $50/mo</div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" placeholder="Search your team..." aria-label="Search team members">
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="state-toggle">
+        <button class="state-btn active" onclick="setCat(this,'all')">All</button>
+        <button class="state-btn" onclick="setCat(this,'personal')">Personal</button>
+        <button class="state-btn" onclick="setCat(this,'business')">Business</button>
+        <button class="state-btn" onclick="setCat(this,'health')">Health</button>
+      </div>
+
+      <!-- Team Grid -->
+      <div id="filled-state">
+        <div class="section-header">
+          <span class="section-title">Active Members</span>
+          <span class="section-count" id="member-count">1 hired</span>
+        </div>
+        <div class="agent-grid" id="team-grid">
+
+          <!-- Card 1: LinkedIn Agent (Online) -->
+          <div class="agent-card" data-cat="personal" onclick="window.location='05-agent-detail.html'">
+            <div class="status-dot online" title="Online"></div>
+            <div class="card-top">
+              <div class="agent-icon linkedin">💼</div>
+              <div>
+                <div class="agent-name">LinkedIn Post Agent</div>
+                <div class="agent-role">Content & Thought Leadership</div>
+              </div>
+            </div>
+            <div class="platform-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="#0A66C2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+              LinkedIn
+            </div>
+            <div class="activity-line"><strong>Now:</strong> Generating post ideas from Grok research...</div>
+            <div class="card-footer">
+              <span class="timestamp">Last active 2 min ago</span>
+              <span class="view-link">
+                View Details
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Add card -->
+          <div class="add-card">
+            <div class="add-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <div class="add-label">Add another member</div>
+            <div class="add-sub">Browse the Marketplace to hire a new agent</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Empty category state -->
+      <div class="empty-state" id="empty-cat-state">
+        <svg class="empty-illustration" viewBox="0 0 120 120" fill="none">
+          <circle cx="60" cy="60" r="55" fill="#EFEFEF"/>
+          <rect x="38" y="42" width="18" height="18" rx="5" fill="#D2D2D7"/>
+          <rect x="64" y="42" width="18" height="18" rx="5" fill="#D2D2D7"/>
+          <rect x="38" y="68" width="44" height="10" rx="5" fill="#E8E8EA"/>
+        </svg>
+        <div class="empty-title">No agents in this category</div>
+        <p class="empty-body">You haven't hired any agents here yet. Browse the Marketplace to add one.</p>
+        <button class="btn-primary" onclick="window.location='06-marketplace.html'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          Browse Marketplace
+        </button>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+function setCat(btn, cat) {
+  document.querySelectorAll('.state-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+
+  var cards = document.querySelectorAll('#team-grid .agent-card');
+  var addCard = document.querySelector('#team-grid .add-card');
+  var visible = 0;
+
+  cards.forEach(function(card) {
+    var cardCat = card.getAttribute('data-cat') || '';
+    var show = (cat === 'all' || cat === cardCat);
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  var emptyCat = document.getElementById('empty-cat-state');
+  var grid = document.getElementById('team-grid');
+
+  if (visible === 0) {
+    grid.style.display = 'none';
+    emptyCat.classList.add('visible');
+  } else {
+    grid.style.display = 'grid';
+    emptyCat.classList.remove('visible');
+    if (addCard) addCard.style.display = '';
+  }
+
+  var countEl = document.getElementById('member-count');
+  if (countEl) countEl.textContent = visible + ' hired';
+}
+</script>
+<!-- ─── MOBILE BOTTOM TAB BAR ─── -->
+<nav class="mobile-tabbar">
+  <a href="04-dashboard.html" class="tab-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Team</span>
+  </a>
+  <a href="06-marketplace.html" class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Hire</span>
+  </a>
+  <a href="07-billing.html" class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    <span>Billing</span>
+  </a>
+</nav>
+</body>
+</html>

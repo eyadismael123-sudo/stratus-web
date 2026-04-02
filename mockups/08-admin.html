@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratus — War Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0D0D0F;
+    --surface: #161618;
+    --surface-2: #1E1E21;
+    --surface-3: #252528;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --white: #FFFFFF;
+    --white-80: rgba(255,255,255,0.8);
+    --white-50: rgba(255,255,255,0.5);
+    --white-30: rgba(255,255,255,0.3);
+    --graphite: #3A3A3C;
+    --yellow: #FFD60A;
+    --green: #34C759;
+    --red: #FF3B30;
+    --orange: #FF9500;
+    --blue: #007AFF;
+    --war-red: #FF3B30;
+    --war-orange: #FF6B35;
+    --sidebar-w: 220px;
+    --topbar-h: 60px;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-elevated: 0 10px 30px rgba(0,0,0,0.6), 0 4px 6px rgba(0,0,0,0.4);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --radius: 10px;
+    --radius-sm: 8px;
+  }
+
+  html { font-family: 'Geist', -apple-system, sans-serif; background: var(--bg); color: var(--white); }
+  body { display: flex; min-height: 100vh; }
+  a { text-decoration: none; color: inherit; }
+  button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--sidebar-w); height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 100; padding: 20px 0;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 18px 20px; border-bottom: 1px solid var(--border);
+  }
+  .logo-wordmark { font-size: 17px; font-weight: 700; color: var(--white); letter-spacing: -0.3px; }
+  .logo-badge {
+    font-size: 9px; font-weight: 700; background: var(--war-red); color: var(--white);
+    padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-section-label {
+    font-size: 9px; font-weight: 700; color: var(--white-30);
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 0 18px; margin-bottom: 4px; margin-top: 16px;
+  }
+  .nav-section-label:first-child { margin-top: 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 18px; font-size: 13px; font-weight: 500; color: var(--white-50);
+    border-radius: 7px; margin: 1px 8px; transition: all 0.15s var(--ease);
+    cursor: pointer;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: var(--white-80); }
+  .nav-item.active { background: rgba(255,59,48,0.15); color: var(--white); font-weight: 600; }
+  .nav-item.active .nav-icon { opacity: 1; color: var(--war-red); }
+  .nav-icon { width: 16px; height: 16px; opacity: 0.5; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto; background: var(--war-red); color: var(--white);
+    font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 9999px;
+  }
+
+  .sidebar-user {
+    padding: 14px 18px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    border-radius: 7px; margin: 0 8px; transition: background 0.15s var(--ease);
+  }
+  .sidebar-user:hover { background: rgba(255,255,255,0.04); }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--war-red), var(--war-orange));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; color: var(--white);
+  }
+  .user-name { font-size: 12px; font-weight: 600; color: var(--white-80); }
+  .user-role { font-size: 10px; color: var(--white-30); }
+
+  /* ── MAIN ── */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* TOPBAR */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    height: var(--topbar-h);
+    background: rgba(13,13,15,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .war-room-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,59,48,0.15); border: 1px solid rgba(255,59,48,0.3);
+    padding: 4px 10px; border-radius: 6px;
+  }
+  .war-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--war-red); animation: war-pulse 1.5s ease-in-out infinite; }
+  @keyframes war-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.4); } }
+  .war-label { font-size: 11px; font-weight: 700; color: var(--war-red); letter-spacing: 0.5px; }
+  .topbar-title { font-size: 16px; font-weight: 700; color: var(--white); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  /* Big control buttons */
+  .btn-kill-all {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: rgba(255,59,48,0.15); border: 1px solid rgba(255,59,48,0.4);
+    color: var(--war-red); border-radius: var(--radius-sm); font-size: 13px; font-weight: 700;
+    font-family: inherit; cursor: pointer; transition: all 0.15s var(--ease);
+    letter-spacing: -0.2px;
+  }
+  .btn-kill-all:hover { background: rgba(255,59,48,0.25); box-shadow: 0 0 20px rgba(255,59,48,0.2); }
+  .btn-restart-all {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: rgba(255,149,0,0.15); border: 1px solid rgba(255,149,0,0.4);
+    color: var(--orange); border-radius: var(--radius-sm); font-size: 13px; font-weight: 700;
+    font-family: inherit; cursor: pointer; transition: all 0.15s var(--ease);
+  }
+  .btn-restart-all:hover { background: rgba(255,149,0,0.25); box-shadow: 0 0 20px rgba(255,149,0,0.15); }
+
+  /* PAGE CONTENT */
+  .page-content { padding: 24px 28px; flex: 1; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface-2); border-radius: 10px; padding: 4px; width: fit-content; }
+  .tab {
+    padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    color: var(--white-50); cursor: pointer; transition: all 0.15s var(--ease);
+    background: transparent; border: none; font-family: inherit;
+  }
+  .tab.active { background: var(--surface-3); color: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+  .tab:hover:not(.active) { color: var(--white-80); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── OVERVIEW TAB ── */
+  /* Status Grid */
+  .status-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .stat-label { font-size: 10px; font-weight: 600; color: var(--white-30); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 900; color: var(--white); letter-spacing: -0.5px; }
+  .stat-meta { font-size: 11px; color: var(--white-30); margin-top: 4px; }
+  .stat-meta .up { color: var(--green); font-weight: 600; }
+  .stat-meta .alert { color: var(--war-red); font-weight: 600; }
+
+  /* Two-column layout */
+  .overview-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+
+  /* Section card */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .card:last-child { margin-bottom: 0; }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--white); }
+  .card-subtitle { font-size: 11px; color: var(--white-30); margin-top: 2px; }
+  .card-action { font-size: 12px; font-weight: 600; color: var(--blue); cursor: pointer; }
+  .card-action:hover { text-decoration: underline; }
+
+  /* Agent Status Table */
+  .agent-table { width: 100%; }
+  .agent-row {
+    display: grid; grid-template-columns: 32px 1fr 120px 80px 90px 90px 110px;
+    align-items: center; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s var(--ease);
+  }
+  .agent-row:last-child { border-bottom: none; }
+  .agent-row:hover { background: rgba(255,255,255,0.03); }
+  .agent-row.header { padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .col-h { font-size: 10px; font-weight: 600; color: var(--white-30); text-transform: uppercase; letter-spacing: 0.6px; }
+  .agent-emoji { font-size: 20px; }
+  .agent-name-col {}
+  .a-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .a-client { font-size: 11px; color: var(--white-30); margin-top: 1px; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 9999px; font-size: 11px; font-weight: 600;
+  }
+  .pill-online { background: rgba(52,199,89,0.15); color: var(--green); }
+  .pill-offline { background: rgba(255,255,255,0.08); color: var(--white-30); }
+  .pill-error { background: rgba(255,59,48,0.15); color: var(--war-red); }
+  .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .a-stat { font-size: 13px; color: var(--white-80); font-variant-numeric: tabular-nums; }
+  .a-stat-sub { font-size: 10px; color: var(--white-30); margin-top: 1px; }
+  .a-time { font-size: 12px; color: var(--white-50); font-variant-numeric: tabular-nums; }
+
+  /* Agent action buttons */
+  .agent-controls { display: flex; gap: 6px; }
+  .ctrl-btn {
+    width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-family: inherit; cursor: pointer; transition: all 0.15s var(--ease); font-size: 12px; border: none;
+  }
+  .ctrl-run { background: rgba(52,199,89,0.12); color: var(--green); }
+  .ctrl-run:hover { background: rgba(52,199,89,0.25); }
+  .ctrl-pause { background: rgba(255,149,0,0.12); color: var(--orange); }
+  .ctrl-pause:hover { background: rgba(255,149,0,0.25); }
+  .ctrl-kill { background: rgba(255,59,48,0.12); color: var(--war-red); }
+  .ctrl-kill:hover { background: rgba(255,59,48,0.25); }
+
+  /* ── LIVE LOG ── */
+  .log-stream {
+    background: var(--bg); border-radius: 8px; padding: 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; line-height: 1.7;
+    max-height: 320px; overflow-y: auto;
+    border: 1px solid var(--border);
+  }
+  .log-stream::-webkit-scrollbar { width: 4px; }
+  .log-stream::-webkit-scrollbar-track { background: transparent; }
+  .log-stream::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+  .log-entry { display: flex; gap: 10px; margin-bottom: 4px; }
+  .log-ts { color: var(--white-30); flex-shrink: 0; }
+  .log-level-info { color: var(--blue); font-weight: 600; min-width: 36px; }
+  .log-level-ok { color: var(--green); font-weight: 600; min-width: 36px; }
+  .log-level-warn { color: var(--orange); font-weight: 600; min-width: 36px; }
+  .log-level-err { color: var(--war-red); font-weight: 600; min-width: 36px; }
+  .log-msg { color: rgba(255,255,255,0.75); }
+  .log-msg .agent-ref { color: var(--white-80); font-weight: 600; }
+
+  /* ── RIGHT SIDEBAR CARDS ── */
+  .right-col-admin { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Revenue card */
+  .revenue-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .rc-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 16px; }
+  .rc-main { font-size: 36px; font-weight: 900; color: var(--white); letter-spacing: -1px; line-height: 1; }
+  .rc-sub { font-size: 12px; color: var(--white-30); margin-top: 4px; }
+  .rc-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+  .rc-row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .rc-label { font-size: 12px; color: var(--white-50); }
+  .rc-val { font-size: 12px; font-weight: 600; color: var(--white-80); }
+  .rc-arr { color: var(--green); }
+
+  /* Quick stats */
+  .quick-stats { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+  .qs-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
+  .qs-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .qs-row:last-child { border-bottom: none; }
+  .qs-label { font-size: 12px; color: var(--white-50); }
+  .qs-val { font-size: 13px; font-weight: 700; color: var(--white); }
+  .qs-val.green { color: var(--green); }
+  .qs-val.red { color: var(--war-red); }
+  .qs-val.orange { color: var(--orange); }
+
+  /* ── CLIENTS TAB ── */
+  .clients-table { width: 100%; }
+  .ct-row {
+    display: grid; grid-template-columns: 40px 1fr 100px 100px 100px 120px 100px;
+    align-items: center; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s var(--ease);
+  }
+  .ct-row:hover { background: rgba(255,255,255,0.02); }
+  .ct-row.header { padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .ct-avatar {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--surface-3); display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--white-80);
+  }
+  .ct-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .ct-company { font-size: 11px; color: var(--white-30); }
+  .ct-cell { font-size: 13px; color: var(--white-80); }
+  .ct-cell.muted { color: var(--white-30); }
+  .badge-sm {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: 700;
+  }
+  .badge-active-sm { background: rgba(52,199,89,0.15); color: var(--green); }
+  .badge-trial-sm { background: rgba(0,122,255,0.15); color: var(--blue); }
+  .btn-view {
+    background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--white-80);
+    padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.15s var(--ease);
+  }
+  .btn-view:hover { background: rgba(255,255,255,0.12); }
+
+  /* ── POSTS TAB ── */
+  .post-feed { padding: 0; }
+  .post-item {
+    padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s var(--ease);
+  }
+  .post-item:last-child { border-bottom: none; }
+  .post-item:hover { background: rgba(255,255,255,0.02); }
+  .post-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .post-client { font-size: 12px; font-weight: 700; color: var(--white-80); }
+  .post-date { font-size: 11px; color: var(--white-30); }
+  .post-platform { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--blue); font-weight: 600; background: rgba(0,122,255,0.1); padding: 2px 7px; border-radius: 4px; }
+  .post-body { font-size: 13px; color: var(--white-80); line-height: 1.6; margin-bottom: 10px; }
+  .post-stats { display: flex; gap: 16px; }
+  .post-stat { font-size: 11px; color: var(--white-30); }
+  .post-stat strong { color: var(--white-80); font-weight: 600; }
+  .post-approved { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--green); font-weight: 600; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    background: var(--surface-2); color: var(--white);
+    border: 1px solid var(--border-strong);
+    padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow-elevated); display: flex; align-items: center; gap: 8px;
+    transform: translateY(80px); opacity: 0; transition: all 0.3s var(--ease);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ─── BOTTOM TAB BAR ─── */
+  .mobile-tabbar { display: none; }
+
+  @media (max-width: 768px) {
+    html, body { overflow-x: hidden; }
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; padding-bottom: 72px; overflow-x: hidden; width: 100%; }
+    .topbar { padding: 0 16px; width: 100%; }
+    .topbar-right { display: none; }
+    .page-content { padding: 16px; overflow-x: hidden; }
+    .status-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-value { font-size: 20px; }
+    .tabs { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+    .tab { white-space: nowrap; padding: 8px 14px; }
+    .overview-grid { grid-template-columns: 1fr; }
+    .card { overflow-x: auto; }
+    .agent-table { min-width: 560px; }
+    .mobile-tabbar {
+      display: flex; position: fixed;
+      bottom: 0; left: 0; right: 0; height: 60px;
+      background: var(--surface); border-top: 1px solid var(--border-strong);
+      z-index: 999; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: var(--white-30); font-size: 10px; font-weight: 500; font-family: 'Geist', sans-serif; letter-spacing: 0.02em; transition: color 0.15s; }
+    .tab-item.active { color: var(--white); }
+    .tab-item svg { width: 22px; height: 22px; }
+  }
+
+  /* Live pulse on log */
+  .live-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--green); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: war-pulse 1.5s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-wordmark">stratus</span>
+    <span class="logo-badge">ADMIN</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-section-label">Control</div>
+    <a href="#" class="nav-item active">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/>
+        <rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/>
+      </svg>
+      Overview
+    </a>
+    <a href="#" class="nav-item" onclick="switchTab('clients'); return false;">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="8" cy="7" r="3"/><path d="M2 18c0-3.3 2.7-6 6-6"/>
+        <circle cx="15" cy="10" r="2.5"/><path d="M12 18c0-2.2 1.3-4 3-4h.5c1.7 0 3 1.8 3 4"/>
+      </svg>
+      Clients
+      <span class="nav-badge">1</span>
+    </a>
+    <a href="#" class="nav-item" onclick="switchTab('posts'); return false;">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M4 4h12M4 8h8M4 12h10M4 16h6"/>
+      </svg>
+      Posts
+    </a>
+    <div class="nav-section-label">Platform</div>
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M3 3h14l-2 8H5L3 3z"/><circle cx="8" cy="17" r="1.2"/><circle cx="14" cy="17" r="1.2"/>
+      </svg>
+      Marketplace
+    </a>
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="2" y="5" width="16" height="12" rx="2"/><path d="M2 9h16"/>
+      </svg>
+      Revenue
+    </a>
+    <div class="nav-section-label">Switch View</div>
+    <a href="04-dashboard.html" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="10" cy="10" r="8"/><path d="M10 6v4l2 2"/>
+      </svg>
+      Client View
+    </a>
+  </nav>
+  <div style="padding: 0 8px 0;">
+    <div class="sidebar-user">
+      <div class="user-avatar">E</div>
+      <div style="flex: 1; min-width: 0;">
+        <div class="user-name">Eyad Ismael</div>
+        <div class="user-role">Founder · God Mode</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="war-room-badge">
+        <div class="war-dot"></div>
+        <div class="war-label">WAR ROOM</div>
+      </div>
+      <div class="topbar-title">Admin Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-restart-all" onclick="showToast('⚡ Restarting all agents...', 'orange')">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M4 10a6 6 0 016-6 6 6 0 014.2 1.7M16 10a6 6 0 01-6 6 6 6 0 01-4.2-1.7"/>
+          <path d="M14 6l2.2-2.2M6 16L3.8 18.2"/>
+        </svg>
+        Restart All
+      </button>
+      <button class="btn-kill-all" onclick="showToast('🔴 All agents killed.', 'red')">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="10" cy="10" r="8"/><path d="M7 7l6 6M13 7l-6 6"/>
+        </svg>
+        Kill All Agents
+      </button>
+    </div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="page-content">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('overview')">Overview</button>
+      <button class="tab" onclick="switchTab('clients')">Clients (1)</button>
+      <button class="tab" onclick="switchTab('posts')">Post History</button>
+      <button class="tab" onclick="switchTab('logs')">Live Logs</button>
+    </div>
+
+    <!-- ══ OVERVIEW TAB ══ -->
+    <div class="tab-panel active" id="tab-overview">
+
+      <!-- Status strip -->
+      <div class="status-grid">
+        <div class="stat-card">
+          <div class="stat-label">Active Agents</div>
+          <div class="stat-value" style="color: var(--green);">1</div>
+          <div class="stat-meta"><span class="up">↑ 1</span> this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Clients</div>
+          <div class="stat-value">1</div>
+          <div class="stat-meta">0 trial · 1 paid</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">MRR</div>
+          <div class="stat-value">$50</div>
+          <div class="stat-meta"><span class="up">↑ $50</span> vs last month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Posts Generated</div>
+          <div class="stat-value">3</div>
+          <div class="stat-meta">since Mar 18</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Agent Errors</div>
+          <div class="stat-value" style="color: var(--green);">0</div>
+          <div class="stat-meta">last 7 days</div>
+        </div>
+      </div>
+
+      <div class="overview-grid">
+        <!-- LEFT -->
+        <div>
+          <!-- Agent Fleet Status -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Agent Fleet</div>
+                <div class="card-subtitle">Live status of all deployed agents</div>
+              </div>
+              <div class="live-indicator">
+                <div class="live-dot"></div>
+                Live
+              </div>
+            </div>
+            <div class="agent-row header">
+              <div></div>
+              <div class="col-h">Agent</div>
+              <div class="col-h">Status</div>
+              <div class="col-h">Last Run</div>
+              <div class="col-h">Posts</div>
+              <div class="col-h">Client</div>
+              <div class="col-h">Controls</div>
+            </div>
+            <div class="agent-row">
+              <div class="agent-emoji">💼</div>
+              <div class="agent-name-col">
+                <div class="a-name">LinkedIn Post Agent</div>
+                <div class="a-client">v1.0 · FastAPI + Claude</div>
+              </div>
+              <div><div class="status-pill pill-online"><div class="pill-dot"></div>Online</div></div>
+              <div>
+                <div class="a-stat">08:02 AM</div>
+                <div class="a-stat-sub">Today</div>
+              </div>
+              <div>
+                <div class="a-stat">3</div>
+                <div class="a-stat-sub">generated</div>
+              </div>
+              <div>
+                <div class="a-stat" style="font-size:11px;">Eyad Sr.</div>
+                <div class="a-stat-sub">AbbVie</div>
+              </div>
+              <div class="agent-controls">
+                <button class="ctrl-btn ctrl-run" title="Run now" onclick="showToast('▶ LinkedIn Post Agent triggered')">
+                  <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor"><path d="M6 4l12 6-12 6z"/></svg>
+                </button>
+                <button class="ctrl-btn ctrl-pause" title="Pause" onclick="showToast('⏸ Agent paused')">
+                  <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor"><rect x="5" y="3" width="3.5" height="14"/><rect x="11.5" y="3" width="3.5" height="14"/></svg>
+                </button>
+                <button class="ctrl-btn ctrl-kill" title="Kill" onclick="showToast('🔴 Agent killed', 'red')">
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4l12 12M16 4L4 16"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Log Preview -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Live Log Feed</div>
+                <div class="card-subtitle">Real-time agent activity</div>
+              </div>
+              <div class="live-indicator">
+                <div class="live-dot"></div>
+                Streaming
+              </div>
+            </div>
+            <div style="padding: 14px 20px;">
+              <div class="log-stream" id="logStream">
+                <div class="log-entry"><span class="log-ts">08:02:01</span><span class="log-level-ok">OK</span><span class="log-msg"><span class="agent-ref">[linkedin-post]</span> Cron triggered for client eyad.ismael@abbvie.com</span></div>
+                <div class="log-entry"><span class="log-ts">08:02:02</span><span class="log-level-info">INF</span><span class="log-msg"><span class="agent-ref">[linkedin-post]</span> Calling Grok API — industry: pharmaceutical, market: MENA</span></div>
+                <div class="log-entry"><span class="log-ts">08:02:04</span><span class="log-level-ok">OK</span><span class="log-msg"><span class="agent-ref">[grok]</span> 12 signals retrieved (AI drug trials, clinical pipeline news)</span></div>
+                <div class="log-entry"><span class="log-ts">08:02:05</span><span class="log-level-info">INF</span><span class="log-msg"><span class="agent-ref">[linkedin-post]</span> Calling Claude claude-sonnet-4-6 — formatting 3 post ideas</span></div>
+                <div class="log-entry"><span class="log-ts">08:02:08</span><span class="log-level-ok">OK</span><span class="log-msg"><span class="agent-ref">[claude]</span> 3 post variants generated (786 tokens, $0.004)</span></div>
+                <div class="log-entry"><span class="log-ts">08:02:09</span><span class="log-level-ok">OK</span><span class="log-msg"><span class="agent-ref">[telegram]</span> Briefing delivered to @eyad_client — message_id: 1842</span></div>
+                <div class="log-entry"><span class="log-ts">08:02:09</span><span class="log-level-ok">OK</span><span class="log-msg"><span class="agent-ref">[linkedin-post]</span> Run complete — 8s elapsed, status: SUCCESS</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-col-admin">
+          <!-- Revenue -->
+          <div class="revenue-card">
+            <div class="rc-title">Revenue</div>
+            <div class="rc-main">$50</div>
+            <div class="rc-sub">Monthly Recurring Revenue</div>
+            <hr class="rc-divider">
+            <div class="rc-row"><span class="rc-label">ARR</span><span class="rc-val rc-arr">$600</span></div>
+            <div class="rc-row"><span class="rc-label">This month</span><span class="rc-val">$50</span></div>
+            <div class="rc-row"><span class="rc-label">All-time</span><span class="rc-val">$50</span></div>
+            <div class="rc-row"><span class="rc-label">Next payout</span><span class="rc-val">Apr 18</span></div>
+            <div class="rc-row"><span class="rc-label">Churn</span><span class="rc-val" style="color:var(--green)">0%</span></div>
+          </div>
+
+          <!-- Quick stats -->
+          <div class="quick-stats">
+            <div class="qs-title">Platform Health</div>
+            <div class="qs-row"><span class="qs-label">API Uptime</span><span class="qs-val green">99.9%</span></div>
+            <div class="qs-row"><span class="qs-label">Avg Run Time</span><span class="qs-val">8.2s</span></div>
+            <div class="qs-row"><span class="qs-label">API Errors (7d)</span><span class="qs-val green">0</span></div>
+            <div class="qs-row"><span class="qs-label">Telegram Msgs Sent</span><span class="qs-val">3</span></div>
+            <div class="qs-row"><span class="qs-label">Claude API Cost (mo)</span><span class="qs-val">$0.01</span></div>
+            <div class="qs-row"><span class="qs-label">Grok API Cost (mo)</span><span class="qs-val">$0.00</span></div>
+          </div>
+
+          <!-- Feedback nudge -->
+          <div class="card" style="margin: 0;">
+            <div style="padding: 16px 18px;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--white-80); margin-bottom: 6px;">Client Feedback</div>
+              <div style="font-size: 11px; color: var(--white-30); margin-bottom: 12px;">No feedback received yet. Ask your client after their first post goes live.</div>
+              <button style="width:100%; background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--white-80); padding: 8px; border-radius:6px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;" onclick="showToast('Opening feedback form...')">Send Feedback Request</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CLIENTS TAB ══ -->
+    <div class="tab-panel" id="tab-clients">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">All Clients</div>
+            <div class="card-subtitle">1 active client</div>
+          </div>
+          <button style="background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--white-80); padding: 7px 14px; border-radius:7px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;" onclick="showToast('Opening client invite...')">+ Invite Client</button>
+        </div>
+        <div class="clients-table">
+          <div class="ct-row header">
+            <div></div>
+            <div class="col-h">Client</div>
+            <div class="col-h">Agents</div>
+            <div class="col-h">Status</div>
+            <div class="col-h">MRR</div>
+            <div class="col-h">Since</div>
+            <div class="col-h"></div>
+          </div>
+          <div class="ct-row">
+            <div class="ct-avatar">E</div>
+            <div>
+              <div class="ct-name">Eyad Ismael Sr.</div>
+              <div class="ct-company">AbbVie · Medical Affairs</div>
+            </div>
+            <div class="ct-cell">1 active</div>
+            <div><div class="badge-sm badge-active-sm">● Active</div></div>
+            <div class="ct-cell">$50</div>
+            <div class="ct-cell muted">Mar 18, 2026</div>
+            <div><button class="btn-view" onclick="showToast('Opening client profile...')">View Profile</button></div>
+          </div>
+        </div>
+        <div style="padding: 20px; text-align: center; font-size: 12px; color: var(--white-30);">
+          More clients will appear here as you onboard them from the marketplace.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ POSTS TAB ══ -->
+    <div class="tab-panel" id="tab-posts">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Post History</div>
+            <div class="card-subtitle">All AI-generated posts sent to clients</div>
+          </div>
+          <div style="font-size:11px; color:var(--white-30);">3 posts total</div>
+        </div>
+        <div class="post-feed">
+          <div class="post-item">
+            <div class="post-meta">
+              <div class="ct-avatar" style="width:28px;height:28px;font-size:11px;border-radius:8px;">E</div>
+              <div class="post-client">Eyad Sr. · AbbVie</div>
+              <div class="post-date">Today, 8:02 AM</div>
+              <div class="post-platform">
+                <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="16" height="16" rx="2"/></svg>
+                LinkedIn
+              </div>
+              <div class="post-approved">✓ Approved</div>
+            </div>
+            <div class="post-body">"AI is changing clinical trials faster than most doctors realise. Three trends I'm watching in MENA pharma this week — and what they mean for patient outcomes in our region."</div>
+            <div class="post-stats">
+              <div class="post-stat"><strong>Idea #1</strong> of 3</div>
+              <div class="post-stat">Approved <strong>8:06 AM</strong></div>
+              <div class="post-stat">Posted via LinkedIn pre-fill</div>
+            </div>
+          </div>
+          <div class="post-item">
+            <div class="post-meta">
+              <div class="ct-avatar" style="width:28px;height:28px;font-size:11px;border-radius:8px;">E</div>
+              <div class="post-client">Eyad Sr. · AbbVie</div>
+              <div class="post-date">Yesterday, 8:01 AM</div>
+              <div class="post-platform">
+                <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="16" height="16" rx="2"/></svg>
+                LinkedIn
+              </div>
+              <div class="post-approved">✓ Approved</div>
+            </div>
+            <div class="post-body">"The best medical affairs teams I've seen don't just share information — they translate it into decisions. Here's the framework we use at AbbVie for evidence-based engagement."</div>
+            <div class="post-stats">
+              <div class="post-stat"><strong>Idea #2</strong> of 3</div>
+              <div class="post-stat">Approved <strong>8:44 AM</strong></div>
+              <div class="post-stat">Est. impressions <strong>8.2k</strong></div>
+            </div>
+          </div>
+          <div class="post-item">
+            <div class="post-meta">
+              <div class="ct-avatar" style="width:28px;height:28px;font-size:11px;border-radius:8px;">E</div>
+              <div class="post-client">Eyad Sr. · AbbVie</div>
+              <div class="post-date">Mar 18, 8:00 AM</div>
+              <div class="post-platform">
+                <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><rect x="2" y="2" width="16" height="16" rx="2"/></svg>
+                LinkedIn
+              </div>
+              <div style="font-size:11px; color:var(--white-30); font-weight:600;">Skipped</div>
+            </div>
+            <div class="post-body">"Onboarding day. Testing the system. More soon."</div>
+            <div class="post-stats">
+              <div class="post-stat"><strong>Idea #1</strong> of 3</div>
+              <div class="post-stat" style="color: var(--white-30);">Not approved</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LOGS TAB ══ -->
+    <div class="tab-panel" id="tab-logs">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Live System Logs</div>
+            <div class="card-subtitle">All agent activity, API calls, and errors</div>
+          </div>
+          <div class="live-indicator">
+            <div class="live-dot"></div>
+            Streaming
+          </div>
+        </div>
+        <div style="padding: 16px 20px;">
+          <div class="log-stream" style="max-height: 600px; font-size: 12px;">
+            <div class="log-entry"><span class="log-ts">08:02:01</span><span class="log-level-ok">OK&nbsp;&nbsp;</span><span class="log-msg"><span class="agent-ref">[linkedin-post]</span> Cron triggered — client: eyad.sr@abbvie.com, tz: Asia/Dubai</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:02</span><span class="log-level-info">INF&nbsp;</span><span class="log-msg"><span class="agent-ref">[linkedin-post]</span> Loading voice profile — tone: professional, industry: pharmaceutical</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:02</span><span class="log-level-info">INF&nbsp;</span><span class="log-msg"><span class="agent-ref">[grok-api]</span> Searching X/web — query: "pharma AI clinical trials MENA 2026"</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:04</span><span class="log-level-ok">OK&nbsp;&nbsp;</span><span class="log-msg"><span class="agent-ref">[grok-api]</span> 12 signals returned — latency: 2100ms</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:04</span><span class="log-level-info">INF&nbsp;</span><span class="log-msg"><span class="agent-ref">[claude-api]</span> Calling claude-sonnet-4-6 — prompt: 1420 tokens</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:08</span><span class="log-level-ok">OK&nbsp;&nbsp;</span><span class="log-msg"><span class="agent-ref">[claude-api]</span> Response received — output: 786 tokens, cost: $0.004</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:08</span><span class="log-level-info">INF&nbsp;</span><span class="log-msg"><span class="agent-ref">[post-parser]</span> 3 post ideas extracted and formatted</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:09</span><span class="log-level-info">INF&nbsp;</span><span class="log-msg"><span class="agent-ref">[telegram]</span> Sending briefing to chat_id: 938471 — 3 ideas + LinkedIn pre-fill links</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:09</span><span class="log-level-ok">OK&nbsp;&nbsp;</span><span class="log-msg"><span class="agent-ref">[telegram]</span> Message delivered — message_id: 1842, status: 200</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:09</span><span class="log-level-ok">OK&nbsp;&nbsp;</span><span class="log-msg"><span class="agent-ref">[linkedin-post]</span> Run complete — total: 8.1s, status: SUCCESS</span></div>
+            <div class="log-entry"><span class="log-ts">08:02:09</span><span class="log-level-info">INF&nbsp;</span><span class="log-msg"><span class="agent-ref">[db]</span> Run logged to post_runs — id: run_00003, client_id: client_001</span></div>
+            <div style="margin: 8px 0; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;"></div>
+            <div class="log-entry"><span class="log-ts">00:00:00</span><span class="log-level-info">INF&nbsp;</span><span class="log-msg"><span class="agent-ref">[scheduler]</span> Daily cron registered for 3 clients — next run: 08:00 Asia/Dubai</span></div>
+            <div class="log-entry"><span class="log-ts">Mar 18</span><span class="log-level-ok">OK&nbsp;&nbsp;</span><span class="log-msg"><span class="agent-ref">[stripe-webhook]</span> payment_intent.succeeded — amount: $50 client_id: client_001</span></div>
+            <div class="log-entry"><span class="log-ts">Mar 18</span><span class="log-level-ok">OK&nbsp;&nbsp;</span><span class="log-msg"><span class="agent-ref">[access-gate]</span> Client client_001 activated — LinkedIn Post Agent enabled</span></div>
+            <div class="log-entry"><span class="log-ts">Mar 18</span><span class="log-level-info">INF&nbsp;</span><span class="log-msg"><span class="agent-ref">[onboarding]</span> Voice profile captured via Telegram — tone: professional, industry: pharma</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  let toastTimer;
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    if (type === 'red') { t.style.borderColor = 'rgba(255,59,48,0.4)'; t.style.color = '#FF6B6B'; }
+    else if (type === 'orange') { t.style.borderColor = 'rgba(255,149,0,0.4)'; t.style.color = '#FFB347'; }
+    else { t.style.borderColor = 'rgba(255,255,255,0.14)'; t.style.color = '#fff'; }
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const names = ['overview','clients','posts','logs'];
+      t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('active', p.id === 'tab-' + name);
+    });
+  }
+</script>
+
+<nav class="mobile-tabbar">
+  <a href="04-dashboard.html" class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    <span>Team</span>
+  </a>
+  <a href="06-marketplace.html" class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Hire</span>
+  </a>
+  <a href="08-admin.html" class="tab-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    <span>Admin</span>
+  </a>
+</nav>
+
+</body>
+</html>

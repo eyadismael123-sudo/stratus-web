@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratus — Billing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F5F7;
+    --graphite: #3A3A3C;
+    --graphite-mid: #6A6A6E;
+    --graphite-light: #D2D2D7;
+    --white: #FFFFFF;
+    --yellow: #FFD60A;
+    --green: #34C759;
+    --red: #FF3B30;
+    --blue: #007AFF;
+    --sidebar-w: 240px;
+    --topbar-h: 60px;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-elevated: 0 10px 30px rgba(0,0,0,0.12), 0 4px 6px rgba(0,0,0,0.08);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --radius: 10px;
+    --radius-sm: 8px;
+  }
+
+  html { font-family: 'Geist', -apple-system, sans-serif; background: var(--bg); color: var(--graphite); }
+  body { display: flex; min-height: 100vh; }
+  a { text-decoration: none; color: inherit; }
+  button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--sidebar-w); height: 100vh;
+    background: var(--white);
+    border-right: 1px solid rgba(0,0,0,0.06);
+    display: flex; flex-direction: column;
+    z-index: 100; padding: 20px 0;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 20px 20px; border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .logo-wordmark { font-size: 18px; font-weight: 700; color: var(--graphite); letter-spacing: -0.3px; }
+  .logo-badge {
+    font-size: 9px; font-weight: 600; background: var(--graphite); color: var(--white);
+    padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .nav { flex: 1; padding: 16px 0; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 600; color: var(--graphite-mid);
+    letter-spacing: 0.8px; text-transform: uppercase;
+    padding: 0 20px; margin-bottom: 6px; margin-top: 16px;
+  }
+  .nav-section-label:first-child { margin-top: 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--graphite-mid);
+    border-radius: 8px; margin: 0 8px; transition: all 0.15s var(--ease);
+    cursor: pointer;
+  }
+  .nav-item:hover { background: rgba(0,0,0,0.04); color: var(--graphite); }
+  .nav-item.active { background: rgba(0,0,0,0.06); color: var(--graphite); font-weight: 600; }
+  .nav-icon { width: 18px; height: 18px; opacity: 0.6; }
+  .nav-item.active .nav-icon { opacity: 1; }
+
+  .sidebar-user {
+    padding: 16px 20px; border-top: 1px solid rgba(0,0,0,0.06);
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    border-radius: 8px; margin: 0 8px; transition: background 0.15s var(--ease);
+  }
+  .sidebar-user:hover { background: rgba(0,0,0,0.04); }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--graphite); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--graphite); }
+  .user-role { font-size: 11px; color: var(--graphite-mid); }
+  .sidebar-logout {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 20px; font-size: 13px; color: var(--graphite-mid);
+    cursor: pointer; transition: color 0.15s; margin: 0 8px;
+    border-radius: 6px; background: none; border: none; width: 100%;
+    font-family: inherit;
+  }
+  .sidebar-logout:hover { color: var(--red); background: rgba(255,59,48,0.06); }
+
+  /* ── MAIN ── */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* TOPBAR */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    height: var(--topbar-h);
+    background: rgba(245,245,247,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+  }
+  .topbar-left { display: flex; flex-direction: column; }
+  .topbar-title { font-size: 16px; font-weight: 700; color: var(--graphite); }
+  .topbar-sub { font-size: 12px; color: var(--graphite-mid); margin-top: 1px; }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600; font-family: inherit;
+    transition: all 0.15s var(--ease); cursor: pointer;
+  }
+  .btn-ghost {
+    background: transparent; color: var(--graphite-mid);
+    border: 1px solid var(--graphite-light);
+  }
+  .btn-ghost:hover { background: var(--white); color: var(--graphite); box-shadow: var(--shadow-card); }
+  .btn-primary {
+    background: var(--graphite); color: var(--white); border: none;
+  }
+  .btn-primary:hover { background: #2a2a2c; box-shadow: var(--shadow-elevated); transform: translateY(-1px); }
+
+  /* PAGE CONTENT */
+  .page-content { padding: 32px; flex: 1; }
+
+  /* ── BILLING SUMMARY STRIP ── */
+  .billing-summary {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px;
+  }
+  .summary-card {
+    background: var(--white); border-radius: var(--radius); padding: 20px;
+    box-shadow: var(--shadow-card); border: 1px solid rgba(0,0,0,0.04);
+  }
+  .summary-label { font-size: 11px; font-weight: 600; color: var(--graphite-mid); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+  .summary-value { font-size: 28px; font-weight: 900; color: var(--graphite); letter-spacing: -0.5px; }
+  .summary-meta { font-size: 12px; color: var(--graphite-mid); margin-top: 4px; }
+  .summary-meta .positive { color: var(--green); font-weight: 600; }
+  .summary-meta .negative { color: var(--red); font-weight: 600; }
+
+  /* ── TWO-COLUMN LAYOUT ── */
+  .billing-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+
+  /* ── ACTIVE SUBSCRIPTIONS ── */
+  .section { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-card); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 24px; }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .section-title { font-size: 15px; font-weight: 700; color: var(--graphite); }
+  .section-subtitle { font-size: 12px; color: var(--graphite-mid); margin-top: 2px; }
+  .section-action { font-size: 13px; font-weight: 600; color: var(--blue); cursor: pointer; }
+  .section-action:hover { text-decoration: underline; }
+
+  /* Subscription Row */
+  .sub-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.04);
+    transition: background 0.15s var(--ease);
+  }
+  .sub-row:last-child { border-bottom: none; }
+  .sub-row:hover { background: rgba(0,0,0,0.02); }
+  .sub-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--bg); display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .sub-info { flex: 1; min-width: 0; }
+  .sub-name { font-size: 14px; font-weight: 600; color: var(--graphite); }
+  .sub-desc { font-size: 12px; color: var(--graphite-mid); margin-top: 2px; }
+  .sub-renewal { font-size: 11px; color: var(--graphite-mid); margin-top: 4px; }
+  .sub-renewal span { font-weight: 600; color: var(--graphite); }
+  .sub-status { flex-shrink: 0; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600;
+  }
+  .badge-active { background: rgba(52,199,89,0.12); color: #1d7a3a; }
+  .badge-paused { background: rgba(255,149,0,0.12); color: #a05c00; }
+  .badge-cancelled { background: rgba(255,59,48,0.1); color: var(--red); }
+  .badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .badge-active .badge-dot { background: var(--green); }
+  .badge-paused .badge-dot { background: #FF9500; }
+  .badge-cancelled .badge-dot { background: var(--red); }
+  .sub-price { flex-shrink: 0; text-align: right; }
+  .price-amount { font-size: 16px; font-weight: 700; color: var(--graphite); }
+  .price-period { font-size: 11px; color: var(--graphite-mid); }
+  .sub-actions { flex-shrink: 0; display: flex; gap: 8px; }
+  .btn-sm {
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.15s var(--ease);
+  }
+  .btn-sm-ghost { background: transparent; border: 1px solid var(--graphite-light); color: var(--graphite-mid); }
+  .btn-sm-ghost:hover { background: var(--white); color: var(--graphite); box-shadow: var(--shadow-card); }
+  .btn-sm-danger { background: transparent; border: 1px solid rgba(255,59,48,0.3); color: var(--red); }
+  .btn-sm-danger:hover { background: rgba(255,59,48,0.06); }
+
+  /* Add Agent Banner */
+  .add-agent-banner {
+    margin: 16px 24px 20px;
+    border: 1.5px dashed var(--graphite-light); border-radius: var(--radius-sm);
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: all 0.15s var(--ease);
+  }
+  .add-agent-banner:hover { border-color: var(--graphite-mid); background: rgba(0,0,0,0.02); }
+  .add-plus { width: 32px; height: 32px; border-radius: 8px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--graphite-mid); flex-shrink: 0; }
+  .add-text { flex: 1; }
+  .add-title { font-size: 13px; font-weight: 600; color: var(--graphite); }
+  .add-sub { font-size: 12px; color: var(--graphite-mid); }
+  .add-cta { font-size: 13px; font-weight: 600; color: var(--graphite); background: var(--graphite-light); padding: 6px 12px; border-radius: 6px; opacity: 0.7; }
+
+  /* ── INVOICE TABLE ── */
+  .invoice-table { width: 100%; border-collapse: collapse; }
+  .invoice-table th {
+    text-align: left; padding: 12px 24px;
+    font-size: 11px; font-weight: 600; color: var(--graphite-mid);
+    text-transform: uppercase; letter-spacing: 0.6px;
+    border-bottom: 1px solid rgba(0,0,0,0.06); background: rgba(0,0,0,0.02);
+  }
+  .invoice-table td { padding: 14px 24px; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 13px; }
+  .invoice-table tr:last-child td { border-bottom: none; }
+  .invoice-table tr:hover td { background: rgba(0,0,0,0.02); }
+  .invoice-date { color: var(--graphite); font-weight: 500; }
+  .invoice-desc { color: var(--graphite); }
+  .invoice-desc-sub { font-size: 11px; color: var(--graphite-mid); margin-top: 2px; }
+  .invoice-amount { font-weight: 700; color: var(--graphite); font-variant-numeric: tabular-nums; }
+  .invoice-status-paid { color: var(--green); font-weight: 600; }
+  .invoice-download {
+    color: var(--graphite-mid); cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 12px;
+    transition: color 0.15s;
+  }
+  .invoice-download:hover { color: var(--graphite); }
+  .show-more-row td {
+    text-align: center; padding: 16px; font-size: 13px;
+    font-weight: 600; color: var(--graphite-mid); cursor: pointer;
+  }
+  .show-more-row td:hover { color: var(--graphite); }
+
+  /* ── RIGHT COLUMN ── */
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Payment Method Card */
+  .payment-card {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-card);
+    border: 1px solid rgba(0,0,0,0.04); overflow: hidden;
+  }
+  .payment-card-header {
+    padding: 18px 20px; border-bottom: 1px solid rgba(0,0,0,0.06);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .payment-card-title { font-size: 14px; font-weight: 700; color: var(--graphite); }
+  .payment-card-body { padding: 20px; }
+
+  /* Credit card mock */
+  .cc-visual {
+    background: linear-gradient(135deg, #3A3A3C 0%, #2a2a2c 100%);
+    border-radius: 12px; padding: 20px; margin-bottom: 16px; position: relative; overflow: hidden;
+  }
+  .cc-visual::before {
+    content: ''; position: absolute; top: -20px; right: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .cc-visual::after {
+    content: ''; position: absolute; top: 20px; right: 20px;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .cc-brand { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 14px; }
+  .cc-number { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.7); letter-spacing: 2px; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+  .cc-footer { display: flex; justify-content: space-between; }
+  .cc-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255,255,255,0.5); margin-bottom: 2px; }
+  .cc-value { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
+
+  .pm-meta { display: flex; justify-content: space-between; align-items: center; }
+  .pm-detail { font-size: 13px; color: var(--graphite); font-weight: 500; }
+  .pm-sub { font-size: 11px; color: var(--graphite-mid); margin-top: 2px; }
+  .btn-update-pm {
+    background: var(--bg); border: 1px solid var(--graphite-light); color: var(--graphite);
+    padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.15s var(--ease);
+  }
+  .btn-update-pm:hover { background: var(--white); box-shadow: var(--shadow-card); }
+
+  /* Next Invoice */
+  .next-invoice {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-card);
+    border: 1px solid rgba(0,0,0,0.04); padding: 20px;
+  }
+  .ni-title { font-size: 14px; font-weight: 700; color: var(--graphite); margin-bottom: 16px; }
+  .ni-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+  .ni-row:last-of-type { border-bottom: none; }
+  .ni-label { font-size: 13px; color: var(--graphite-mid); }
+  .ni-value { font-size: 13px; font-weight: 600; color: var(--graphite); }
+  .ni-total-row { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; margin-top: 4px; border-top: 2px solid var(--graphite-light); }
+  .ni-total-label { font-size: 14px; font-weight: 700; color: var(--graphite); }
+  .ni-total-value { font-size: 20px; font-weight: 900; color: var(--graphite); }
+  .ni-date { font-size: 11px; color: var(--graphite-mid); margin-top: 12px; text-align: center; }
+
+  /* Billing Info */
+  .billing-info {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-card);
+    border: 1px solid rgba(0,0,0,0.04); padding: 20px;
+  }
+  .bi-title { font-size: 14px; font-weight: 700; color: var(--graphite); margin-bottom: 14px; }
+  .bi-row { display: flex; justify-content: space-between; padding: 6px 0; }
+  .bi-label { font-size: 12px; color: var(--graphite-mid); }
+  .bi-value { font-size: 12px; font-weight: 600; color: var(--graphite); text-align: right; }
+  .btn-edit-billing {
+    width: 100%; margin-top: 14px;
+    background: transparent; border: 1px solid var(--graphite-light); color: var(--graphite-mid);
+    padding: 9px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.15s var(--ease);
+  }
+  .btn-edit-billing:hover { color: var(--graphite); background: var(--bg); }
+
+  /* Danger Zone */
+  .danger-zone {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid rgba(255,59,48,0.2); padding: 20px;
+    box-shadow: var(--shadow-card);
+  }
+  .dz-title { font-size: 13px; font-weight: 700; color: var(--red); margin-bottom: 6px; }
+  .dz-desc { font-size: 12px; color: var(--graphite-mid); margin-bottom: 14px; line-height: 1.5; }
+  .btn-cancel-all {
+    width: 100%; background: transparent; border: 1px solid rgba(255,59,48,0.4); color: var(--red);
+    padding: 10px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.15s var(--ease);
+  }
+  .btn-cancel-all:hover { background: rgba(255,59,48,0.06); }
+
+  /* ── CANCEL MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s var(--ease);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--white); border-radius: 14px; padding: 32px;
+    width: 400px; box-shadow: var(--shadow-elevated);
+    transform: scale(0.96) translateY(8px); transition: transform 0.25s var(--ease);
+  }
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+  .modal-icon { width: 48px; height: 48px; background: rgba(255,59,48,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--graphite); margin-bottom: 8px; }
+  .modal-desc { font-size: 14px; color: var(--graphite-mid); line-height: 1.6; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-btn-cancel-no {
+    flex: 1; background: var(--bg); border: 1px solid var(--graphite-light);
+    color: var(--graphite); padding: 11px; border-radius: 8px;
+    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
+    transition: all 0.15s var(--ease);
+  }
+  .modal-btn-cancel-no:hover { background: var(--white); }
+  .modal-btn-cancel-yes {
+    flex: 1; background: var(--red); color: var(--white); border: none;
+    padding: 11px; border-radius: 8px;
+    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
+    transition: all 0.15s var(--ease);
+  }
+  .modal-btn-cancel-yes:hover { background: #d4312a; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    background: var(--graphite); color: var(--white);
+    padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500;
+    box-shadow: var(--shadow-elevated); display: flex; align-items: center; gap: 8px;
+    transform: translateY(80px); opacity: 0; transition: all 0.3s var(--ease);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ─── BOTTOM TAB BAR ─── */
+  .mobile-tabbar { display: none; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; padding-bottom: 72px; overflow-x: hidden; }
+    .content { padding: 16px; }
+    .topbar { padding: 0 16px; }
+    .topbar-actions { display: none; }
+    .billing-summary { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .billing-grid { grid-template-columns: 1fr; }
+    .sub-row { flex-wrap: wrap; gap: 8px; padding: 16px; }
+    .sub-info { min-width: 0; }
+    .sub-status, .sub-price, .sub-actions { flex-shrink: 0; }
+    .sub-price { margin-left: auto; }
+    .sub-actions { width: 100%; margin-top: 4px; }
+    .section { overflow-x: auto; }
+    .invoice-table { min-width: 480px; }
+    .mobile-tabbar {
+      display: flex; position: fixed;
+      bottom: 0; left: 0; right: 0; height: 60px;
+      background: #fff; border-top: 1px solid rgba(58,58,60,0.1);
+      z-index: 999; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #8E8E93; font-size: 10px; font-weight: 500; font-family: 'Geist', sans-serif; letter-spacing: 0.02em; transition: color 0.15s; }
+    .tab-item.active { color: #3A3A3C; }
+    .tab-item svg { width: 22px; height: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-wordmark">stratus</span>
+    <span class="logo-badge">BETA</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-section-label">Workspace</div>
+    <a href="04-dashboard.html" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/>
+        <rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/>
+      </svg>
+      Your Team
+    </a>
+    <a href="06-marketplace.html" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M3 3h14l-2 8H5L3 3z"/><circle cx="8" cy="17" r="1.2"/><circle cx="14" cy="17" r="1.2"/>
+        <path d="M5 3L4 1H1"/>
+      </svg>
+      Marketplace
+    </a>
+    <div class="nav-section-label">Account</div>
+    <a href="#" class="nav-item active">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="2" y="5" width="16" height="12" rx="2"/><path d="M2 9h16"/><path d="M6 13h2M10 13h4"/>
+      </svg>
+      Billing
+    </a>
+    <a href="#" class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="10" cy="10" r="3"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/>
+      </svg>
+      Settings
+    </a>
+  </nav>
+  <div style="padding: 0 8px;">
+    <div class="sidebar-user">
+      <div class="user-avatar">E</div>
+      <div class="user-info">
+        <div class="user-name">Eyad Ismael</div>
+        <div class="user-role">Founder · Admin</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4">
+        <circle cx="10" cy="5" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="15" r="1.5"/>
+      </svg>
+    </div>
+    <button class="sidebar-logout">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13 3h4a1 1 0 011 1v12a1 1 0 01-1 1h-4M9 14l-4-4 4-4M15 10H5"/>
+      </svg>
+      Log out
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Billing</div>
+      <div class="topbar-sub">Manage your subscriptions and payment method</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="window.open('#', '_blank')">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 2v8M14 6l-4-4-4 4M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+        </svg>
+        Export PDF
+      </button>
+      <button class="btn btn-primary" onclick="window.location.href='06-marketplace.html'">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M10 4v12M4 10h12"/>
+        </svg>
+        Hire Another Agent
+      </button>
+    </div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="page-content">
+
+    <!-- SUMMARY STRIP -->
+    <div class="billing-summary">
+      <div class="summary-card">
+        <div class="summary-label">Active Agents</div>
+        <div class="summary-value">1</div>
+        <div class="summary-meta">of 5 available slots</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Monthly Total</div>
+        <div class="summary-value">$50</div>
+        <div class="summary-meta"><span class="positive">↑ $50</span> since last month</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Total Spent</div>
+        <div class="summary-value">$50</div>
+        <div class="summary-meta">Since Mar 2026</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Next Charge</div>
+        <div class="summary-value" style="font-size: 22px;">Apr 18</div>
+        <div class="summary-meta">in 30 days</div>
+      </div>
+    </div>
+
+    <!-- TWO COLUMN -->
+    <div class="billing-grid">
+
+      <!-- LEFT COLUMN -->
+      <div>
+        <!-- ACTIVE SUBSCRIPTIONS -->
+        <div class="section">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Active Subscriptions</div>
+              <div class="section-subtitle">Your hired AI team members</div>
+            </div>
+            <a href="06-marketplace.html" class="section-action">+ Add Agent</a>
+          </div>
+
+          <!-- LinkedIn Post Agent — ACTIVE -->
+          <div class="sub-row">
+            <div class="sub-icon">💼</div>
+            <div class="sub-info">
+              <div class="sub-name">LinkedIn Post Agent</div>
+              <div class="sub-desc">Daily post ideas · Delivers via Telegram · 8am daily</div>
+              <div class="sub-renewal">Renews on <span>April 18, 2026</span></div>
+            </div>
+            <div class="sub-status">
+              <div class="badge badge-active">
+                <div class="badge-dot"></div>
+                Active
+              </div>
+            </div>
+            <div class="sub-price">
+              <div class="price-amount">$50</div>
+              <div class="price-period">/month</div>
+            </div>
+            <div class="sub-actions">
+              <button class="btn-sm btn-sm-ghost" onclick="window.location.href='05-agent-detail.html'">Manage</button>
+              <button class="btn-sm btn-sm-danger" onclick="openCancelModal('LinkedIn Post Agent')">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Add Another Agent Banner -->
+          <div class="add-agent-banner" onclick="window.location.href='06-marketplace.html'">
+            <div class="add-plus">＋</div>
+            <div class="add-text">
+              <div class="add-title">Hire your next AI employee</div>
+              <div class="add-sub">4 more agents coming soon — Car Reseller Intel, AI Receptionist, and more</div>
+            </div>
+            <div class="add-cta">Browse →</div>
+          </div>
+        </div>
+
+        <!-- INVOICE HISTORY -->
+        <div class="section">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Invoice History</div>
+              <div class="section-subtitle">All past payments and receipts</div>
+            </div>
+          </div>
+          <table class="invoice-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Receipt</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="invoice-date">Mar 18, 2026</td>
+                <td>
+                  <div class="invoice-desc">LinkedIn Post Agent</div>
+                  <div class="invoice-desc-sub">Monthly subscription · March 2026</div>
+                </td>
+                <td class="invoice-amount">$50.00</td>
+                <td class="invoice-status-paid">Paid</td>
+                <td>
+                  <div class="invoice-download" onclick="showToast('Downloading invoice...')">
+                    <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M10 3v10M6 9l4 4 4-4M3 16h14"/>
+                    </svg>
+                    PDF
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding: 20px 24px; text-align: center;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; color: var(--graphite-mid); font-size: 12px;">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="10" cy="10" r="8"/><path d="M10 6v4l2 2"/>
+              </svg>
+              Your billing history will appear here as charges are made
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="right-col">
+
+        <!-- Payment Method -->
+        <div class="payment-card">
+          <div class="payment-card-header">
+            <div class="payment-card-title">Payment Method</div>
+            <button class="btn-update-pm" onclick="showToast('Opening payment update...')">Update</button>
+          </div>
+          <div class="payment-card-body">
+            <div class="cc-visual">
+              <div class="cc-brand">VISA</div>
+              <div class="cc-number">•••• •••• •••• 4242</div>
+              <div class="cc-footer">
+                <div>
+                  <div class="cc-label">Card Holder</div>
+                  <div class="cc-value">Eyad Ismael</div>
+                </div>
+                <div>
+                  <div class="cc-label">Expires</div>
+                  <div class="cc-value">12/28</div>
+                </div>
+              </div>
+            </div>
+            <div class="pm-meta">
+              <div>
+                <div class="pm-detail">Visa ending in 4242</div>
+                <div class="pm-sub">Default · Auto-charges on renewal date</div>
+              </div>
+              <div class="badge badge-active" style="font-size: 10px;">
+                <div class="badge-dot"></div>
+                Valid
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Invoice -->
+        <div class="next-invoice">
+          <div class="ni-title">Upcoming Invoice</div>
+          <div class="ni-row">
+            <div class="ni-label">LinkedIn Post Agent</div>
+            <div class="ni-value">$50.00</div>
+          </div>
+          <div class="ni-row">
+            <div class="ni-label">Tax (VAT 5%)</div>
+            <div class="ni-value">$2.50</div>
+          </div>
+          <div class="ni-row">
+            <div class="ni-label">Discount</div>
+            <div class="ni-value" style="color: var(--green);">—</div>
+          </div>
+          <div class="ni-total-row">
+            <div class="ni-total-label">Total Due</div>
+            <div class="ni-total-value">$52.50</div>
+          </div>
+          <div class="ni-date">Charged automatically on Apr 18, 2026</div>
+        </div>
+
+        <!-- Billing Info -->
+        <div class="billing-info">
+          <div class="bi-title">Billing Information</div>
+          <div class="bi-row">
+            <div class="bi-label">Name</div>
+            <div class="bi-value">Eyad Ismael</div>
+          </div>
+          <div class="bi-row">
+            <div class="bi-label">Email</div>
+            <div class="bi-value">eyad@stratus.ae</div>
+          </div>
+          <div class="bi-row">
+            <div class="bi-label">Country</div>
+            <div class="bi-value">United Arab Emirates</div>
+          </div>
+          <div class="bi-row">
+            <div class="bi-label">VAT Number</div>
+            <div class="bi-value" style="color: var(--graphite-mid);">Not set</div>
+          </div>
+          <button class="btn-edit-billing" onclick="showToast('Opening billing editor...')">Edit Billing Info</button>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="danger-zone">
+          <div class="dz-title">Cancel All Subscriptions</div>
+          <div class="dz-desc">This will immediately cancel all active agents. You'll retain access until the end of your billing period.</div>
+          <button class="btn-cancel-all" onclick="openCancelModal('all subscriptions')">Cancel Everything</button>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+</main>
+
+<!-- CANCEL MODAL -->
+<div class="modal-overlay" id="cancelModal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2">
+        <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+    </div>
+    <div class="modal-title">Cancel <span id="cancelTarget"></span>?</div>
+    <div class="modal-desc">Your agent will keep running until the end of your current billing period. After that, access will be revoked. You can re-hire at any time from the Marketplace.</div>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel-no" onclick="closeCancelModal()">Keep Active</button>
+      <button class="modal-btn-cancel-yes" onclick="confirmCancel()">Yes, Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  let toastTimer;
+
+  function showToast(msg, emoji = '✓') {
+    const t = document.getElementById('toast');
+    t.innerHTML = `<span>${emoji}</span> ${msg}`;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function openCancelModal(target) {
+    document.getElementById('cancelTarget').textContent = target;
+    document.getElementById('cancelModal').classList.add('open');
+  }
+
+  function closeCancelModal() {
+    document.getElementById('cancelModal').classList.remove('open');
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target.id === 'cancelModal') closeCancelModal();
+  }
+
+  function confirmCancel() {
+    closeCancelModal();
+    showToast('Subscription cancelled. Access remains until Apr 18.', '✓');
+  }
+</script>
+
+<nav class="mobile-tabbar">
+  <a href="04-dashboard.html" class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    <span>Team</span>
+  </a>
+  <a href="06-marketplace.html" class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Hire</span>
+  </a>
+  <a href="07-billing.html" class="tab-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+    <span>Billing</span>
+  </a>
+</nav>
+
+</body>
+</html>

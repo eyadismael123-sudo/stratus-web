@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratus — Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F5F7;
+    --graphite: #3A3A3C;
+    --graphite-mid: #6A6A6E;
+    --graphite-light: #D2D2D7;
+    --white: #FFFFFF;
+    --yellow: #FFD60A;
+    --green: #34C759;
+    --red: #FF3B30;
+    --blue: #007AFF;
+    --sidebar-w: 240px;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-elevated: 0 10px 30px rgba(0,0,0,0.12), 0 4px 6px rgba(0,0,0,0.08);
+    --radius: 10px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --font: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--graphite); }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--white);
+    border-right: 1px solid rgba(0,0,0,0.06);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px; border-bottom: 1px solid rgba(0,0,0,0.06);
+    display: flex; align-items: center; gap: 8px; text-decoration: none;
+  }
+  .logo-text { font-size: 18px; font-weight: 700; color: var(--graphite); letter-spacing: -0.5px; }
+  .beta-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+    background: var(--graphite); color: var(--white);
+    padding: 2px 6px; border-radius: 4px; text-transform: uppercase;
+  }
+  .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--graphite-mid); padding: 0 8px 8px; margin-top: 16px;
+  }
+  .nav-section-label:first-child { margin-top: 0; }
+  .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px; text-decoration: none;
+    color: var(--graphite-mid); font-size: 14px; font-weight: 500;
+    transition: all 150ms var(--ease); cursor: pointer; margin-bottom: 2px;
+  }
+  .nav-link:hover { background: var(--bg); color: var(--graphite); }
+  .nav-link.active { background: var(--bg); color: var(--graphite); font-weight: 600; }
+  .nav-link svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-user {
+    padding: 16px 20px; border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .user-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; border-radius: 8px; cursor: pointer; transition: background 150ms; margin-bottom: 8px;
+  }
+  .user-row:hover { background: var(--bg); }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--graphite); color: var(--white);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--graphite); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--graphite-mid); }
+  .logout-btn {
+    display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; cursor: pointer;
+    font-size: 13px; color: var(--graphite-mid); font-weight: 500; transition: all 150ms;
+    border: none; background: none; width: 100%; font-family: var(--font);
+  }
+  .logout-btn:hover { background: #FFF1F0; color: var(--red); }
+
+  /* ── Main ── */
+  .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(245,245,247,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    padding: 0 40px; height: 60px; display: flex; align-items: center; gap: 16px;
+  }
+  .topbar-title { font-size: 17px; font-weight: 700; color: var(--graphite); }
+  .topbar-sub { font-size: 13px; color: var(--graphite-mid); }
+  .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  /* ── Search Bar ── */
+  .search-section { padding: 32px 40px 0; }
+  .search-wrap {
+    background: var(--white); border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: var(--shadow-card);
+    padding: 20px 24px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .search-input-wrap {
+    flex: 1; display: flex; align-items: center; gap: 10px;
+    background: var(--bg); border-radius: 8px;
+    padding: 0 14px; border: 1px solid var(--graphite-light);
+    transition: border-color 150ms;
+  }
+  .search-input-wrap:focus-within { border-color: var(--graphite); }
+  .search-input-wrap svg { width: 16px; height: 16px; color: var(--graphite-mid); flex-shrink: 0; }
+  .search-input {
+    flex: 1; height: 42px; border: none; background: none;
+    font-family: var(--font); font-size: 14px; color: var(--graphite); outline: none;
+  }
+  .search-input::placeholder { color: var(--graphite-mid); }
+
+  .filter-row { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .filter-label { font-size: 12px; font-weight: 600; color: var(--graphite-mid); white-space: nowrap; }
+  .filter-chip {
+    padding: 6px 14px; border-radius: 9999px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--graphite-light); background: var(--white);
+    color: var(--graphite-mid); cursor: pointer; transition: all 150ms; font-family: var(--font);
+    white-space: nowrap;
+  }
+  .filter-chip.active { background: var(--graphite); color: var(--white); border-color: var(--graphite); }
+  .filter-chip:hover:not(.active) { border-color: var(--graphite); color: var(--graphite); }
+
+  /* ── Content ── */
+  .content { padding: 28px 40px 48px; display: flex; flex-direction: column; gap: 40px; }
+
+  /* ── Featured Agent ── */
+  .featured-agent {
+    background: var(--graphite);
+    border-radius: 16px;
+    padding: 36px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .featured-agent::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .featured-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--yellow); color: var(--graphite);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 4px 10px; border-radius: 9999px; margin-bottom: 14px; text-transform: uppercase;
+  }
+  .featured-title { font-size: 26px; font-weight: 900; color: var(--white); margin-bottom: 8px; letter-spacing: -0.5px; line-height: 1.2; }
+  .featured-desc { font-size: 15px; color: rgba(255,255,255,0.7); margin-bottom: 20px; max-width: 480px; line-height: 1.6; }
+
+  .featured-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .tag {
+    padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 500;
+    background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .featured-meta { display: flex; align-items: center; gap: 24px; }
+  .meta-item { font-size: 12px; color: rgba(255,255,255,0.5); }
+  .meta-item strong { color: rgba(255,255,255,0.9); font-weight: 700; margin-right: 4px; }
+
+  .featured-action { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+  .featured-emoji { font-size: 72px; line-height: 1; }
+
+  .hire-price {
+    text-align: right;
+  }
+  .hire-price-amount { font-size: 28px; font-weight: 900; color: var(--white); letter-spacing: -1px; }
+  .hire-price-per { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+  .btn-hire-featured {
+    background: var(--yellow); color: var(--graphite);
+    border: none; border-radius: 10px; padding: 0 28px; height: 48px;
+    font-family: var(--font); font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 150ms var(--ease); white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-hire-featured:hover { background: #ffd000; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,214,10,0.4); }
+
+  /* ── Section Headers ── */
+  .section-hdr { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; }
+  .section-title { font-size: 18px; font-weight: 700; color: var(--graphite); }
+  .section-link { font-size: 13px; color: var(--graphite-mid); text-decoration: none; transition: color 150ms; }
+  .section-link:hover { color: var(--graphite); }
+
+  /* ── Agent Grid ── */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .agent-card {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid rgba(0,0,0,0.06);
+    padding: 24px;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    box-shadow: var(--shadow-card);
+    display: flex; flex-direction: column; gap: 16px;
+    text-decoration: none;
+  }
+  .agent-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-elevated);
+    border-color: rgba(0,0,0,0.1);
+  }
+
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; }
+  .card-emoji { font-size: 36px; line-height: 1; }
+  .card-live-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 3px 8px; border-radius: 9999px;
+    background: rgba(52,199,89,0.1); color: #1a7d39;
+    text-transform: uppercase;
+  }
+  .card-soon-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 3px 8px; border-radius: 9999px;
+    background: rgba(0,0,0,0.06); color: var(--graphite-mid);
+    text-transform: uppercase;
+  }
+
+  .card-body { flex: 1; }
+  .card-name { font-size: 15px; font-weight: 700; color: var(--graphite); margin-bottom: 6px; }
+  .card-desc { font-size: 13px; color: var(--graphite-mid); line-height: 1.6; }
+
+  .card-industries { display: flex; flex-wrap: wrap; gap: 4px; }
+  .industry-tag {
+    font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 9999px;
+    background: var(--bg); color: var(--graphite-mid); border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 14px; border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .card-price { font-size: 15px; font-weight: 700; color: var(--graphite); }
+  .card-price span { font-size: 12px; font-weight: 400; color: var(--graphite-mid); }
+
+  .btn-hire {
+    background: var(--graphite); color: var(--white);
+    border: none; border-radius: 8px; padding: 0 16px; height: 34px;
+    font-family: var(--font); font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 150ms var(--ease);
+  }
+  .btn-hire:hover { background: #2a2a2c; transform: translateY(-1px); }
+
+  .btn-notify {
+    background: transparent; color: var(--graphite-mid);
+    border: 1px solid var(--graphite-light); border-radius: 8px; padding: 0 14px; height: 34px;
+    font-family: var(--font); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 150ms;
+  }
+  .btn-notify:hover { border-color: var(--graphite); color: var(--graphite); }
+
+  /* Coming soon overlay */
+  .agent-card.coming-soon { opacity: 0.7; }
+  .agent-card.coming-soon:hover { transform: none; box-shadow: var(--shadow-card); }
+
+  /* ── Stats Banner ── */
+  .stats-banner {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid rgba(0,0,0,0.06);
+    padding: 28px 36px;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 24px; box-shadow: var(--shadow-card);
+  }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 900; color: var(--graphite); letter-spacing: -1px; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--graphite-mid); font-weight: 500; }
+
+  /* ── Category Groups ── */
+  .cat-group { margin-bottom: 48px; }
+  .cat-group-hdr {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 24px; padding-bottom: 14px;
+    border-bottom: 2px solid rgba(0,0,0,0.06);
+  }
+  .cat-group-icon { font-size: 22px; line-height: 1; }
+  .cat-group-name { font-size: 18px; font-weight: 900; color: var(--graphite); letter-spacing: -0.4px; }
+  .cat-coming-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+    background: rgba(0,0,0,0.06); color: var(--graphite-mid);
+    padding: 3px 9px; border-radius: 100px;
+  }
+  .sub-cat { margin-bottom: 32px; }
+  .sub-cat-label {
+    font-size: 11px; font-weight: 700; color: var(--graphite-mid);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sub-cat-label::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.06); }
+
+  @media (max-width: 1100px) {
+    .agent-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-banner { grid-template-columns: repeat(2, 1fr); }
+  }
+  /* ─── BOTTOM TAB BAR ─── */
+  .mobile-tabbar { display: none; }
+
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; padding-bottom: 72px; }
+    .content { padding: 20px; }
+    .agent-grid { grid-template-columns: 1fr; }
+    .featured-agent { grid-template-columns: 1fr; }
+    .featured-action { align-items: flex-start; }
+    .search-section { padding: 20px 20px 0; }
+    .topbar { padding: 0 20px; }
+    .mobile-tabbar {
+      display: flex; position: fixed;
+      bottom: 0; left: 0; right: 0; height: 60px;
+      background: #fff; border-top: 1px solid rgba(58,58,60,0.1);
+      z-index: 999; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #8E8E93; font-size: 10px; font-weight: 500; font-family: 'Geist', sans-serif; letter-spacing: 0.02em; transition: color 0.15s; }
+    .tab-item.active { color: #3A3A3C; }
+    .tab-item svg { width: 22px; height: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <a href="#" class="sidebar-logo">
+      <span class="logo-text">stratus</span>
+      <span class="beta-badge">BETA</span>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a href="#" class="nav-link">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+        Your Team
+      </a>
+      <a href="#" class="nav-link active">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3l2 2"/></svg>
+        Marketplace
+      </a>
+      <div class="nav-section-label">Account</div>
+      <a href="#" class="nav-link">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/><path d="M1.5 6.5h13"/></svg>
+        Billing
+      </a>
+      <a href="#" class="nav-link">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5.5" r="2.5"/><path d="M2.5 13c0-2.76 2.46-5 5.5-5s5.5 2.24 5.5 5"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-row">
+        <div class="user-avatar">E</div>
+        <div class="user-info">
+          <div class="user-name">Eyad Ismael</div>
+          <div class="user-role">Founder · Admin</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#6A6A6E" stroke-width="1.5"><circle cx="7" cy="3" r="0.75" fill="#6A6A6E"/><circle cx="7" cy="7" r="0.75" fill="#6A6A6E"/><circle cx="7" cy="11" r="0.75" fill="#6A6A6E"/></svg>
+      </div>
+      <button class="logout-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 7h7M9 5l2 2-2 2M9 1H3a1 1 0 00-1 1v10a1 1 0 001 1h6"/></svg>
+        Log out
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Marketplace</div>
+        <div class="topbar-sub">Hire an AI employee for your business</div>
+      </div>
+      <div class="topbar-actions">
+        <button style="background:transparent;border:none;font-family:var(--font);font-size:13px;font-weight:600;color:var(--graphite-mid);cursor:pointer;padding:8px;border-radius:8px;transition:all 150ms;" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='transparent'">
+          Request an Agent
+        </button>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-section">
+      <div class="search-wrap">
+        <div class="search-input-wrap">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+          <input id="search-input" class="search-input" type="text" placeholder="Search agents by name, industry, or task...">
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Filter:</span>
+          <button class="filter-chip active" onclick="setCat(this,'all')">All</button>
+          <button class="filter-chip" onclick="setCat(this,'personal')">Personal</button>
+          <button class="filter-chip" onclick="setCat(this,'business')">Business</button>
+          <button class="filter-chip" onclick="setCat(this,'health')">Health</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Featured Agent -->
+      <div>
+        <div class="section-hdr">
+          <span class="section-title">Featured Agent</span>
+        </div>
+        <div class="featured-agent">
+          <div class="featured-left">
+            <div class="featured-badge">
+              ★ Live Now
+            </div>
+            <div class="featured-title">LinkedIn Post Agent</div>
+            <div class="featured-desc">Your AI ghostwriter for LinkedIn. Researches real-time trends in your industry every morning, generates 3 post ideas in your voice, and delivers them to you on Telegram. One tap to approve and post.</div>
+            <div class="featured-tags">
+              <span class="tag">Content</span>
+              <span class="tag">LinkedIn</span>
+              <span class="tag">Thought Leadership</span>
+              <span class="tag">Pharma</span>
+              <span class="tag">Professional Services</span>
+              <span class="tag">Consulting</span>
+            </div>
+            <div class="featured-meta">
+              <div class="meta-item"><strong>Delivers via</strong> Telegram</div>
+              <div class="meta-item"><strong>Runs</strong> Daily at 8am</div>
+              <div class="meta-item"><strong>Setup</strong> &lt; 5 minutes</div>
+
+            </div>
+          </div>
+          <div class="featured-action">
+            <div class="featured-emoji">💼</div>
+            <div class="hire-price">
+              <div class="hire-price-amount">$50</div>
+              <div class="hire-price-per">/month · cancel anytime</div>
+            </div>
+            <button class="btn-hire-featured">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+              Hire Now
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-banner">
+        <div class="stat-item">
+          <div class="stat-num">1</div>
+          <div class="stat-label">Agent Live Now</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">4</div>
+          <div class="stat-label">Coming Soon</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Runs 24/7</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">Dubai</div>
+          <div class="stat-label">Made for MENA Business</div>
+        </div>
+      </div>
+
+      <!-- Agent Catalogue -->
+      <div id="agent-catalogue">
+
+        <!-- ── PERSONAL ── -->
+        <div class="cat-group" data-cat="personal">
+          <div class="cat-group-hdr">
+            <span class="cat-group-icon">👤</span>
+            <span class="cat-group-name">Personal</span>
+            <span style="font-size:13px;color:var(--graphite-mid);">Agents for your personal brand and career</span>
+          </div>
+
+          <!-- Personal Brand -->
+          <div class="sub-cat">
+            <div class="sub-cat-label">Personal Brand</div>
+            <div class="agent-grid">
+
+              <!-- LinkedIn Post Agent — LIVE -->
+              <div class="agent-card" data-name="linkedin post agent">
+                <div class="card-header">
+                  <div class="card-emoji">💼</div>
+                  <span class="card-live-badge">Live</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">LinkedIn Post Agent</div>
+                  <div class="card-desc">Daily post ideas in your voice, delivered every morning via Telegram. Researches real-time trends using Grok.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">Pharma</span>
+                  <span class="industry-tag">Consulting</span>
+                  <span class="industry-tag">Finance</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price">$50 <span>/ month</span></div>
+                  <button class="btn-hire" onclick="handleHire(this)">Hire</button>
+                </div>
+              </div>
+
+              <!-- Content Calendar Agent — Soon -->
+              <div class="agent-card coming-soon" data-name="content calendar agent">
+                <div class="card-header">
+                  <div class="card-emoji">📅</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">Content Calendar Agent</div>
+                  <div class="card-desc">Plans your monthly content calendar across LinkedIn, Twitter/X, and Instagram. One brief in, 30 days of posts out.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">Content</span>
+                  <span class="industry-tag">Social Media</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Career & Jobs -->
+          <div class="sub-cat">
+            <div class="sub-cat-label">Career & Jobs</div>
+            <div class="agent-grid">
+
+              <div class="agent-card coming-soon" data-name="cv resume optimizer">
+                <div class="card-header">
+                  <div class="card-emoji">📄</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">CV / Resume Optimizer</div>
+                  <div class="card-desc">Rewrites your CV for each job application using ATS keywords, role language, and industry-specific phrasing.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">Career</span>
+                  <span class="industry-tag">Job Search</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+
+              <div class="agent-card coming-soon" data-name="job alert agent">
+                <div class="card-header">
+                  <div class="card-emoji">🔔</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">Job Alert Agent</div>
+                  <div class="card-desc">Monitors LinkedIn, Indeed, and Bayt for new roles matching your profile. Sends curated alerts daily to Telegram.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">Career</span>
+                  <span class="industry-tag">Dubai</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ── BUSINESS ── -->
+        <div class="cat-group" data-cat="business">
+          <div class="cat-group-hdr">
+            <span class="cat-group-icon">🏢</span>
+            <span class="cat-group-name">Business</span>
+            <span style="font-size:13px;color:var(--graphite-mid);">Industry-specific agents for your business</span>
+          </div>
+
+          <!-- Automotive -->
+          <div class="sub-cat">
+            <div class="sub-cat-label">Automotive</div>
+            <div class="agent-grid">
+              <div class="agent-card coming-soon" data-name="car reseller intel agent">
+                <div class="card-header">
+                  <div class="card-emoji">🚗</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">Car Reseller Intel Agent</div>
+                  <div class="card-desc">Dubai car market morning briefing. Tracks prices, spots flips, monitors competitors across Dubizzle and classifieds daily.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">Automotive</span>
+                  <span class="industry-tag">Dubai</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real Estate -->
+          <div class="sub-cat">
+            <div class="sub-cat-label">Real Estate</div>
+            <div class="agent-grid">
+              <div class="agent-card coming-soon" data-name="property market briefing">
+                <div class="card-header">
+                  <div class="card-emoji">🏠</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">Property Market Briefing</div>
+                  <div class="card-desc">Daily Dubai property intelligence. Price movements, new listings, off-plan launches, and rental yield shifts — before your competitors see them.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">Real Estate</span>
+                  <span class="industry-tag">Dubai</span>
+                  <span class="industry-tag">MENA</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Restaurants & F&B -->
+          <div class="sub-cat">
+            <div class="sub-cat-label">Restaurants & F&B</div>
+            <div class="agent-grid">
+              <div class="agent-card coming-soon" data-name="ai receptionist restaurants">
+                <div class="card-header">
+                  <div class="card-emoji">📞</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">AI Receptionist</div>
+                  <div class="card-desc">Handles WhatsApp enquiries, books tables, answers FAQs, and routes serious enquiries to your team — 24/7 with no sick days.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">F&B</span>
+                  <span class="industry-tag">Hospitality</span>
+                  <span class="industry-tag">Dubai</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HR & Recruitment -->
+          <div class="sub-cat">
+            <div class="sub-cat-label">HR & Recruitment</div>
+            <div class="agent-grid">
+              <div class="agent-card coming-soon" data-name="cv screener scheduler">
+                <div class="card-header">
+                  <div class="card-emoji">📋</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">CV Screener + Scheduler</div>
+                  <div class="card-desc">Screens CVs against your criteria, scores candidates, and automatically schedules interviews — so you only see the best.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">HR</span>
+                  <span class="industry-tag">Recruitment</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── HEALTH ── -->
+        <div class="cat-group" data-cat="health">
+          <div class="cat-group-hdr">
+            <span class="cat-group-icon">🏥</span>
+            <span class="cat-group-name">Health</span>
+            <span class="cat-coming-tag">Division launching 2026</span>
+          </div>
+
+          <!-- Doctors & Clinicians -->
+          <div class="sub-cat">
+            <div class="sub-cat-label">Doctors & Clinicians</div>
+            <div class="agent-grid">
+              <div class="agent-card coming-soon" data-name="doctor morning briefing">
+                <div class="card-header">
+                  <div class="card-emoji">🩺</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">Doctor Morning Briefing</div>
+                  <div class="card-desc">Clinical news digest + patient summary before rounds. Curated by specialty, delivered daily to your phone.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">Healthcare</span>
+                  <span class="industry-tag">Clinical</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clinic Operations -->
+          <div class="sub-cat">
+            <div class="sub-cat-label">Clinic Operations</div>
+            <div class="agent-grid">
+              <div class="agent-card coming-soon" data-name="clinic receptionist agent">
+                <div class="card-header">
+                  <div class="card-emoji">🏥</div>
+                  <span class="card-soon-badge">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                  <div class="card-name">Clinic Receptionist Agent</div>
+                  <div class="card-desc">Books appointments, sends reminders, handles WhatsApp patient queries, and manages your clinic schedule — automatically.</div>
+                </div>
+                <div class="card-industries">
+                  <span class="industry-tag">Clinics</span>
+                  <span class="industry-tag">Healthcare</span>
+                  <span class="industry-tag">Dubai</span>
+                </div>
+                <div class="card-footer">
+                  <div class="card-price" style="color:var(--graphite-mid);font-size:13px;">Notify me</div>
+                  <button class="btn-notify">Notify Me</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Request Agent -->
+        <div style="text-align:center;padding:40px 0 20px;">
+          <div style="display:inline-flex;flex-direction:column;align-items:center;gap:12px;padding:32px 48px;border:2px dashed var(--graphite-light);border-radius:16px;cursor:pointer;transition:border-color 200ms;" onmouseenter="this.style.borderColor='var(--graphite)'" onmouseleave="this.style.borderColor='var(--graphite-light)'">
+            <div style="font-size:28px;">✦</div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--graphite);margin-bottom:4px;">Don't see your industry?</div>
+              <div style="font-size:13px;color:var(--graphite-mid);line-height:1.6;">Tell us what you need automated and we'll build it.</div>
+            </div>
+            <button style="background:var(--graphite);color:var(--white);border:none;border-radius:8px;padding:0 20px;height:36px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all 150ms;" onmouseenter="this.style.background='#2a2a2c'" onmouseleave="this.style.background='var(--graphite)'">
+              Request an Agent
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<script>
+var currentCat = 'all';
+
+function setCat(btn, cat) {
+  currentCat = cat;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  var query = document.getElementById('search-input').value.toLowerCase().trim();
+  document.querySelectorAll('.cat-group').forEach(function(group) {
+    var groupCat = group.getAttribute('data-cat');
+    var catMatch = (currentCat === 'all' || currentCat === groupCat);
+    if (!catMatch) { group.style.display = 'none'; return; }
+    // Within a matching category, filter individual cards by search query
+    var anyVisible = false;
+    group.querySelectorAll('.agent-card').forEach(function(card) {
+      var name = (card.getAttribute('data-name') || '').toLowerCase();
+      var desc = (card.querySelector('.card-desc') ? card.querySelector('.card-desc').textContent : '').toLowerCase();
+      var tags = (card.querySelector('.card-industries') ? card.querySelector('.card-industries').textContent : '').toLowerCase();
+      var match = !query || name.includes(query) || desc.includes(query) || tags.includes(query);
+      card.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+    });
+    group.style.display = (anyVisible || !query) ? '' : 'none';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('search-input').addEventListener('input', applyFilters);
+});
+
+function handleHire(btn) {
+  btn.textContent = '✓ Hired!';
+  btn.style.background = '#34C759';
+  setTimeout(function() {
+    btn.textContent = 'Hire';
+    btn.style.background = '';
+  }, 2000);
+}
+</script>
+
+<nav class="mobile-tabbar">
+  <a href="04-dashboard.html" class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    <span>Team</span>
+  </a>
+  <a href="06-marketplace.html" class="tab-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Hire</span>
+  </a>
+  <a href="07-billing.html" class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+    <span>Billing</span>
+  </a>
+</nav>
+
+</body>
+</html>
