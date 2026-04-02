@@ -28,6 +28,36 @@ interface TabContent {
 }
 
 function HireMockup() {
+  const team = [
+    {
+      initials: "Fr",
+      name: "Frame",
+      role: "LinkedIn Ghostwriter",
+      status: "Active",
+      hired: true,
+      avatarBg: "#1B4332",
+      avatarColor: "#FFFFFF",
+    },
+    {
+      initials: "Fl",
+      name: "Flash",
+      role: "Research Agent",
+      status: "Hire",
+      hired: false,
+      avatarBg: "#E8E6E1",
+      avatarColor: "#8A8A8A",
+    },
+    {
+      initials: "Fc",
+      name: "Focus",
+      role: "Analytics Agent",
+      status: "Soon",
+      hired: false,
+      avatarBg: "#E8E6E1",
+      avatarColor: "#8A8A8A",
+    },
+  ];
+
   return (
     <div
       className="rounded-[16px] p-6 min-h-[280px]"
@@ -37,48 +67,60 @@ function HireMockup() {
         boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
       }}
     >
-      <div
-        className="rounded-[12px] p-5"
-        style={{ background: "#FAF9F6", border: "1px solid #E8E6E1" }}
-      >
-        <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: "rgba(26,28,26,0.4)" }}>
+          Your Team
+        </span>
+        <span className="text-[11px] font-semibold" style={{ color: "#8A8A8A" }}>
+          1 hired
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {team.map((member) => (
           <div
-            className="w-11 h-11 rounded-[12px] flex items-center justify-center text-[14px] font-bold flex-shrink-0"
-            style={{ background: "#1B4332", color: "#FAF9F6" }}
+            key={member.name}
+            className="flex items-center justify-between p-3.5 rounded-[12px] transition-all"
+            style={{
+              background: member.hired ? "#FAF9F6" : "transparent",
+              border: member.hired ? "1px solid #AEEECB" : "1px solid #E8E6E1",
+              opacity: member.status === "Soon" ? 0.5 : 1,
+            }}
           >
-            LP
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold" style={{ color: "#1A1A1A" }}>
-              LinkedIn Post Agent
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0"
+                style={{ background: member.avatarBg, color: member.avatarColor }}
+              >
+                {member.initials}
+              </div>
+              <div>
+                <p className="text-[13px] font-bold leading-none mb-0.5" style={{ color: member.hired ? "#1A1A1A" : "#8A8A8A" }}>
+                  {member.name}
+                </p>
+                <p className="text-[11px]" style={{ color: "#8A8A8A" }}>{member.role}</p>
+              </div>
             </div>
-            <div className="text-[12px]" style={{ color: "#8A8A8A" }}>
-              LinkedIn Ghostwriter
-            </div>
+
+            {member.hired ? (
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
+                <span className="text-[11px] font-bold" style={{ color: "#10b981" }}>Active</span>
+              </div>
+            ) : member.status === "Hire" ? (
+              <button
+                className="text-[11px] font-bold px-3 py-1.5 rounded-[6px]"
+                style={{ background: "#1B4332", color: "#FFFFFF" }}
+              >
+                + Hire
+              </button>
+            ) : (
+              <span className="text-[10px] font-bold tracking-wide uppercase" style={{ color: "#C0BDBA" }}>
+                Soon
+              </span>
+            )}
           </div>
-          <span
-            className="text-[10px] font-bold tracking-[0.08em] uppercase px-2.5 py-1 rounded-full"
-            style={{ color: "#FFFFFF", background: "#1B4332" }}
-          >
-            Live
-          </span>
-        </div>
-
-        <p className="text-[13px] leading-relaxed mb-4" style={{ color: "#8A8A8A" }}>
-          Writes thought leadership in your voice. Daily.
-        </p>
-
-        <div className="flex items-center justify-between">
-          <span className="text-[14px] font-bold" style={{ color: "#4A4A4A" }}>
-            $50/mo
-          </span>
-          <button
-            className="text-[13px] font-bold text-white px-4 py-2 rounded-[8px] flex-shrink-0"
-            style={{ background: "#1B4332" }}
-          >
-            Hire
-          </button>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -132,6 +174,11 @@ function WatchMockup() {
 }
 
 function GrowMockup() {
+  const contributions = [
+    { agent: "Flash", initials: "Fl", action: "Scanned 18 trending topics", stat: "3 picked", statColor: "#1B4332" },
+    { agent: "Frame", initials: "Fr", action: "Drafted 2 posts from Flash's intel", stat: "1 published", statColor: "#1B4332" },
+  ];
+
   return (
     <div
       className="rounded-[16px] p-6 min-h-[280px]"
@@ -141,33 +188,42 @@ function GrowMockup() {
         boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
       }}
     >
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-5">
         <Smartphone size={14} color="#8A8A8A" />
         <span className="text-[12px] font-bold" style={{ color: "#8A8A8A" }}>
           Daily Team Report — 7:00 PM
         </span>
       </div>
 
-      <div
-        className="rounded-[10px] p-4"
-        style={{ background: "#FAF9F6", border: "1px solid #E8E6E1" }}
-      >
-        <p className="text-[13px] leading-[1.7] mb-0" style={{ color: "#4A4A4A" }}>
-          Today your team accomplished:
-        </p>
-        <ul className="text-[12px] leading-[1.8] mt-2 mb-3 list-none pl-0" style={{ color: "#8A8A8A" }}>
-          <li className="flex gap-2">
-            <span style={{ color: "#E8E6E1" }}>—</span>
-            LinkedIn Agent: drafted 3 posts, 1 published, 847 impressions
-          </li>
-          <li className="flex gap-2">
-            <span style={{ color: "#E8E6E1" }}>—</span>
-            Hours saved: ~1.5
-          </li>
-        </ul>
-        <p className="text-[11px]" style={{ color: "#8A8A8A" }}>
-          Tomorrow: 2 scheduled posts at 9am
-        </p>
+      <p className="text-[13px] mb-4" style={{ color: "#4A4A4A" }}>
+        Today your team accomplished:
+      </p>
+
+      <div className="flex flex-col gap-2.5 mb-4">
+        {contributions.map((c) => (
+          <div
+            key={c.agent}
+            className="flex items-center gap-3 p-3 rounded-[10px]"
+            style={{ background: "#FAF9F6", border: "1px solid #E8E6E1" }}
+          >
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+              style={{ background: "#1B4332", color: "#FFFFFF" }}
+            >
+              {c.initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-semibold leading-none mb-0.5" style={{ color: "#1A1A1A" }}>{c.agent}</p>
+              <p className="text-[11px]" style={{ color: "#8A8A8A" }}>{c.action}</p>
+            </div>
+            <span className="text-[11px] font-bold flex-shrink-0" style={{ color: c.statColor }}>{c.stat}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid #E8E6E1" }}>
+        <p className="text-[12px]" style={{ color: "#8A8A8A" }}>847 impressions · ~2h saved</p>
+        <p className="text-[11px]" style={{ color: "#8A8A8A" }}>Tomorrow: 2 posts at 9am</p>
       </div>
     </div>
   );
@@ -177,7 +233,7 @@ const TABS: TabContent[] = [
   {
     num: "01",
     label: "Hire",
-    headline: "Meet your first\nAI employee.",
+    headline: "Build your team.\nOne hire at a time.",
     features: [
       {
         icon: <Pencil size={18} />,

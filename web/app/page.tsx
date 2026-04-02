@@ -5,7 +5,9 @@ import { LogoStrip } from "@/components/pages/landing/LogoStrip";
 import { StatsStrip } from "@/components/pages/landing/StatsStrip";
 import { TickerSection } from "@/components/pages/landing/TickerSection";
 import { HireWatchGrowTabs } from "@/components/pages/landing/HireWatchGrowTabs";
+import { TeamWorkflowSection } from "@/components/pages/landing/TeamWorkflowSection";
 import { BentoGrid } from "@/components/pages/landing/BentoGrid";
+import { MemorySection } from "@/components/pages/landing/MemorySection";
 import { EditorialBreak } from "@/components/pages/landing/EditorialBreak";
 import { PricingSection } from "@/components/pages/landing/PricingSection";
 import { FinalCTASection } from "@/components/pages/landing/FinalCTASection";
@@ -20,7 +22,9 @@ export default function LandingPage() {
       <StatsStrip />
       <TickerSection />
       <HireWatchGrowTabs />
+      <TeamWorkflowSection />
       <BentoGrid />
+      <MemorySection />
       <EditorialBreak />
       <PricingSection />
       <FinalCTASection />
