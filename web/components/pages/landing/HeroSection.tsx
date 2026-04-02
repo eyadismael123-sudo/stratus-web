@@ -296,44 +296,7 @@ export function HeroSection() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {/* Agent row — Flash (research first) */}
-                  <div
-                    className="flex items-center justify-between p-4 rounded-[12px]"
-                    style={{ background: "#FAF9F6" }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
-                        style={{ background: "#1B4332", color: "#FFFFFF" }}
-                      >
-                        Fl
-                      </div>
-                      <div>
-                        <p className="text-[14px] font-bold" style={{ color: "#1A1A1A" }}>Flash</p>
-                        <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Found 3 trending topics</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ background: "#10b981", animation: "pulse-dot 2s ease-in-out infinite" }}
-                      />
-                      <span className="text-[12px] font-bold" style={{ color: "#10b981" }}>Done</span>
-                    </div>
-                  </div>
-
-                  {/* Handoff arrow */}
-                  <div className="flex items-center gap-2 px-4">
-                    <div className="flex-1 h-px" style={{ background: "#E8E6E1" }} />
-                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#1B4332" }}>
-                      passing to Frame
-                    </span>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6h8M7 3l3 3-3 3" stroke="#1B4332" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-
-                  {/* Agent row — Frame (writing from Flash's research) */}
+                  {/* Frame — LinkedIn Post Agent */}
                   <div
                     className="flex items-center justify-between p-4 rounded-[12px]"
                     style={{ background: "#FAF9F6", border: "1px solid #AEEECB" }}
@@ -341,13 +304,65 @@ export function HeroSection() {
                     <div className="flex items-center gap-4">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
-                        style={{ background: "#AEEECB", color: "#1B4332" }}
+                        style={{ background: "#1B4332", color: "#FFFFFF" }}
                       >
                         Fr
                       </div>
                       <div>
                         <p className="text-[14px] font-bold" style={{ color: "#1A1A1A" }}>Frame</p>
-                        <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Writing post from Flash&apos;s intel</p>
+                        <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Drafting today&apos;s LinkedIn post</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ background: "#10b981", animation: "pulse-dot 2s ease-in-out infinite" }}
+                      />
+                      <span className="text-[12px] font-bold" style={{ color: "#10b981" }}>Active</span>
+                    </div>
+                  </div>
+
+                  {/* Scout — Car Reseller Intel */}
+                  <div
+                    className="flex items-center justify-between p-4 rounded-[12px]"
+                    style={{ background: "#FAF9F6" }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                        style={{ background: "#E8F5EF", color: "#1B4332" }}
+                      >
+                        Sc
+                      </div>
+                      <div>
+                        <p className="text-[14px] font-bold" style={{ color: "#1A1A1A" }}>Scout</p>
+                        <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Found 4 underpriced listings</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ background: "#10b981" }}
+                      />
+                      <span className="text-[12px] font-bold" style={{ color: "#10b981" }}>Done</span>
+                    </div>
+                  </div>
+
+                  {/* Brief — Doctor Morning Briefing */}
+                  <div
+                    className="flex items-center justify-between p-4 rounded-[12px]"
+                    style={{ background: "#FAF9F6" }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                        style={{ background: "#E8F5EF", color: "#1B4332" }}
+                      >
+                        Br
+                      </div>
+                      <div>
+                        <p className="text-[14px] font-bold" style={{ color: "#1A1A1A" }}>Brief</p>
+                        <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Prepping tomorrow&apos;s patient brief</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

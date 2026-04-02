@@ -32,25 +32,25 @@ function HireMockup() {
     {
       initials: "Fr",
       name: "Frame",
-      role: "LinkedIn Ghostwriter",
+      role: "LinkedIn Post Agent",
       status: "Active",
       hired: true,
       avatarBg: "#1B4332",
       avatarColor: "#FFFFFF",
     },
     {
-      initials: "Fl",
-      name: "Flash",
-      role: "Research Agent",
+      initials: "Sc",
+      name: "Scout",
+      role: "Car Reseller Intel",
       status: "Hire",
       hired: false,
       avatarBg: "#E8E6E1",
       avatarColor: "#8A8A8A",
     },
     {
-      initials: "Fc",
-      name: "Focus",
-      role: "Analytics Agent",
+      initials: "Br",
+      name: "Brief",
+      role: "Doctor Morning Briefing",
       status: "Soon",
       hired: false,
       avatarBg: "#E8E6E1",
@@ -175,8 +175,8 @@ function WatchMockup() {
 
 function GrowMockup() {
   const contributions = [
-    { agent: "Flash", initials: "Fl", action: "Scanned 18 trending topics", stat: "3 picked", statColor: "#1B4332" },
-    { agent: "Frame", initials: "Fr", action: "Drafted 2 posts from Flash's intel", stat: "1 published", statColor: "#1B4332" },
+    { agent: "Frame", initials: "Fr", action: "Drafted 2 posts, 1 published to LinkedIn", stat: "847 views", statColor: "#1B4332" },
+    { agent: "Scout", initials: "Sc", action: "Scanned 47 listings, flagged 4 underpriced", stat: "4 leads", statColor: "#1B4332" },
   ];
 
   return (
