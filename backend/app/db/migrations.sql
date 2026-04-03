@@ -141,6 +141,10 @@ CREATE TABLE IF NOT EXISTS agent_schedules (
 CREATE INDEX IF NOT EXISTS idx_agent_schedules_enabled ON agent_schedules(is_enabled);
 CREATE INDEX IF NOT EXISTS idx_agent_schedules_next_run ON agent_schedules(next_run_at);
 
+-- ─── Memory Columns on User Agents ─────────────────────────────────
+ALTER TABLE user_agents ADD COLUMN IF NOT EXISTS memory_summary      text;
+ALTER TABLE user_agents ADD COLUMN IF NOT EXISTS memory_updated_at   timestamptz;
+
 -- ─── Agent Signals (Phase 1.4 — Schema Only) ───────────────────────
 CREATE TABLE IF NOT EXISTS agent_signals (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -150,8 +154,35 @@ CREATE TABLE IF NOT EXISTS agent_signals (
   content         text NOT NULL,
   industries      text[] DEFAULT '{}',
   consumed_by     uuid[] DEFAULT '{}',
+  expires_at      timestamptz DEFAULT (now() + interval '7 days'),
   created_at      timestamptz DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_signals_client     ON agent_signals(client_id);
+CREATE INDEX IF NOT EXISTS idx_signals_industries ON agent_signals USING GIN(industries);
+CREATE INDEX IF NOT EXISTS idx_signals_type       ON agent_signals(signal_type);
+CREATE INDEX IF NOT EXISTS idx_signals_expires    ON agent_signals(expires_at);
+
+-- ─── Client-Facing Chat ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS conversations (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id   uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  agent_id    uuid REFERENCES user_agents(id),  -- NULL = Chief of Staff
+  created_at  timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversations_client ON conversations(client_id);
+
+CREATE TABLE IF NOT EXISTS messages (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id  uuid NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  role             text NOT NULL CHECK (role IN ('user', 'assistant')),
+  content          text NOT NULL,
+  tokens_used      integer,
+  created_at       timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, created_at);
 
 -- ─── Auto-create profile on signup (Supabase trigger) ───────────────
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -214,6 +245,28 @@ CREATE POLICY "Users can view own subscriptions" ON subscriptions
 CREATE POLICY "Users can view own schedules" ON agent_schedules
   FOR SELECT USING (
     user_agent_id IN (SELECT id FROM user_agents WHERE user_id = auth.uid())
+  );
+
+-- Conversations + Messages: users can only see their own
+ALTER TABLE agent_signals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own signals" ON agent_signals
+  FOR SELECT USING (auth.uid() = client_id);
+
+CREATE POLICY "Users can view own conversations" ON conversations
+  FOR SELECT USING (auth.uid() = client_id);
+CREATE POLICY "Users can insert own conversations" ON conversations
+  FOR INSERT WITH CHECK (auth.uid() = client_id);
+
+CREATE POLICY "Users can view own messages" ON messages
+  FOR SELECT USING (
+    conversation_id IN (SELECT id FROM conversations WHERE client_id = auth.uid())
+  );
+CREATE POLICY "Users can insert own messages" ON messages
+  FOR INSERT WITH CHECK (
+    conversation_id IN (SELECT id FROM conversations WHERE client_id = auth.uid())
   );
 
 -- Service role bypasses RLS — used by backend for admin operations

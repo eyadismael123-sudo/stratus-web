@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     supabase_anon_key: str
     supabase_service_role_key: str
 
+    # Anthropic
+    anthropic_api_key: str = ""
+
     # Stripe (optional until Stripe account is set up)
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""

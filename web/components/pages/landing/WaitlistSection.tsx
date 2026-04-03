@@ -2,12 +2,31 @@
 
 import { useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
 export function WaitlistSection() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError("");
+    setLoading(true);
+    const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value;
+    try {
+      const res = await fetch(`${API_URL}/waitlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,37 +58,46 @@ export function WaitlistSection() {
             You&apos;re on the list. We&apos;ll be in touch.
           </p>
         ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="flex gap-3 max-w-[440px] mx-auto flex-wrap"
-          >
-            <input
-              type="email"
-              name="email"
-              placeholder="Your email address"
-              required
-              className="flex-1 min-w-[220px] px-[18px] py-[14px] rounded-[10px] text-[15px] outline-none"
-              style={{
-                background: "#FAF9F6",
-                color: "#1A1A1A",
-                border: "none",
-                fontFamily: "inherit",
-              }}
-            />
-            <button
-              type="submit"
-              className="px-6 py-[14px] rounded-[10px] text-[15px] font-bold whitespace-nowrap transition-all hover:bg-[#E8E6E1]"
-              style={{
-                background: "#FAF9F6",
-                color: "#1B4332",
-                border: "none",
-                fontFamily: "inherit",
-                cursor: "pointer",
-              }}
+          <>
+            <form
+              onSubmit={handleSubmit}
+              className="flex gap-3 max-w-[440px] mx-auto flex-wrap"
             >
-              Join Waitlist
-            </button>
-          </form>
+              <input
+                type="email"
+                name="email"
+                placeholder="Your email address"
+                required
+                disabled={loading}
+                className="flex-1 min-w-[220px] px-[18px] py-[14px] rounded-[10px] text-[15px] outline-none disabled:opacity-60"
+                style={{
+                  background: "#FAF9F6",
+                  color: "#1A1A1A",
+                  border: "none",
+                  fontFamily: "inherit",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-[14px] rounded-[10px] text-[15px] font-bold whitespace-nowrap transition-all hover:bg-[#E8E6E1] disabled:opacity-60"
+                style={{
+                  background: "#FAF9F6",
+                  color: "#1B4332",
+                  border: "none",
+                  fontFamily: "inherit",
+                  cursor: loading ? "not-allowed" : "pointer",
+                }}
+              >
+                {loading ? "Joining..." : "Join Waitlist"}
+              </button>
+            </form>
+            {error && (
+              <p className="text-[13px] mt-3" style={{ color: "rgba(250,100,100,0.9)" }}>
+                {error}
+              </p>
+            )}
+          </>
         )}
 
         <p className="text-[12px] mt-4" style={{ color: "rgba(250,249,246,0.4)" }}>

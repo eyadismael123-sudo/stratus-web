@@ -38,5 +38,10 @@ Figma MCP (design bridge), Vercel (deployment)
 - Lighthouse score 90+ on every page
 
 ## Memory Log
-[Updated after sessions where something meaningful was learned]
+
+### 2026-04-03
+- **Scroll-dependent animation pattern**: `useScroll` on the component's own ref with `offset: ["start end", "end start"]`. Use a threshold ref (`lastTrigger`) to advance one step every N% of scroll — `STEP = 0.18` felt right (weaker = 0.25, stronger = 0.12).
+- **Jump animation**: `layout` prop on `motion.div` inside `AnimatePresence mode="popLayout"` makes staying cards spring to their new slot automatically. Spring config `damping: 20, stiffness: 260, mass: 0.8` gives a snappy jump. Key must be stable (e.g. `member.name`) not `name + offset`.
+- **nano-banana**: model `gemini-2.5-flash-image-preview` is NOT available on Eyad's API tier. Falls back gracefully — use hand-crafted SVGs in `/public/avatars/` instead. They look sharper at small sizes anyway.
+- **GitHub push auth**: Repo is `eyadismael123-sudo/stratus-web`. Local machine authenticates as `malekelsawy-1738`. Requires collaborator invite to be accepted before push works. Remote URL with PAT: `https://<token>@github.com/eyadismael123-sudo/stratus-web.git`.
 

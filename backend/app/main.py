@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import admin, agents, auth, health, marketplace, subscriptions, webhooks
+from app.api import admin, agents, auth, chat, health, marketplace, subscriptions, waitlist, webhooks
 from app.config import settings
 from app.exceptions import AppError, app_error_handler
 
@@ -37,3 +37,5 @@ app.include_router(agents.router)
 app.include_router(subscriptions.router)
 app.include_router(webhooks.router)
 app.include_router(admin.router)
+app.include_router(chat.router)
+app.include_router(waitlist.router)

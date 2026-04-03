@@ -1,9 +1,23 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { AgentGrid } from "@/components/pages/dashboard/AgentGrid";
-import { MOCK_USER_AGENTS } from "@/constants/mock-data";
+import { get } from "@/lib/api";
+import type { UserAgent } from "@/types";
 import Link from "next/link";
 
 export default function DashboardPage() {
-  const activeCount = MOCK_USER_AGENTS.filter((a) => a.status === "active").length;
+  const [agents, setAgents] = useState<UserAgent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    get<UserAgent[]>("/agents")
+      .then(setAgents)
+      .catch(() => setAgents([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const activeCount = agents.filter((a) => a.status === "active").length;
 
   return (
     <div className="px-6 md:px-8 py-7">
@@ -13,9 +27,11 @@ export default function DashboardPage() {
           <h1 className="text-[22px] font-black text-[#3A3A3C] tracking-[-0.03em]">
             Your Team
           </h1>
-          <p className="text-[13px] text-[#8E8E93] mt-0.5">
-            {activeCount} agent{activeCount !== 1 ? "s" : ""} running right now
-          </p>
+          {!loading && (
+            <p className="text-[13px] text-[#8E8E93] mt-0.5">
+              {activeCount} agent{activeCount !== 1 ? "s" : ""} running right now
+            </p>
+          )}
         </div>
         <Link
           href="/marketplace"
@@ -28,7 +44,19 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <AgentGrid agents={MOCK_USER_AGENTS} />
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="rounded-[16px] bg-[#EBEBED] animate-pulse"
+              style={{ height: "200px" }}
+            />
+          ))}
+        </div>
+      ) : (
+        <AgentGrid agents={agents} />
+      )}
     </div>
   );
 }
