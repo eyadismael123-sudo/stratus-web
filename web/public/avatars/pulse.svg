@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+  <circle cx="36" cy="36" r="36" fill="#1A2B4A"/>
+  <!-- City skyline -->
+  <rect x="20" y="38" width="5" height="12" rx="0.5" fill="white" opacity="0.9"/>
+  <rect x="27" y="33" width="5" height="17" rx="0.5" fill="white" opacity="0.9"/>
+  <rect x="34" y="28" width="5" height="22" rx="0.5" fill="white" opacity="0.9"/>
+  <rect x="41" y="35" width="5" height="15" rx="0.5" fill="white" opacity="0.9"/>
+  <rect x="48" y="40" width="4" height="10" rx="0.5" fill="white" opacity="0.9"/>
+  <!-- Trend arrow -->
+  <polyline points="22,45 29,40 36,34 43,30 50,22" stroke="#FFD60A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <polyline points="46,22 50,22 50,26" stroke="#FFD60A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

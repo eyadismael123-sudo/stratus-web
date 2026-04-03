@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -27,39 +27,70 @@ interface TabContent {
   mockup: React.ReactNode;
 }
 
+const ALL_AGENTS = [
+  { name: "Frame",  role: "LinkedIn Post Agent",      status: "Active", hired: true,  avatar: "/avatars/frame.svg"  },
+  { name: "Scout",  role: "Car Reseller Intel",        status: "Hire",   hired: false, avatar: "/avatars/scout.svg"  },
+  { name: "Brief",  role: "Doctor Morning Briefing",   status: "Soon",   hired: false, avatar: "/avatars/brief.svg"  },
+  { name: "Pulse",  role: "Property Market Briefing",  status: "Soon",   hired: false, avatar: "/avatars/pulse.svg"  },
+  { name: "Relay",  role: "AI Receptionist",           status: "Soon",   hired: false, avatar: "/avatars/relay.svg"  },
+];
+
+function AgentAvatar({ name, avatar }: { name: string; avatar: string }) {
+  return (
+    <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-[#E8E6E1]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={avatar}
+        alt={name}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          const el = e.currentTarget;
+          el.style.display = "none";
+          if (el.parentElement) {
+            el.parentElement.style.display = "flex";
+            el.parentElement.style.alignItems = "center";
+            el.parentElement.style.justifyContent = "center";
+            el.parentElement.style.background = "#1B4332";
+            el.parentElement.style.color = "#fff";
+            el.parentElement.style.fontSize = "12px";
+            el.parentElement.style.fontWeight = "700";
+            el.parentElement.textContent = name.slice(0, 2);
+          }
+        }}
+      />
+    </div>
+  );
+}
+
 function HireMockup() {
-  const team = [
-    {
-      initials: "Fr",
-      name: "Frame",
-      role: "LinkedIn Post Agent",
-      status: "Active",
-      hired: true,
-      avatarBg: "#1B4332",
-      avatarColor: "#FFFFFF",
-    },
-    {
-      initials: "Sc",
-      name: "Scout",
-      role: "Car Reseller Intel",
-      status: "Hire",
-      hired: false,
-      avatarBg: "#E8E6E1",
-      avatarColor: "#8A8A8A",
-    },
-    {
-      initials: "Br",
-      name: "Brief",
-      role: "Doctor Morning Briefing",
-      status: "Soon",
-      hired: false,
-      avatarBg: "#E8E6E1",
-      avatarColor: "#8A8A8A",
-    },
-  ];
+  const VISIBLE = 3;
+  const [offset, setOffset] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const lastTrigger = useRef(0);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"],
+  });
+
+  // Advance one step every ~25% of section scroll — weaker dependency
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    const STEP = 0.18;
+    const delta = latest - lastTrigger.current;
+    if (delta >= STEP) {
+      lastTrigger.current += STEP;
+      setOffset((prev) => (prev + 1) % ALL_AGENTS.length);
+    } else if (delta <= -STEP) {
+      lastTrigger.current -= STEP;
+      setOffset((prev) => (prev - 1 + ALL_AGENTS.length) % ALL_AGENTS.length);
+    }
+  });
+
+  const visible = Array.from({ length: VISIBLE }, (_, i) => ALL_AGENTS[(offset + i) % ALL_AGENTS.length]);
 
   return (
     <div
+      ref={containerRef}
       className="rounded-[16px] p-6 min-h-[280px]"
       style={{
         background: "#FFFFFF",
@@ -69,58 +100,66 @@ function HireMockup() {
     >
       <div className="flex items-center justify-between mb-5">
         <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: "rgba(26,28,26,0.4)" }}>
-          Your Team
+          Active Agents
         </span>
         <span className="text-[11px] font-semibold" style={{ color: "#8A8A8A" }}>
           1 hired
         </span>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {team.map((member) => (
-          <div
-            key={member.name}
-            className="flex items-center justify-between p-3.5 rounded-[12px] transition-all"
-            style={{
-              background: member.hired ? "#FAF9F6" : "transparent",
-              border: member.hired ? "1px solid #AEEECB" : "1px solid #E8E6E1",
-              opacity: member.status === "Soon" ? 0.5 : 1,
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0"
-                style={{ background: member.avatarBg, color: member.avatarColor }}
-              >
-                {member.initials}
+      <div className="flex flex-col gap-3 overflow-hidden" style={{ minHeight: "210px" }}>
+        <AnimatePresence mode="popLayout" initial={false}>
+          {visible.map((member) => (
+            <motion.div
+              key={member.name}
+              layout
+              initial={{ opacity: 0, y: 52, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -36, scale: 0.97 }}
+              transition={{
+                type: "spring",
+                damping: 20,
+                stiffness: 260,
+                mass: 0.8,
+                layout: { type: "spring", damping: 22, stiffness: 280 },
+              }}
+              className="flex items-center justify-between p-3.5 rounded-[12px]"
+              style={{
+                background: member.hired ? "#FAF9F6" : "transparent",
+                border: member.hired ? "1px solid #AEEECB" : "1px solid #E8E6E1",
+                opacity: member.status === "Soon" ? 0.55 : 1,
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <AgentAvatar name={member.name} avatar={member.avatar} />
+                <div>
+                  <p className="text-[13px] font-bold leading-none mb-0.5" style={{ color: member.hired ? "#1A1A1A" : "#8A8A8A" }}>
+                    {member.name}
+                  </p>
+                  <p className="text-[11px]" style={{ color: "#8A8A8A" }}>{member.role}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[13px] font-bold leading-none mb-0.5" style={{ color: member.hired ? "#1A1A1A" : "#8A8A8A" }}>
-                  {member.name}
-                </p>
-                <p className="text-[11px]" style={{ color: "#8A8A8A" }}>{member.role}</p>
-              </div>
-            </div>
 
-            {member.hired ? (
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
-                <span className="text-[11px] font-bold" style={{ color: "#10b981" }}>Active</span>
-              </div>
-            ) : member.status === "Hire" ? (
-              <button
-                className="text-[11px] font-bold px-3 py-1.5 rounded-[6px]"
-                style={{ background: "#1B4332", color: "#FFFFFF" }}
-              >
-                + Hire
-              </button>
-            ) : (
-              <span className="text-[10px] font-bold tracking-wide uppercase" style={{ color: "#C0BDBA" }}>
-                Soon
-              </span>
-            )}
-          </div>
-        ))}
+              {member.hired ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
+                  <span className="text-[11px] font-bold" style={{ color: "#10b981" }}>Active</span>
+                </div>
+              ) : member.status === "Hire" ? (
+                <button
+                  className="text-[11px] font-bold px-3 py-1.5 rounded-[6px]"
+                  style={{ background: "#1B4332", color: "#FFFFFF" }}
+                >
+                  + Hire
+                </button>
+              ) : (
+                <span className="text-[10px] font-bold tracking-wide uppercase" style={{ color: "#C0BDBA" }}>
+                  Soon
+                </span>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -175,8 +214,8 @@ function WatchMockup() {
 
 function GrowMockup() {
   const contributions = [
-    { agent: "Frame", initials: "Fr", action: "Drafted 2 posts, 1 published to LinkedIn", stat: "847 views", statColor: "#1B4332" },
-    { agent: "Scout", initials: "Sc", action: "Scanned 47 listings, flagged 4 underpriced", stat: "4 leads", statColor: "#1B4332" },
+    { agent: "Frame", action: "Drafted 2 posts, 1 published to LinkedIn", stat: "847 views", statColor: "#1B4332" },
+    { agent: "Scout", action: "Scanned 47 listings, flagged 4 underpriced", stat: "4 leads", statColor: "#1B4332" },
   ];
 
   return (
@@ -206,12 +245,7 @@ function GrowMockup() {
             className="flex items-center gap-3 p-3 rounded-[10px]"
             style={{ background: "#FAF9F6", border: "1px solid #E8E6E1" }}
           >
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-              style={{ background: "#1B4332", color: "#FFFFFF" }}
-            >
-              {c.initials}
-            </div>
+            <AgentAvatar name={c.agent} avatar={ALL_AGENTS.find(a => a.name === c.agent)?.avatar ?? ""} />
             <div className="flex-1 min-w-0">
               <p className="text-[12px] font-semibold leading-none mb-0.5" style={{ color: "#1A1A1A" }}>{c.agent}</p>
               <p className="text-[11px]" style={{ color: "#8A8A8A" }}>{c.action}</p>

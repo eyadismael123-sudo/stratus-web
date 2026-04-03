@@ -1,8 +1,8 @@
 const LOGOS = [
-  { name: "AbbVie", type: "pharma" },
-  { name: "Emaar", type: "realestate" },
-  { name: "Aldar", type: "proptech" },
-  { name: "Aramex", type: "logistics" },
+  { name: "AbbVie",  label: "AbbVie" },
+  { name: "Emaar",   label: "Emaar" },
+  { name: "Aldar",   label: "Aldar" },
+  { name: "Aramex",  label: "Aramex" },
 ];
 
 export function LogoStrip() {
@@ -18,14 +18,14 @@ export function LogoStrip() {
         >
           Trusted by fast-growing MENA enterprises
         </p>
-        <div className="flex flex-wrap justify-center gap-12 md:gap-20 items-center opacity-30">
-          {LOGOS.map(({ name }) => (
+        <div className="flex flex-wrap justify-center gap-12 md:gap-20 items-center">
+          {LOGOS.map(({ name, label }) => (
             <span
               key={name}
-              className="font-display font-bold text-[18px] tracking-[-0.02em] whitespace-nowrap"
-              style={{ color: "#1A1A1A" }}
+              className="font-display font-bold text-[22px] tracking-[-0.04em] whitespace-nowrap select-none opacity-25 hover:opacity-50 transition-opacity duration-300"
+              style={{ color: "#1A1A1A", letterSpacing: "-0.04em" }}
             >
-              {name}
+              {label}
             </span>
           ))}
         </div>

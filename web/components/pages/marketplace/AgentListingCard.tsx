@@ -1,10 +1,38 @@
+import type React from "react";
 import type { AgentTemplate } from "@/types";
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  Personal: "👤",
-  Business: "🏢",
-  Health: "🩺",
+const CATEGORY_ICON: Record<string, React.ReactNode> = {
+  Personal: (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="36" height="36" rx="10" fill="#F0F4FF"/>
+      <circle cx="18" cy="14" r="5" fill="#3A3A3C"/>
+      <path d="M8 28c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="#3A3A3C" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  ),
+  Business: (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="36" height="36" rx="10" fill="#FFF7E6"/>
+      <rect x="10" y="14" width="16" height="14" rx="1.5" stroke="#3A3A3C" strokeWidth="1.8"/>
+      <path d="M14 14v-3a4 4 0 0 1 8 0v3" stroke="#3A3A3C" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="18" y1="18" x2="18" y2="24" stroke="#3A3A3C" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="14" y1="21" x2="22" y2="21" stroke="#3A3A3C" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  ),
+  Health: (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="36" height="36" rx="10" fill="#F0FFF4"/>
+      <path d="M18 26s-8-5.5-8-11a6 6 0 0 1 8-5.66A6 6 0 0 1 26 15c0 5.5-8 11-8 11z" stroke="#3A3A3C" strokeWidth="1.8" strokeLinejoin="round"/>
+    </svg>
+  ),
 };
+
+const DEFAULT_ICON = (
+  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="36" height="36" rx="10" fill="#F5F5F7"/>
+    <circle cx="18" cy="18" r="6" stroke="#3A3A3C" strokeWidth="1.8"/>
+    <path d="M18 14v4l3 2" stroke="#3A3A3C" strokeWidth="1.8" strokeLinecap="round"/>
+  </svg>
+);
 
 function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(0)}`;
@@ -15,7 +43,7 @@ interface AgentListingCardProps {
 }
 
 export function AgentListingCard({ template }: AgentListingCardProps) {
-  const emoji = CATEGORY_EMOJI[template.category] ?? "🤖";
+  const icon = CATEGORY_ICON[template.category] ?? DEFAULT_ICON;
   const isLive = template.is_published;
 
   return (
@@ -26,9 +54,9 @@ export function AgentListingCard({ template }: AgentListingCardProps) {
         opacity: isLive ? 1 : 0.7,
       }}
     >
-      {/* Header: emoji + badge */}
+      {/* Header: icon + badge */}
       <div className="flex items-start justify-between">
-        <span className="text-4xl leading-none">{emoji}</span>
+        <span className="leading-none">{icon}</span>
         {isLive ? (
           <span
             className="text-[10px] font-bold tracking-[0.5px] uppercase px-2 py-0.5 rounded-full"

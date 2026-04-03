@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -35,9 +36,18 @@ export function Header({
         {/* Logo */}
         <Link
           href="/"
-          className="text-2xl font-display font-bold tracking-tighter text-[#012d1d] no-underline"
+          className="flex items-center gap-2 no-underline"
         >
-          Stratus
+          <Image
+            src="/logo.png"
+            alt="Stratus"
+            width={28}
+            height={28}
+            className="rounded-[6px]"
+          />
+          <span className="text-2xl font-display font-bold tracking-tighter text-[#012d1d]">
+            Stratus
+          </span>
         </Link>
 
         {/* Desktop nav */}
