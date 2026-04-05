@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
     stripe_price_id: str = ""
 
+    # Google Sheets (waitlist)
+    google_service_account_json: str = ""  # full JSON string from service account key file
+    google_sheet_id: str = ""  # ID from the Sheet URL
+
     # App
     frontend_url: str = "http://localhost:3000"
     environment: str = "development"
