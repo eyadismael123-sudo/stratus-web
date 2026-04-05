@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     google_service_account_json: str = ""  # full JSON string from service account key file
     google_sheet_id: str = ""  # ID from the Sheet URL
 
+    # News (Doctor Morning Briefing)
+    news_api_key: str = ""  # newsapi.org — free tier: 100 req/day
+
+    # Telegram (agent delivery)
+    telegram_bot_token: str = ""
+
     # App
     frontend_url: str = "http://localhost:3000"
     environment: str = "development"

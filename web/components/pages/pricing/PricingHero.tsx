@@ -5,7 +5,7 @@ export default function PricingHero() {
         Simple pricing. Powerful agents.
       </h1>
       <p className="text-xl md:text-2xl text-[#526259] max-w-2xl mx-auto leading-relaxed">
-        $50/month per agent. No setup fees. No contracts.
+        Starting from $49/month per agent. No setup fees. No contracts.
       </p>
     </section>
   );

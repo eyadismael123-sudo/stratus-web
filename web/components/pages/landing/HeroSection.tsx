@@ -228,7 +228,7 @@ export function HeroSection() {
                 className="mb-10 max-w-md opacity-0"
                 style={{ fontSize: "20px", color: "#4A4A4A", lineHeight: 1.6 }}
               >
-                Automate operations with culture-aware AI agents designed for the growth dynamics of the Middle East. Starting at $50/month.
+                Automate operations with culture-aware AI agents designed for the growth dynamics of the Middle East. Starting at $49/month.
               </p>
 
               {/* CTAs */}

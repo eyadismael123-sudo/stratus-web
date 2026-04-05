@@ -38,7 +38,7 @@ export const MOCK_AGENT_TEMPLATES: AgentTemplate[] = [
       "Grok-powered real-time trend research",
     ],
     industries: ["Any industry", "Pharma", "Tech", "Finance", "Consulting"],
-    price_usd_cents: 5000,
+    price_usd_cents: 9900,
     setup_fee_cents: 0,
     billing_interval: "month",
     is_featured: true,

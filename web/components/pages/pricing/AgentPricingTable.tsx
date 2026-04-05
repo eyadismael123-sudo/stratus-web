@@ -7,6 +7,7 @@ const AGENTS = [
     role: "LinkedIn Post Agent",
     description: "Automated thought leadership for executives.",
     live: true,
+    price: "$99/mo",
   },
   {
     slug: "car-reseller-intel",
@@ -14,6 +15,7 @@ const AGENTS = [
     role: "Car Reseller Intel",
     description: "Underpriced cars found before competitors wake up.",
     live: false,
+    price: "$149/mo",
   },
   {
     slug: "property-market-briefing",
@@ -21,6 +23,7 @@ const AGENTS = [
     role: "Property Market Briefing",
     description: "Dubai real estate moves. In your inbox at 8am.",
     live: false,
+    price: "$99/mo",
   },
   {
     slug: "doctor-morning-briefing",
@@ -28,6 +31,7 @@ const AGENTS = [
     role: "Doctor Morning Briefing",
     description: "Clinical news + patient context. Before your first appointment.",
     live: false,
+    price: "$49/mo",
   },
 ];
 
@@ -69,7 +73,7 @@ export default function AgentPricingTable() {
                 </p>
                 <p className="text-sm text-[#414844]">{agent.description}</p>
               </div>
-              <div className="text-[#012d1d] font-bold">$50/mo</div>
+              <div className="text-[#012d1d] font-bold">{agent.price}</div>
             </div>
           ))}
         </div>

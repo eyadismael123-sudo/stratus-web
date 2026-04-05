@@ -37,6 +37,9 @@ Figma MCP (design bridge), Vercel (deployment)
 - Mobile-first — every layout works on 375px first
 - Lighthouse score 90+ on every page
 
+## Rules (Session Additions)
+- **Never commit unless Eyad explicitly says to.** Always wait for the go-ahead before running any git commit or push.
+
 ## Memory Log
 
 ### 2026-04-03

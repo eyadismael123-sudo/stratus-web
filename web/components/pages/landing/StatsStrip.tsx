@@ -16,7 +16,7 @@ const STATS: Stat[] = [
   { value: "5+", label: "AI Agents" },
   { value: "MENA 🌍", label: "Locally Optimized" },
   { value: "Daily", label: "Briefings" },
-  { value: "$50/mo", label: "Per Agent" },
+  { value: "From $49", label: "Per Agent / mo" },
 ];
 
 function StatItem({ stat, index }: { stat: Stat; index: number }) {

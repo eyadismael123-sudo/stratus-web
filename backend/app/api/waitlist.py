@@ -22,18 +22,23 @@ router = APIRouter(prefix="/waitlist", tags=["waitlist"])
 _SHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 
-def _append_to_sheet(email: str) -> None:
-    """Append email + timestamp to Google Sheet. Fails silently — Supabase is the source of truth."""
+def _append_to_sheet(email: str, agent: str | None) -> None:
+    """Append email + agent + timestamp to Google Sheet. Fails silently — Supabase is the source of truth."""
     if not settings.google_service_account_json or not settings.google_sheet_id:
-        return  # Sheets not configured yet — skip silently
+        logger.warning("Google Sheets not configured — skipping sheet append")
+        return
 
+    logger.info("Appending to sheet: email=%s agent=%s", email, agent)
     try:
         creds_dict = json.loads(settings.google_service_account_json)
         creds = Credentials.from_service_account_info(creds_dict, scopes=_SHEETS_SCOPES)
         client = gspread.authorize(creds)
         sheet = client.open_by_key(settings.google_sheet_id).sheet1
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        sheet.append_row([email, timestamp])
+        row = [email, agent or "", timestamp]
+        logger.info("Sheet row: %s", row)
+        sheet.append_row(row)
+        logger.info("Sheet append succeeded")
     except Exception:
         # Never let Sheets failure break the signup flow
         logger.exception("Failed to append waitlist email to Google Sheet")
@@ -41,26 +46,22 @@ def _append_to_sheet(email: str) -> None:
 
 class WaitlistRequest(BaseModel):
     email: EmailStr
+    agent: str | None = None  # which agent they signed up for (optional)
 
 
 @router.post("", response_model=SuccessResponse[dict])
 def join_waitlist(body: WaitlistRequest):
-    """Add an email to the waitlist. Idempotent — duplicate emails return success."""
+    """Add an email to the waitlist. Upserts on email so agent is always updated."""
+    logger.info("Waitlist signup: email=%s agent=%s", body.email, body.agent)
     db = get_service_client()
 
-    # Check if already on the list
-    existing = (
-        db.table("waitlist")
-        .select("id")
-        .eq("email", body.email)
-        .execute()
-    )
-    if existing.data:
-        return {"success": True, "data": {"status": "already_registered"}}
-
-    db.table("waitlist").insert({"email": body.email}).execute()
+    # Upsert — inserts if new, updates agent if email already exists
+    db.table("waitlist").upsert(
+        {"email": body.email, "agent": body.agent},
+        on_conflict="email",
+    ).execute()
 
     # Mirror to Google Sheets (best-effort — never blocks signup)
-    _append_to_sheet(body.email)
+    _append_to_sheet(body.email, body.agent)
 
     return {"success": True, "data": {"status": "registered"}}
