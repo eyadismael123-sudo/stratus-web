@@ -26,8 +26,17 @@ class Settings(BaseSettings):
     # News (Doctor Morning Briefing)
     news_api_key: str = ""  # newsapi.org — free tier: 100 req/day
 
-    # Telegram (agent delivery)
+    # Telegram (agent delivery — legacy, superseded by WhatsApp)
     telegram_bot_token: str = ""
+
+    # WhatsApp Cloud API (Meta)
+    whatsapp_access_token: str = ""       # permanent system user token
+    whatsapp_phone_number_id: str = ""    # Meta phone number ID
+    whatsapp_verify_token: str = ""       # arbitrary string you set in Meta dashboard
+    whatsapp_app_secret: str = ""         # for HMAC-SHA256 signature verification
+
+    # Grok API (xAI — real-time X/Twitter clinical signals)
+    grok_api_key: str = ""
 
     # App
     frontend_url: str = "http://localhost:3000"

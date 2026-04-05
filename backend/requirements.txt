@@ -10,3 +10,4 @@ croniter==5.0.1
 anthropic==0.40.0
 email-validator==2.2.0
 gspread==6.1.4
+apscheduler==3.10.4
