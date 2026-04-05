@@ -74,15 +74,9 @@ export function Header({
         <div className="flex items-center gap-6">
           {variant === "marketing" ? (
             <>
-              <Link
-                href="/auth/signin"
-                className="hidden sm:block text-[#57534e] font-body font-medium text-sm hover:text-[#065f46] transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link href="/auth/signup">
+              <Link href="/marketplace">
                 <button className="bg-[#1b4332] text-white px-5 py-2.5 rounded font-body text-sm hover:opacity-90 active:scale-[0.99] transition-all">
-                  Get Started
+                  Hire an Agent
                 </button>
               </Link>
               {/* Mobile hamburger */}
@@ -182,12 +176,9 @@ export function Header({
               </Link>
             ))}
             <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-[#c1c8c2]/20">
-              <Link href="/auth/signin" onClick={() => setMenuOpen(false)} className="text-center text-sm font-body text-[#57534e] py-2">
-                Sign In
-              </Link>
-              <Link href="/auth/signup" onClick={() => setMenuOpen(false)}>
+              <Link href="/marketplace" onClick={() => setMenuOpen(false)}>
                 <button className="w-full bg-[#1b4332] text-white py-2.5 rounded font-body text-sm hover:opacity-90 transition-all">
-                  Get Started
+                  Hire an Agent
                 </button>
               </Link>
             </div>

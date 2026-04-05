@@ -67,7 +67,7 @@ export default function AgentHero({ template }: AgentHeroProps) {
                 <span className="text-lg font-body font-medium text-[#414844]">/month</span>
               </div>
             </div>
-            <Link href="/auth/signup">
+            <Link href="/marketplace">
               <button className="w-full bg-[#012d1d] text-white py-4 rounded font-display font-bold text-lg hover:bg-[#1b4332] transition-colors mb-4">
                 Hire This Agent
               </button>

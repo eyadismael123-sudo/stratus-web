@@ -21,7 +21,7 @@ export default function AdminLayout({
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
-        router.replace("/auth/signin");
+        router.replace("/");
         return;
       }
 

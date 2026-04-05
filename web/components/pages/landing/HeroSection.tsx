@@ -120,13 +120,6 @@ export function HeroSection() {
         {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-3">
           <Link
-            href="/auth/signin"
-            className="text-[14px] font-semibold rounded-[8px] px-[18px] py-2 no-underline hover:bg-[#E8E6E1] transition-all"
-            style={{ color: "#1A1A1A", border: "1px solid #E8E6E1" }}
-          >
-            Sign in
-          </Link>
-          <Link
             href="/agents/linkedin-post-agent"
             className="text-[14px] font-bold text-white rounded-[8px] px-[18px] py-2 no-underline hover:bg-[#2D6A4F] hover:-translate-y-px transition-all"
             style={{
@@ -182,14 +175,6 @@ export function HeroSection() {
                 {l.label}
               </Link>
             ))}
-            <Link
-              href="/auth/signin"
-              className="text-[15px] font-semibold no-underline"
-              style={{ color: "#1A1A1A" }}
-              onClick={() => setMenuOpen(false)}
-            >
-              Sign in
-            </Link>
             <Link
               href="/marketplace"
               className="text-[15px] font-bold text-white rounded-[8px] px-5 py-3 no-underline text-center"

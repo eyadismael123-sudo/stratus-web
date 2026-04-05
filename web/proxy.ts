@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const signInUrl = new URL("/auth/signin", request.url);
+    const signInUrl = new URL("/", request.url);
     signInUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(signInUrl);
   }

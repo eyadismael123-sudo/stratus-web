@@ -23,7 +23,7 @@ export default function AgentPricingCTA({ template }: AgentPricingCTAProps) {
             {price}
             <span className="text-xl font-body font-medium text-[#c1ecd4]/60">/month</span>
           </div>
-          <Link href="/auth/signup">
+          <Link href="/marketplace">
             <button className="bg-[#FAF9F6] text-[#012d1d] px-12 py-5 rounded font-display font-bold text-lg hover:bg-white transition-colors">
               Get Started Now
             </button>
