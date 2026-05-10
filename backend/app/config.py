@@ -35,8 +35,13 @@ class Settings(BaseSettings):
     whatsapp_verify_token: str = ""       # arbitrary string you set in Meta dashboard
     whatsapp_app_secret: str = ""         # for HMAC-SHA256 signature verification
 
-    # Grok API (xAI — real-time X/Twitter clinical signals)
+    # Grok API (xAI — real-time X/Twitter signals)
     grok_api_key: str = ""
+
+    # LinkedIn Ghostwriter OAuth
+    linkedin_client_id: str = ""
+    linkedin_client_secret: str = ""
+    linkedin_redirect_uri: str = "http://localhost:8000/linkedin/oauth/callback"
 
     # App
     frontend_url: str = "http://localhost:3000"

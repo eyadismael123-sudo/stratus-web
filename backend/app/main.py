@@ -6,8 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import admin, agents, auth, chat, health, marketplace, subscriptions, waitlist, webhooks
-from app.api import whatsapp_webhook, telegram_webhook
+from app.api import linkedin, whatsapp_webhook, telegram_webhook
 from app.agents.brief.scheduler import start_scheduler, stop_scheduler
+from app.agents.linkedin.scheduler import start_linkedin_scheduler, stop_linkedin_scheduler
 from app.config import settings
 from app.exceptions import AppError, app_error_handler
 
@@ -15,8 +16,10 @@ from app.exceptions import AppError, app_error_handler
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     start_scheduler()
+    start_linkedin_scheduler()
     yield
     stop_scheduler()
+    stop_linkedin_scheduler()
 
 
 app = FastAPI(
@@ -54,3 +57,4 @@ app.include_router(chat.router)
 app.include_router(waitlist.router)
 app.include_router(whatsapp_webhook.router)
 app.include_router(telegram_webhook.router)
+app.include_router(linkedin.router)
