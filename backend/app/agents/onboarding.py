@@ -16,15 +16,19 @@ logger = logging.getLogger(__name__)
 def get_session(client_id: str, agent_slug: str) -> dict | None:
     """Return the onboarding session row, or None if not started."""
     db = get_service_client()
-    result = (
-        db.table("onboarding_sessions")
-        .select("*")
-        .eq("client_id", client_id)
-        .eq("agent_slug", agent_slug)
-        .maybe_single()
-        .execute()
-    )
-    return result.data
+    try:
+        result = (
+            db.table("onboarding_sessions")
+            .select("*")
+            .eq("client_id", client_id)
+            .eq("agent_slug", agent_slug)
+            .maybe_single()
+            .execute()
+        )
+        return result.data if result else None
+    except Exception:
+        logger.exception("get_session failed client=%s agent=%s", client_id, agent_slug)
+        return None
 
 
 def is_complete(client_id: str, agent_slug: str) -> bool:

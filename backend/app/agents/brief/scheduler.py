@@ -21,7 +21,6 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.agents.brief.agent import DoctorBriefAgent
 from app.agents.memory import load_agent_memory, load_master_profile
 from app.db.connection import get_service_client
-from app.whatsapp.client import send_with_human_feel
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +33,7 @@ def _get_active_brief_clients() -> list[dict]:
     db = get_service_client()
     result = (
         db.table("client_agents")
-        .select("client_id, clients(id, whatsapp_number, name, timezone)")
+        .select("client_id, clients(id, telegram_chat_id, name, timezone)")
         .eq("agent_slug", "brief")
         .eq("is_active", True)
         .execute()
@@ -77,9 +76,9 @@ async def _run_briefing_check() -> None:
     for client in clients:
         client_id = client.get("id")
         timezone_str = client.get("timezone", "Asia/Dubai")
-        whatsapp_number = client.get("whatsapp_number")
+        telegram_chat_id = client.get("telegram_chat_id")
 
-        if not whatsapp_number:
+        if not telegram_chat_id:
             continue
 
         memory = load_agent_memory(client_id, "brief")
@@ -96,7 +95,6 @@ async def _run_briefing_check() -> None:
             briefing = await _agent.proactive_outreach(client, memory, profile)
 
             if briefing:
-                await send_with_human_feel(whatsapp_number, briefing)
                 logger.info("Brief: briefing delivered to client=%s", client_id)
             else:
                 logger.info("Brief: no briefing generated for client=%s", client_id)

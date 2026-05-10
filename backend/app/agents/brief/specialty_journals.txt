@@ -1,0 +1,215 @@
+Cardiology
+  - NEJM
+  - European Heart Journal
+  - JACC
+
+Interventional Cardiology
+  - JACC: Cardiovascular Interventions
+  - EuroIntervention
+  - Circulation: Cardiovascular Interventions
+
+Electrophysiology
+  - Heart Rhythm
+  - JACC: Clinical Electrophysiology
+  - Circulation: Arrhythmia and Electrophysiology
+
+Heart Failure
+  - JACC: Heart Failure
+  - European Journal of Heart Failure
+  - Circulation: Heart Failure
+
+Oncology
+  - Journal of Clinical Oncology
+  - Lancet Oncology
+  - NEJM
+
+Radiation Oncology
+  - International Journal of Radiation Oncology Biology Physics
+  - Radiotherapy and Oncology
+  - JAMA Oncology
+
+Hematology
+  - Blood
+  - Haematologica
+  - American Journal of Hematology
+
+Hematologic Oncology
+  - Blood
+  - Leukemia
+  - Journal of Hematology & Oncology
+
+Neurology
+  - Lancet Neurology
+  - Neurology
+  - NEJM
+
+Stroke
+  - Stroke
+  - Lancet Neurology
+  - NEJM
+
+Neurosurgery
+  - Journal of Neurosurgery
+  - Neurosurgery
+  - Acta Neurochirurgica
+
+Psychiatry
+  - JAMA Psychiatry
+  - Lancet Psychiatry
+  - American Journal of Psychiatry
+
+Emergency Medicine
+  - Annals of Emergency Medicine
+  - NEJM
+  - Academic Emergency Medicine
+
+Internal Medicine
+  - NEJM
+  - JAMA
+  - Annals of Internal Medicine
+
+Pulmonology
+  - American Journal of Respiratory and Critical Care Medicine
+  - European Respiratory Journal
+  - Chest
+
+Gastroenterology
+  - Gastroenterology
+  - Gut
+  - American Journal of Gastroenterology
+
+Hepatology
+  - Journal of Hepatology
+  - Hepatology
+  - JHEP Reports
+
+Nephrology
+  - Journal of the American Society of Nephrology
+  - Kidney International
+  - American Journal of Kidney Diseases
+
+Endocrinology
+  - Diabetes Care
+  - Journal of Clinical Endocrinology & Metabolism
+  - Diabetes
+
+Rheumatology
+  - Annals of the Rheumatic Diseases
+  - Arthritis & Rheumatology
+  - Rheumatology
+
+Infectious Disease
+  - Lancet Infectious Diseases
+  - Clinical Infectious Diseases
+  - Journal of Infectious Diseases
+
+Dermatology
+  - JAMA Dermatology
+  - Journal of Investigative Dermatology
+  - British Journal of Dermatology
+
+Ophthalmology
+  - Ophthalmology
+  - JAMA Ophthalmology
+  - British Journal of Ophthalmology
+
+Otolaryngology
+  - JAMA Otolaryngology - Head & Neck Surgery
+  - Otolaryngology - Head and Neck Surgery
+  - The Laryngoscope
+
+Orthopedics
+  - Journal of Bone and Joint Surgery
+  - Bone & Joint Journal
+  - American Journal of Sports Medicine
+
+Urology
+  - European Urology
+  - Journal of Urology
+  - BJU International
+
+Obstetrics and Gynecology
+  - American Journal of Obstetrics and Gynecology
+  - BJOG
+  - Obstetrics & Gynecology
+
+Pediatrics
+  - JAMA Pediatrics
+  - Pediatrics
+  - Archives of Disease in Childhood
+
+Neonatology
+  - Pediatrics
+  - Archives of Disease in Childhood: Fetal and Neonatal Edition
+  - Journal of Perinatology
+
+Anesthesiology
+  - Anesthesiology
+  - British Journal of Anaesthesia
+  - Regional Anesthesia and Pain Medicine
+
+Critical Care
+  - Intensive Care Medicine
+  - Critical Care Medicine
+  - NEJM
+
+Radiology
+  - Radiology
+  - European Radiology
+  - AJR: American Journal of Roentgenology
+
+Interventional Radiology
+  - Journal of Vascular and Interventional Radiology
+  - CardioVascular and Interventional Radiology
+  - European Journal of Radiology
+
+Pathology
+  - Modern Pathology
+  - Journal of Pathology
+  - American Journal of Surgical Pathology
+
+General Surgery
+  - Annals of Surgery
+  - JAMA Surgery
+  - British Journal of Surgery
+
+Vascular Surgery
+  - Journal of Vascular Surgery
+  - European Journal of Vascular and Endovascular Surgery
+  - Annals of Vascular Surgery
+
+Allergy and Immunology
+  - Journal of Allergy and Clinical Immunology
+  - Allergy
+  - Clinical & Experimental Allergy
+
+Geriatrics
+  - Age and Ageing
+  - Journal of the American Geriatrics Society
+  - Journal of Gerontology: Medical Sciences
+
+Family Medicine
+  - Annals of Family Medicine
+  - British Journal of General Practice
+  - American Family Physician
+
+Palliative Care
+  - Palliative Medicine
+  - Journal of Pain and Symptom Management
+  - Journal of Palliative Medicine
+
+Sports Medicine
+  - British Journal of Sports Medicine
+  - Sports Medicine
+  - American Journal of Sports Medicine
+
+Transplant Medicine
+  - American Journal of Transplantation
+  - Transplantation
+  - Transplant International
+
+General Medicine
+  - NEJM
+  - JAMA
+  - Lancet
+

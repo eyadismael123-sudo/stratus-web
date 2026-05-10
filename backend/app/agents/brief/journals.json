@@ -1,0 +1,400 @@
+{
+  "specialties": [
+    {
+      "name": "Cardiology",
+      "aliases": ["cardiology", "cardiolog", "cardiac medicine", "cardiovascular medicine"],
+      "journals": [
+        { "display": "NEJM", "pubmed": "N Engl J Med" },
+        { "display": "European Heart Journal", "pubmed": "Eur Heart J" },
+        { "display": "JACC", "pubmed": "J Am Coll Cardiol" }
+      ]
+    },
+    {
+      "name": "Interventional Cardiology",
+      "aliases": ["interventional cardiology", "interventional cardiolog", "pci", "percutaneous coronary", "cath lab"],
+      "journals": [
+        { "display": "JACC: Cardiovascular Interventions", "pubmed": "JACC Cardiovasc Interv" },
+        { "display": "EuroIntervention", "pubmed": "EuroIntervention" },
+        { "display": "Circulation: Cardiovascular Interventions", "pubmed": "Circ Cardiovasc Interv" }
+      ]
+    },
+    {
+      "name": "Electrophysiology",
+      "aliases": ["electrophysiology", "cardiac electrophysiology", "ep", "arrhythmia", "cardiac rhythm", "pacing"],
+      "journals": [
+        { "display": "Heart Rhythm", "pubmed": "Heart Rhythm" },
+        { "display": "JACC: Clinical Electrophysiology", "pubmed": "JACC Clin Electrophysiol" },
+        { "display": "Circulation: Arrhythmia and Electrophysiology", "pubmed": "Circ Arrhythm Electrophysiol" }
+      ]
+    },
+    {
+      "name": "Heart Failure",
+      "aliases": ["heart failure", "advanced heart failure", "cardiac failure", "hf cardiology"],
+      "journals": [
+        { "display": "JACC: Heart Failure", "pubmed": "JACC Heart Fail" },
+        { "display": "European Journal of Heart Failure", "pubmed": "Eur J Heart Fail" },
+        { "display": "Circulation: Heart Failure", "pubmed": "Circ Heart Fail" }
+      ]
+    },
+    {
+      "name": "Oncology",
+      "aliases": ["oncology", "medical oncology", "cancer", "solid tumor", "solid tumour"],
+      "journals": [
+        { "display": "Journal of Clinical Oncology", "pubmed": "J Clin Oncol" },
+        { "display": "Lancet Oncology", "pubmed": "Lancet Oncol" },
+        { "display": "NEJM", "pubmed": "N Engl J Med" }
+      ]
+    },
+    {
+      "name": "Radiation Oncology",
+      "aliases": ["radiation oncology", "radiation therapy", "radiotherapy", "radiation", "xrt"],
+      "journals": [
+        { "display": "International Journal of Radiation Oncology Biology Physics", "pubmed": "Int J Radiat Oncol Biol Phys" },
+        { "display": "Radiotherapy and Oncology", "pubmed": "Radiother Oncol" },
+        { "display": "JAMA Oncology", "pubmed": "JAMA Oncol" }
+      ]
+    },
+    {
+      "name": "Hematology",
+      "aliases": ["hematology", "haematology", "blood disorders", "benign hematology"],
+      "journals": [
+        { "display": "Blood", "pubmed": "Blood" },
+        { "display": "Haematologica", "pubmed": "Haematologica" },
+        { "display": "American Journal of Hematology", "pubmed": "Am J Hematol" }
+      ]
+    },
+    {
+      "name": "Hematologic Oncology",
+      "aliases": ["hematologic oncology", "hematological oncology", "heme onc", "heme-onc", "haematologic oncology", "leukemia", "lymphoma", "myeloma"],
+      "journals": [
+        { "display": "Blood", "pubmed": "Blood" },
+        { "display": "Leukemia", "pubmed": "Leukemia" },
+        { "display": "Journal of Hematology & Oncology", "pubmed": "J Hematol Oncol" }
+      ]
+    },
+    {
+      "name": "Neurology",
+      "aliases": ["neurology", "neurolog", "neurological"],
+      "journals": [
+        { "display": "Lancet Neurology", "pubmed": "Lancet Neurol" },
+        { "display": "Neurology", "pubmed": "Neurology" },
+        { "display": "NEJM", "pubmed": "N Engl J Med" }
+      ]
+    },
+    {
+      "name": "Stroke",
+      "aliases": ["stroke", "cerebrovascular", "cerebrovascular disease", "stroke neurology", "neurointerventional"],
+      "journals": [
+        { "display": "Stroke", "pubmed": "Stroke" },
+        { "display": "Lancet Neurology", "pubmed": "Lancet Neurol" },
+        { "display": "NEJM", "pubmed": "N Engl J Med" }
+      ]
+    },
+    {
+      "name": "Neurosurgery",
+      "aliases": ["neurosurgery", "neurosurg", "brain surgery", "spinal surgery"],
+      "journals": [
+        { "display": "Journal of Neurosurgery", "pubmed": "J Neurosurg" },
+        { "display": "Neurosurgery", "pubmed": "Neurosurgery" },
+        { "display": "Acta Neurochirurgica", "pubmed": "Acta Neurochir (Wien)" }
+      ]
+    },
+    {
+      "name": "Psychiatry",
+      "aliases": ["psychiatry", "psychiatr", "mental health", "psychosis", "mood disorder"],
+      "journals": [
+        { "display": "JAMA Psychiatry", "pubmed": "JAMA Psychiatry" },
+        { "display": "Lancet Psychiatry", "pubmed": "Lancet Psychiatry" },
+        { "display": "American Journal of Psychiatry", "pubmed": "Am J Psychiatry" }
+      ]
+    },
+    {
+      "name": "Emergency Medicine",
+      "aliases": ["emergency medicine", "emergency physician", "emergency doctor", "a&e", "accident and emergency", "er medicine"],
+      "journals": [
+        { "display": "Annals of Emergency Medicine", "pubmed": "Ann Emerg Med" },
+        { "display": "NEJM", "pubmed": "N Engl J Med" },
+        { "display": "Academic Emergency Medicine", "pubmed": "Acad Emerg Med" }
+      ]
+    },
+    {
+      "name": "Internal Medicine",
+      "aliases": ["internal medicine", "general internal medicine", "general medicine", "internist", "general practitioner"],
+      "journals": [
+        { "display": "NEJM", "pubmed": "N Engl J Med" },
+        { "display": "JAMA", "pubmed": "JAMA" },
+        { "display": "Annals of Internal Medicine", "pubmed": "Ann Intern Med" }
+      ]
+    },
+    {
+      "name": "Pulmonology",
+      "aliases": ["pulmonology", "pulmonolog", "respirology", "respiratory medicine", "chest medicine", "pulmonary", "thoracic medicine"],
+      "journals": [
+        { "display": "American Journal of Respiratory and Critical Care Medicine", "pubmed": "Am J Respir Crit Care Med" },
+        { "display": "European Respiratory Journal", "pubmed": "Eur Respir J" },
+        { "display": "Chest", "pubmed": "Chest" }
+      ]
+    },
+    {
+      "name": "Gastroenterology",
+      "aliases": ["gastroenterology", "gastroenterolog", "gi medicine", "gastrointestinal"],
+      "journals": [
+        { "display": "Gastroenterology", "pubmed": "Gastroenterology" },
+        { "display": "Gut", "pubmed": "Gut" },
+        { "display": "American Journal of Gastroenterology", "pubmed": "Am J Gastroenterol" }
+      ]
+    },
+    {
+      "name": "Hepatology",
+      "aliases": ["hepatology", "hepatolog", "liver disease", "liver medicine", "hepatobiliary"],
+      "journals": [
+        { "display": "Journal of Hepatology", "pubmed": "J Hepatol" },
+        { "display": "Hepatology", "pubmed": "Hepatology" },
+        { "display": "JHEP Reports", "pubmed": "JHEP Rep" }
+      ]
+    },
+    {
+      "name": "Nephrology",
+      "aliases": ["nephrology", "nephrolog", "kidney disease", "renal medicine", "renal"],
+      "journals": [
+        { "display": "Journal of the American Society of Nephrology", "pubmed": "J Am Soc Nephrol" },
+        { "display": "Kidney International", "pubmed": "Kidney Int" },
+        { "display": "American Journal of Kidney Diseases", "pubmed": "Am J Kidney Dis" }
+      ]
+    },
+    {
+      "name": "Endocrinology",
+      "aliases": ["endocrinology", "endocrinolog", "diabetes", "diabetes and endocrinology", "thyroid", "metabolic medicine", "metabolism"],
+      "journals": [
+        { "display": "Diabetes Care", "pubmed": "Diabetes Care" },
+        { "display": "Journal of Clinical Endocrinology & Metabolism", "pubmed": "J Clin Endocrinol Metab" },
+        { "display": "Diabetes", "pubmed": "Diabetes" }
+      ]
+    },
+    {
+      "name": "Rheumatology",
+      "aliases": ["rheumatology", "rheumatolog", "autoimmune", "rheumatic disease"],
+      "journals": [
+        { "display": "Annals of the Rheumatic Diseases", "pubmed": "Ann Rheum Dis" },
+        { "display": "Arthritis & Rheumatology", "pubmed": "Arthritis Rheumatol" },
+        { "display": "Rheumatology", "pubmed": "Rheumatology (Oxford)" }
+      ]
+    },
+    {
+      "name": "Infectious Disease",
+      "aliases": ["infectious disease", "infectious diseases", "infectious", "infection", "id medicine", "tropical medicine"],
+      "journals": [
+        { "display": "Lancet Infectious Diseases", "pubmed": "Lancet Infect Dis" },
+        { "display": "Clinical Infectious Diseases", "pubmed": "Clin Infect Dis" },
+        { "display": "Journal of Infectious Diseases", "pubmed": "J Infect Dis" }
+      ]
+    },
+    {
+      "name": "Dermatology",
+      "aliases": ["dermatology", "dermatolog", "skin medicine", "skin disease"],
+      "journals": [
+        { "display": "JAMA Dermatology", "pubmed": "JAMA Dermatol" },
+        { "display": "Journal of Investigative Dermatology", "pubmed": "J Invest Dermatol" },
+        { "display": "British Journal of Dermatology", "pubmed": "Br J Dermatol" }
+      ]
+    },
+    {
+      "name": "Ophthalmology",
+      "aliases": ["ophthalmology", "ophthalmolog", "eye surgery", "ocular medicine", "retina"],
+      "journals": [
+        { "display": "Ophthalmology", "pubmed": "Ophthalmology" },
+        { "display": "JAMA Ophthalmology", "pubmed": "JAMA Ophthalmol" },
+        { "display": "British Journal of Ophthalmology", "pubmed": "Br J Ophthalmol" }
+      ]
+    },
+    {
+      "name": "Otolaryngology",
+      "aliases": ["otolaryngology", "ent", "ear nose throat", "head and neck", "head & neck", "rhinology", "laryngology"],
+      "journals": [
+        { "display": "JAMA Otolaryngology - Head & Neck Surgery", "pubmed": "JAMA Otolaryngol Head Neck Surg" },
+        { "display": "Otolaryngology - Head and Neck Surgery", "pubmed": "Otolaryngol Head Neck Surg" },
+        { "display": "The Laryngoscope", "pubmed": "Laryngoscope" }
+      ]
+    },
+    {
+      "name": "Orthopedics",
+      "aliases": ["orthopedics", "orthopaedics", "orthopedic surgery", "orthopaedic surgery", "musculoskeletal", "joint replacement", "spine surgery"],
+      "journals": [
+        { "display": "Journal of Bone and Joint Surgery", "pubmed": "J Bone Joint Surg Am" },
+        { "display": "Bone & Joint Journal", "pubmed": "Bone Joint J" },
+        { "display": "American Journal of Sports Medicine", "pubmed": "Am J Sports Med" }
+      ]
+    },
+    {
+      "name": "Urology",
+      "aliases": ["urology", "urolog", "urological surgery", "andrology"],
+      "journals": [
+        { "display": "European Urology", "pubmed": "Eur Urol" },
+        { "display": "Journal of Urology", "pubmed": "J Urol" },
+        { "display": "BJU International", "pubmed": "BJU Int" }
+      ]
+    },
+    {
+      "name": "Obstetrics and Gynecology",
+      "aliases": ["obstetrics", "gynecology", "gynaecology", "obs & gynae", "obstetrics and gynecology", "obstetrics and gynaecology", "maternal fetal", "maternal-fetal", "mfm"],
+      "journals": [
+        { "display": "American Journal of Obstetrics and Gynecology", "pubmed": "Am J Obstet Gynecol" },
+        { "display": "BJOG", "pubmed": "BJOG" },
+        { "display": "Obstetrics & Gynecology", "pubmed": "Obstet Gynecol" }
+      ]
+    },
+    {
+      "name": "Pediatrics",
+      "aliases": ["pediatrics", "paediatrics", "pediatr", "paediatr", "child health", "children's medicine"],
+      "journals": [
+        { "display": "JAMA Pediatrics", "pubmed": "JAMA Pediatr" },
+        { "display": "Pediatrics", "pubmed": "Pediatrics" },
+        { "display": "Archives of Disease in Childhood", "pubmed": "Arch Dis Child" }
+      ]
+    },
+    {
+      "name": "Neonatology",
+      "aliases": ["neonatology", "neonatal", "neonatal medicine", "newborn medicine", "nicu"],
+      "journals": [
+        { "display": "Pediatrics", "pubmed": "Pediatrics" },
+        { "display": "Archives of Disease in Childhood: Fetal and Neonatal Edition", "pubmed": "Arch Dis Child Fetal Neonatal Ed" },
+        { "display": "Journal of Perinatology", "pubmed": "J Perinatol" }
+      ]
+    },
+    {
+      "name": "Anesthesiology",
+      "aliases": ["anesthesiology", "anaesthesiology", "anesthesia", "anaesthesia", "perioperative medicine", "perioperative"],
+      "journals": [
+        { "display": "Anesthesiology", "pubmed": "Anesthesiology" },
+        { "display": "British Journal of Anaesthesia", "pubmed": "Br J Anaesth" },
+        { "display": "Regional Anesthesia and Pain Medicine", "pubmed": "Reg Anesth Pain Med" }
+      ]
+    },
+    {
+      "name": "Critical Care",
+      "aliases": ["critical care", "intensive care", "icu", "itu", "critical care medicine", "intensivist"],
+      "journals": [
+        { "display": "Intensive Care Medicine", "pubmed": "Intensive Care Med" },
+        { "display": "Critical Care Medicine", "pubmed": "Crit Care Med" },
+        { "display": "NEJM", "pubmed": "N Engl J Med" }
+      ]
+    },
+    {
+      "name": "Radiology",
+      "aliases": ["radiology", "diagnostic radiology", "diagnostic imaging", "radiolog"],
+      "journals": [
+        { "display": "Radiology", "pubmed": "Radiology" },
+        { "display": "European Radiology", "pubmed": "Eur Radiol" },
+        { "display": "AJR: American Journal of Roentgenology", "pubmed": "AJR Am J Roentgenol" }
+      ]
+    },
+    {
+      "name": "Interventional Radiology",
+      "aliases": ["interventional radiology", "vascular interventional", "ir radiology"],
+      "journals": [
+        { "display": "Journal of Vascular and Interventional Radiology", "pubmed": "J Vasc Interv Radiol" },
+        { "display": "CardioVascular and Interventional Radiology", "pubmed": "Cardiovasc Intervent Radiol" },
+        { "display": "European Journal of Radiology", "pubmed": "Eur J Radiol" }
+      ]
+    },
+    {
+      "name": "Pathology",
+      "aliases": ["pathology", "patholog", "anatomical pathology", "histopathology", "cytopathology"],
+      "journals": [
+        { "display": "Modern Pathology", "pubmed": "Mod Pathol" },
+        { "display": "Journal of Pathology", "pubmed": "J Pathol" },
+        { "display": "American Journal of Surgical Pathology", "pubmed": "Am J Surg Pathol" }
+      ]
+    },
+    {
+      "name": "General Surgery",
+      "aliases": ["general surgery", "surgery", "surgical", "abdominal surgery", "colorectal surgery", "colorectal"],
+      "journals": [
+        { "display": "Annals of Surgery", "pubmed": "Ann Surg" },
+        { "display": "JAMA Surgery", "pubmed": "JAMA Surg" },
+        { "display": "British Journal of Surgery", "pubmed": "Br J Surg" }
+      ]
+    },
+    {
+      "name": "Plastic and Reconstructive Surgery",
+      "aliases": ["plastic surgery", "reconstructive surgery", "reconstructive plastic surgery", "plastic and reconstructive", "microsurgery", "hand surgery", "burns surgery", "craniofacial", "aesthetic surgery", "cosmetic surgery"],
+      "journals": [
+        { "display": "Plastic and Reconstructive Surgery", "pubmed": "Plast Reconstr Surg" },
+        { "display": "Journal of Plastic, Reconstructive & Aesthetic Surgery", "pubmed": "J Plast Reconstr Aesthet Surg" },
+        { "display": "Annals of Plastic Surgery", "pubmed": "Ann Plast Surg" }
+      ]
+    },
+    {
+      "name": "Vascular Surgery",
+      "aliases": ["vascular surgery", "vascular", "endovascular", "vascular medicine"],
+      "journals": [
+        { "display": "Journal of Vascular Surgery", "pubmed": "J Vasc Surg" },
+        { "display": "European Journal of Vascular and Endovascular Surgery", "pubmed": "Eur J Vasc Endovasc Surg" },
+        { "display": "Annals of Vascular Surgery", "pubmed": "Ann Vasc Surg" }
+      ]
+    },
+    {
+      "name": "Allergy and Immunology",
+      "aliases": ["allergy", "immunology", "allergy and immunology", "clinical immunology", "allergist"],
+      "journals": [
+        { "display": "Journal of Allergy and Clinical Immunology", "pubmed": "J Allergy Clin Immunol" },
+        { "display": "Allergy", "pubmed": "Allergy" },
+        { "display": "Clinical & Experimental Allergy", "pubmed": "Clin Exp Allergy" }
+      ]
+    },
+    {
+      "name": "Geriatrics",
+      "aliases": ["geriatrics", "geriatric medicine", "elderly care", "aged care", "care of the elderly"],
+      "journals": [
+        { "display": "Age and Ageing", "pubmed": "Age Ageing" },
+        { "display": "Journal of the American Geriatrics Society", "pubmed": "J Am Geriatr Soc" },
+        { "display": "Journal of Gerontology: Medical Sciences", "pubmed": "J Gerontol A Biol Sci Med Sci" }
+      ]
+    },
+    {
+      "name": "Family Medicine",
+      "aliases": ["family medicine", "family practice", "general practice", "primary care", "gp"],
+      "journals": [
+        { "display": "Annals of Family Medicine", "pubmed": "Ann Fam Med" },
+        { "display": "British Journal of General Practice", "pubmed": "Br J Gen Pract" },
+        { "display": "American Family Physician", "pubmed": "Am Fam Physician" }
+      ]
+    },
+    {
+      "name": "Palliative Care",
+      "aliases": ["palliative care", "palliative medicine", "hospice", "end of life", "supportive care"],
+      "journals": [
+        { "display": "Palliative Medicine", "pubmed": "Palliat Med" },
+        { "display": "Journal of Pain and Symptom Management", "pubmed": "J Pain Symptom Manage" },
+        { "display": "Journal of Palliative Medicine", "pubmed": "J Palliat Med" }
+      ]
+    },
+    {
+      "name": "Sports Medicine",
+      "aliases": ["sports medicine", "sport medicine", "sports and exercise medicine", "exercise medicine"],
+      "journals": [
+        { "display": "British Journal of Sports Medicine", "pubmed": "Br J Sports Med" },
+        { "display": "Sports Medicine", "pubmed": "Sports Med" },
+        { "display": "American Journal of Sports Medicine", "pubmed": "Am J Sports Med" }
+      ]
+    },
+    {
+      "name": "Transplant Medicine",
+      "aliases": ["transplant", "transplantation", "transplant medicine", "transplant surgery", "solid organ transplant"],
+      "journals": [
+        { "display": "American Journal of Transplantation", "pubmed": "Am J Transplant" },
+        { "display": "Transplantation", "pubmed": "Transplantation" },
+        { "display": "Transplant International", "pubmed": "Transpl Int" }
+      ]
+    },
+    {
+      "name": "General Medicine",
+      "aliases": ["general", "medicine", "physician"],
+      "journals": [
+        { "display": "NEJM", "pubmed": "N Engl J Med" },
+        { "display": "JAMA", "pubmed": "JAMA" },
+        { "display": "Lancet", "pubmed": "Lancet" }
+      ]
+    }
+  ]
+}

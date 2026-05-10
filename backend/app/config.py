@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # News (Doctor Morning Briefing)
     news_api_key: str = ""  # newsapi.org — free tier: 100 req/day
 
-    # Telegram (agent delivery — legacy, superseded by WhatsApp)
+    # Telegram (Brief doctor briefing agent)
     telegram_bot_token: str = ""
 
     # WhatsApp Cloud API (Meta)

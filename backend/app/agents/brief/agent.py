@@ -1,6 +1,6 @@
 """Brief — Doctor Research Agent.
 
-WhatsApp-native agent that:
+Telegram-native agent that:
 - Onboards doctors (specialty, institution, focus areas, journals, preferences)
 - Sends a personalised morning briefing at 06:30 per client timezone
 - Answers follow-up questions about papers and clinical topics
@@ -17,6 +17,7 @@ from anthropic import Anthropic
 
 from app.agents.base import BaseAgent
 from app.agents.brief.formatter import format_morning_briefing, update_memory_with_haiku
+from app.agents.brief.journals import display_names, pubmed_abbrevs, resolve_journals
 from app.agents.brief.research import fetch_grok_signals, fetch_pubmed
 from app.agents.human_feel import familiarity_prefix
 from app.config import settings
@@ -31,8 +32,8 @@ _ONBOARDING_QUESTIONS = [
     "Which hospital or clinic are you based at?",
     # step 2: clinical focus
     "What are your 2-3 main clinical focus areas? (e.g. TAVI outcomes, complex PCI, heart failure)",
-    # step 3: trusted journals
-    "Which journals do you trust most? (e.g. NEJM, JACC, Lancet — just list them)",
+    # step 3: trusted journals (specialty journals are auto-loaded — this adds extras)
+    "I'll automatically pull from the top journals in your specialty. Any additional journals you want included? (e.g. NEJM, JACC, Lancet — or just say 'none')",
     # step 4: dislikes
     "Anything you don't want in your briefing? (e.g. review articles, animal studies, editorials)",
     # step 5: peak reading time (optional)
@@ -135,7 +136,7 @@ The doctor just sent: "{text}"
 
 Respond helpfully. If they're asking about a specific paper or clinical topic, give a concise, evidence-based answer.
 If they're giving feedback on the briefing format, acknowledge it and note it will be updated.
-Keep it under 150 words. WhatsApp-native: short paragraphs, no markdown."""
+Keep it under 150 words. Telegram-native: you may use *bold* for emphasis, but keep formatting minimal."""
 
         try:
             anthropic = Anthropic(api_key=settings.anthropic_api_key)
@@ -176,15 +177,19 @@ Keep it under 150 words. WhatsApp-native: short paragraphs, no markdown."""
         trusted_journals = memory.get("trusted_journals", [])
         dislikes = memory.get("dislikes", [])
 
+        # Resolve curated journals for this specialty
+        specialty_journals = resolve_journals(specialty)
+        spec_pubmed = pubmed_abbrevs(specialty_journals)
+        spec_display = display_names(specialty_journals)
         logger.info(
-            "Brief: fetching research for client=%s specialty=%s",
-            client.get("id"), specialty,
+            "Brief: fetching research for client=%s specialty=%s journals=%s",
+            client.get("id"), specialty, spec_display,
         )
 
         # Fetch from both sources concurrently
         import asyncio
         pubmed_task = asyncio.to_thread(
-            fetch_pubmed, specialty, clinical_focus, trusted_journals, dislikes
+            fetch_pubmed, specialty, clinical_focus, trusted_journals, dislikes, spec_pubmed
         )
         grok_task = fetch_grok_signals(specialty, clinical_focus)
 
@@ -195,13 +200,17 @@ Keep it under 150 words. WhatsApp-native: short paragraphs, no markdown."""
             len(pubmed_articles), len(grok_signals), client.get("id"),
         )
 
-        briefing = format_morning_briefing(memory, profile, pubmed_articles, grok_signals)
+        # Merge specialty journal names into memory for the formatter context
+        enriched_memory = {**memory, "specialty_journals": spec_display}
+        briefing = format_morning_briefing(enriched_memory, profile, pubmed_articles, grok_signals)
 
         # Update memory after send
         interaction_summary = f"Sent morning briefing with {len(pubmed_articles)} PubMed articles and {len(grok_signals)} X signals."
         updated_memory = update_memory_with_haiku(memory, interaction_summary)
 
         from app.agents.memory import save_agent_memory, log_message
+        from app.telegram.client import send_with_human_feel as tg_send
+
         save_agent_memory(client["id"], self.slug, updated_memory)
         log_message(
             client_id=client["id"],
@@ -211,5 +220,14 @@ Keep it under 150 words. WhatsApp-native: short paragraphs, no markdown."""
             raw_content=f"Morning briefing — {len(pubmed_articles)} papers, {len(grok_signals)} signals",
             response=briefing,
         )
+
+        # Push the briefing to Telegram
+        telegram_chat_id = client.get("telegram_chat_id")
+        if telegram_chat_id:
+            await tg_send(telegram_chat_id, briefing)
+        else:
+            logger.warning(
+                "Brief: no telegram_chat_id for client=%s — briefing not sent", client.get("id")
+            )
 
         return briefing

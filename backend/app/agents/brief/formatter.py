@@ -50,6 +50,7 @@ def format_morning_briefing(
     preferred_format = memory.get("preferred_format", "3 papers, 2-sentence summary each, link at end")
     familiarity_level = memory.get("familiarity_level", 0)
     dislikes = memory.get("dislikes", [])
+    specialty_journals = memory.get("specialty_journals", [])
 
     comm_style = profile.get("communication_style", "professional")
     familiarity_note = profile.get("familiarity_trajectory", "")
@@ -96,6 +97,7 @@ def format_morning_briefing(
         tone_note += f" Context: {familiarity_note}."
 
     dislike_note = f"Avoid: {', '.join(dislikes)}." if dislikes else ""
+    journal_note = f"Primary sources: {', '.join(specialty_journals)}." if specialty_journals else ""
 
     prompt = f"""You are Brief, a specialist AI research assistant for a {specialty} doctor{f' at {institution}' if institution else ''}.
 
@@ -104,6 +106,7 @@ Today is {today}.
 Your doctor's preferred format: {preferred_format}
 {tone_note}
 {dislike_note}
+{journal_note}
 
 Raw clinical information gathered this morning:
 
