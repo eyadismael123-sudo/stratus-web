@@ -1,6 +1,6 @@
 """LinkedIn Ghostwriter API endpoints.
 
-Handles OAuth connect/callback and read-only session/post history endpoints.
+Handles OAuth connect/callback, Stripe checkout, and read-only session/post history.
 The interactive post flow runs via Telegram — these endpoints serve the dashboard.
 """
 
@@ -9,12 +9,16 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
+import stripe
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, EmailStr
 
 from app.agents.linkedin.linkedin_api import get_profile
 from app.agents.linkedin.oauth import exchange_code, generate_auth_url
 from app.config import settings
 from app.db.connection import get_service_client
+
+stripe.api_key = settings.stripe_secret_key
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/linkedin", tags=["linkedin"])
@@ -78,6 +82,69 @@ def linkedin_oauth_callback(code: str = Query(...), state: str = Query(...)):
 
     linkedin_name = profile.get("name", "")
     return {"ok": True, "linkedin_name": linkedin_name, "message": "LinkedIn connected successfully"}
+
+
+# ─── Stripe checkout ──────────────────────────────────────────────────────────
+
+
+class CheckoutRequest(BaseModel):
+    client_id: str
+    email: EmailStr
+
+
+@router.post("/stripe/checkout")
+def linkedin_stripe_checkout(body: CheckoutRequest):
+    """Create a Stripe Checkout session for the LinkedIn Ghostwriter ($50/month).
+
+    On success Stripe redirects to the frontend dashboard.
+    The webhook will activate client_agents once payment clears.
+    """
+    if not settings.stripe_secret_key or not settings.stripe_price_id:
+        raise HTTPException(503, "Stripe is not configured on this server")
+
+    db = get_service_client()
+
+    # Look up the client to confirm they exist
+    client_result = (
+        db.table("clients")
+        .select("id, name, stripe_customer_id")
+        .eq("id", body.client_id)
+        .maybe_single()
+        .execute()
+    )
+    if not client_result or not client_result.data:
+        raise HTTPException(404, "Client not found")
+
+    client = client_result.data
+    customer_id = client.get("stripe_customer_id") or None
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            payment_method_types=["card"],
+            customer=customer_id,
+            customer_email=None if customer_id else str(body.email),
+            line_items=[{"price": settings.stripe_price_id, "quantity": 1}],
+            # Embed client_id + agent_slug on the subscription itself so
+            # customer.subscription.* webhook events can activate/deactivate
+            subscription_data={
+                "metadata": {
+                    "client_id": body.client_id,
+                    "agent_slug": "linkedin",
+                }
+            },
+            metadata={
+                "client_id": body.client_id,
+                "agent_slug": "linkedin",
+            },
+            success_url=f"{settings.frontend_url}/dashboard?hired=linkedin",
+            cancel_url=f"{settings.frontend_url}/marketplace",
+        )
+    except stripe.error.StripeError as exc:
+        logger.exception("Stripe checkout error for client %s", body.client_id)
+        raise HTTPException(502, f"Payment error: {getattr(exc, 'user_message', str(exc))}")
+
+    return {"checkout_url": session.url}
 
 
 # ─── Voice profile ────────────────────────────────────────────────────────────

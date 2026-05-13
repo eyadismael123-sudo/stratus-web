@@ -157,7 +157,11 @@ async def _process_update(message: dict) -> None:
     if not hired_slugs:
         await send_with_human_feel(
             chat_id,
-            "You don't have any active agents yet. Visit stratus.ai to get started.",
+            (
+                "Your Stratus subscription isn't active yet.\n\n"
+                "To get started with the LinkedIn Ghostwriter, "
+                "visit stratus.ai/marketplace or contact your Stratus admin."
+            ),
         )
         return
 
