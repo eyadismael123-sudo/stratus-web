@@ -61,6 +61,18 @@ class DoctorBriefAgent(BaseAgent):
             f"Let me set you up properly. It'll take 2 minutes."
         )
 
+    def get_completion_message(self, client: dict, collected: dict) -> str:
+        name = client.get("name", "Doctor")
+        peak = collected.get("peak_reading_time", "06:30")
+        focuses = ", ".join(collected.get("clinical_focus", [])[:2])
+        journals = ", ".join(collected.get("trusted_journals", [])[:2])
+        return (
+            f"You're all set, Dr. {name.split()[-1]}.\n\n"
+            f"Your first briefing arrives at *{peak}* tomorrow morning. "
+            f"I'll cover {focuses} from {journals} and beyond.\n\n"
+            f"Any questions before then? Just message me."
+        )
+
     def get_onboarding_question(self, step: int, collected: dict) -> str | None:
         if step >= len(_ONBOARDING_QUESTIONS):
             return None

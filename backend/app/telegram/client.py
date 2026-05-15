@@ -76,6 +76,51 @@ async def send_text(chat_id: int | str, text: str, parse_mode: str = "Markdown")
             return None
 
 
+async def send_with_keyboard(
+    chat_id: int | str,
+    text: str,
+    options: list[str],
+    row_size: int = 2,
+) -> dict | None:
+    """Send a message with a reply keyboard showing button options.
+
+    Buttons disappear after the user taps one (one_time_keyboard=True).
+    """
+    if not settings.telegram_bot_token:
+        print(f"\n[Telegram → {chat_id}]\n{text}\nOptions: {options}\n{'─'*60}\n")
+        return None
+
+    rows = [options[i:i + row_size] for i in range(0, len(options), row_size)]
+    reply_markup = {
+        "keyboard": [[{"text": opt} for opt in row] for row in rows],
+        "one_time_keyboard": True,
+        "resize_keyboard": True,
+    }
+
+    await send_typing(chat_id)
+    delay = _typing_delay(text)
+    await asyncio.sleep(delay)
+
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.post(
+                f"{_base_url()}/sendMessage",
+                json={
+                    "chat_id": chat_id,
+                    "text": text,
+                    "parse_mode": "Markdown",
+                    "reply_markup": reply_markup,
+                    "disable_web_page_preview": True,
+                },
+                timeout=15.0,
+            )
+            resp.raise_for_status()
+            return resp.json()
+        except Exception:
+            logger.exception("Failed to send keyboard message to chat_id=%s", chat_id)
+            return None
+
+
 async def send_with_human_feel(chat_id: int | str, text: str) -> dict | None:
     """Send with human-feel: show typing → delay → send."""
     await send_typing(chat_id)

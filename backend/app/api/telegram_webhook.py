@@ -28,7 +28,7 @@ from app.agents import memory as mem_store
 from app.agents import onboarding as ob_store
 from app.agents.registry import route_message
 from app.db.connection import get_service_client
-from app.telegram.client import send_with_human_feel
+from app.telegram.client import send_with_human_feel, send_with_keyboard
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/webhook", tags=["telegram"])
@@ -90,21 +90,15 @@ async def _handle_onboarding(
         ob_store.advance_step(client["id"], agent_slug, next_step, updated_collected, complete=True)
         mem_store.save_agent_memory(client["id"], agent_slug, updated_collected)
 
-        peak = updated_collected.get("peak_reading_time", "06:30")
-        name = client.get("name", "Doctor")
-        focuses = ", ".join(updated_collected.get("clinical_focus", [])[:2])
-        journals = ", ".join(updated_collected.get("trusted_journals", [])[:2])
-
-        completion_msg = (
-            f"You're all set, Dr. {name.split()[-1]}.\n\n"
-            f"Your first briefing arrives at *{peak}* tomorrow morning. "
-            f"I'll cover {focuses} from {journals} and beyond.\n\n"
-            f"Any questions before then? Just message me."
-        )
+        completion_msg = agent.get_completion_message(client, updated_collected)
         await send_with_human_feel(chat_id, completion_msg)
     else:
         ob_store.advance_step(client["id"], agent_slug, next_step, updated_collected)
-        await send_with_human_feel(chat_id, next_q)
+        keyboard = agent.get_onboarding_keyboard(next_step, updated_collected)
+        if keyboard:
+            await send_with_keyboard(chat_id, next_q, keyboard)
+        else:
+            await send_with_human_feel(chat_id, next_q)
 
 
 # ─── Webhook endpoint ─────────────────────────────────────────────────────────
@@ -165,7 +159,11 @@ async def _process_update(message: dict) -> None:
         )
         return
 
-    agent_slug = hired_slugs[0]
+    # Prefer the agent whose onboarding is not yet complete; fall back to most recently hired
+    agent_slug = next(
+        (slug for slug in hired_slugs if not ob_store.is_complete(client_id, slug)),
+        hired_slugs[0],
+    )
 
     # Log incoming
     mem_store.log_message(

@@ -15,7 +15,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from app.agents.base import BaseAgent
-from app.agents.linkedin.post_generator import generate_post_versions
+from app.agents.linkedin.post_generator import generate_edited_versions, generate_post_versions
 from app.agents.linkedin.research import fetch_topic_suggestions
 from app.agents.linkedin.voice_extractor import extract_voice_profile
 from app.config import settings
@@ -23,20 +23,119 @@ from app.db.connection import get_service_client
 
 logger = logging.getLogger(__name__)
 
+_MAX_STYLE_NOTES = 8  # consolidate with Haiku when this is exceeded
+
+
+def _extract_style_note(edit_instruction: str) -> str:
+    """Use Haiku to distill one compact preference sentence from an edit request."""
+    from anthropic import Anthropic
+    from app.config import settings
+
+    if not settings.anthropic_api_key:
+        return ""
+
+    prompt = (
+        f'A LinkedIn ghostwriting user gave this feedback on a post draft: "{edit_instruction}"\n\n'
+        "In one short sentence (max 15 words), what does this reveal about their posting preferences?\n"
+        'Examples: "Prefers shorter posts under 150 words" / "Dislikes bullet points, wants flowing prose"\n\n'
+        "Return ONLY the one sentence, nothing else."
+    )
+    try:
+        client = Anthropic(api_key=settings.anthropic_api_key)
+        resp = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=60,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.content[0].text.strip().rstrip(".")
+    except Exception:
+        logger.exception("Style note extraction failed")
+        return ""
+
+
+def _add_style_note(memory: dict, note: str) -> dict:
+    """Return updated memory dict with the new style note appended.
+
+    If notes exceed _MAX_STYLE_NOTES, consolidates via Haiku to keep memory lean.
+    """
+    notes: list[str] = list(memory.get("style_notes", []))
+    notes.append(note)
+
+    if len(notes) > _MAX_STYLE_NOTES:
+        notes = _consolidate_style_notes(notes)
+
+    return {**memory, "style_notes": notes}
+
+
+def _consolidate_style_notes(notes: list[str]) -> list[str]:
+    """Use Haiku to compress many style notes into 5 denser ones."""
+    from anthropic import Anthropic
+    from app.config import settings
+
+    if not settings.anthropic_api_key:
+        return notes[-_MAX_STYLE_NOTES:]
+
+    bullet_list = "\n".join(f"- {n}" for n in notes)
+    prompt = (
+        "These are style preferences learned from a LinkedIn post user over time:\n\n"
+        f"{bullet_list}\n\n"
+        "Consolidate these into exactly 5 concise preference statements, removing duplicates "
+        "and merging related ones. Each statement max 15 words.\n\n"
+        "Return ONLY a JSON array of 5 strings, e.g. [\"pref 1\", \"pref 2\", ...]"
+    )
+    try:
+        import json
+        client = Anthropic(api_key=settings.anthropic_api_key)
+        resp = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=200,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = resp.content[0].text.strip()
+        start, end = raw.find("["), raw.rfind("]") + 1
+        if start >= 0 and end > start:
+            consolidated = json.loads(raw[start:end])
+            if isinstance(consolidated, list):
+                return [str(n) for n in consolidated[:5]]
+    except Exception:
+        logger.exception("Style note consolidation failed")
+
+    return notes[-_MAX_STYLE_NOTES:]
+
+
 _ONBOARDING_STEPS = [
     # step 0: OAuth — special, sends auth link
     None,
-    # step 1: industry
-    "What industry are you in? (e.g. healthcare, real estate, finance, tech, pharma)",
-    # step 2: paste posts
+    # step 1: field (free text)
+    "What's your job title or field?\n\n_(e.g. Head of Sales at AbbVie, Orthopedic Surgeon, Real Estate Broker)_",
+    # step 2: audience — reply keyboard
+    "Who is your main LinkedIn audience?",
+    # step 3: region — reply keyboard
+    "Where is your audience based?",
+    # step 4: paste posts
     (
         "Now let me learn your voice.\n\n"
-        "Paste your last 5-10 LinkedIn posts below — you can paste them all at once "
-        "separated by '---', or send them one by one. "
-        "When you're done, type *done*."
+        "Paste your last 5–10 LinkedIn posts below — separated by '---', or send them one by one. "
+        "Type *done* when finished."
     ),
-    # step 3: time preference
-    "What time would you like your daily topic suggestions? (Default is 9:00 AM. Reply with a time like '8:30' or just 'default')",
+    # step 5: time preference
+    "What time would you like your daily topic suggestions?\n\n_(Default is 9:00 AM — just type *default*)_",
+]
+
+_AUDIENCE_OPTIONS = [
+    "Business professionals",
+    "Executives / C-suite",
+    "Investors",
+    "Patients / Public",
+    "Mixed audience",
+]
+
+_REGION_OPTIONS = [
+    "UAE / GCC",
+    "UK",
+    "US / Canada",
+    "Europe",
+    "Global",
 ]
 
 
@@ -67,7 +166,6 @@ class LinkedInGhostwriterAgent(BaseAgent):
             return None
 
         if step == 0:
-            # Generate OAuth URL and return it as the "question"
             from app.agents.linkedin.oauth import generate_auth_url
             client_id = collected.get("_client_id", "")
             if settings.linkedin_client_id and client_id:
@@ -84,6 +182,30 @@ class LinkedInGhostwriterAgent(BaseAgent):
 
         return _ONBOARDING_STEPS[step]
 
+    def get_completion_message(self, client: dict, collected: dict) -> str:
+        name = client.get("name", "").split()[0] or "there"
+        field = collected.get("field", "your field")
+        audience = collected.get("audience", "your audience")
+        region = collected.get("region", "your region")
+        post_time = collected.get("post_time", "09:00")
+        return (
+            f"You're all set, {name}!\n\n"
+            f"Here's what I know about you:\n"
+            f"• *Field:* {field}\n"
+            f"• *Audience:* {audience}\n"
+            f"• *Region:* {region}\n\n"
+            f"Every morning at *{post_time}* I'll send you 5 topic ideas tailored to your voice. "
+            f"Pick one, I'll write two versions, you pick A or B.\n\n"
+            f"Type *post* any time if you want to write something right now."
+        )
+
+    def get_onboarding_keyboard(self, step: int, collected: dict) -> list[str] | None:
+        if step == 2:
+            return _AUDIENCE_OPTIONS
+        if step == 3:
+            return _REGION_OPTIONS
+        return None
+
     def process_onboarding_answer(self, step: int, answer: str, collected: dict) -> dict:
         updated = dict(collected)
         answer_stripped = answer.strip()
@@ -92,25 +214,28 @@ class LinkedInGhostwriterAgent(BaseAgent):
             updated["oauth_acknowledged"] = True
 
         elif step == 1:
-            updated["industry"] = answer_stripped
+            updated["field"] = answer_stripped
 
         elif step == 2:
-            # Accumulate pasted posts. User may send multiple messages or paste all at once.
+            updated["audience"] = answer_stripped
+
+        elif step == 3:
+            updated["region"] = answer_stripped
+
+        elif step == 4:
             existing: list[str] = updated.get("pasted_posts", [])
             if answer_stripped.lower() == "done":
                 updated["posts_collection_done"] = True
             else:
-                # Split on "---" separator if pasting many at once
                 chunks = [p.strip() for p in answer_stripped.split("---") if p.strip()]
                 updated["pasted_posts"] = existing + (chunks or [answer_stripped])
 
-        elif step == 3:
+        elif step == 5:
             if answer_stripped.lower() in ("default", "ok", "yes", "9:00", "9am", "09:00"):
                 updated["post_time"] = "09:00"
             else:
                 updated["post_time"] = answer_stripped
 
-            # Extract voice profile from accumulated posts
             posts: list[str] = updated.get("pasted_posts", [])
             name = updated.get("_client_name", "")
             if posts:
@@ -138,15 +263,17 @@ class LinkedInGhostwriterAgent(BaseAgent):
             return await self._handle_topic_selection(client, session, text, memory)
 
         if session and session["state"] == "VERSIONS_SENT":
-            return await self._handle_version_selection(client, session, text)
+            return await self._handle_version_selection(client, session, text, memory)
 
         # No active session — check if they want to trigger a post now
         lower = text.lower()
         if any(kw in lower for kw in ("post", "write", "topic", "content", "linkedin")):
-            industry = memory.get("industry", "your industry")
-            suggestions = await fetch_topic_suggestions(industry)
+            field = memory.get("field", "your field")
+            audience = memory.get("audience", "business professionals")
+            region = memory.get("region", "Global")
+            suggestions = await fetch_topic_suggestions(field, audience, region)
             if not suggestions:
-                suggestions = self._fallback_suggestions(industry)
+                suggestions = self._fallback_suggestions(field)
 
             session_id = self._create_session(client_id, suggestions)
             self._update_session(session_id, {"state": "TOPIC_SENT"})
@@ -171,14 +298,17 @@ class LinkedInGhostwriterAgent(BaseAgent):
         profile: dict,
     ) -> str | None:
         """Send daily topic suggestions. Called by the scheduler at configured time."""
-        industry = memory.get("industry")
-        if not industry:
-            logger.info("LinkedIn: no industry for client=%s — skipping", client.get("id"))
+        field = memory.get("field")
+        if not field:
+            logger.info("LinkedIn: no field in memory for client=%s — skipping", client.get("id"))
             return None
 
-        suggestions = await fetch_topic_suggestions(industry)
+        audience = memory.get("audience", "business professionals")
+        region = memory.get("region", "Global")
+
+        suggestions = await fetch_topic_suggestions(field, audience, region)
         if not suggestions:
-            suggestions = self._fallback_suggestions(industry)
+            suggestions = self._fallback_suggestions(field)
 
         session_id = self._create_session(client["id"], suggestions)
         self._update_session(session_id, {"state": "TOPIC_SENT"})
@@ -260,8 +390,9 @@ class LinkedInGhostwriterAgent(BaseAgent):
 
         name = client.get("name", "")
         voice_profile = memory.get("voice_profile", {})
+        style_notes = memory.get("style_notes", [])
 
-        versions = generate_post_versions(topic, angle, name, voice_profile)
+        versions = generate_post_versions(topic, angle, name, voice_profile, style_notes)
         if not versions.version_a or not versions.version_b:
             return "Couldn't generate posts right now — try again in a moment."
 
@@ -284,16 +415,18 @@ class LinkedInGhostwriterAgent(BaseAgent):
     # ── Version selection ─────────────────────────────────────────────────────
 
     async def _handle_version_selection(
-        self, client: dict, session: dict, text: str
+        self, client: dict, session: dict, text: str, memory: dict
     ) -> str:
         choice = text.upper().strip()
+
+        # Not A/B → treat as an edit instruction
+        if choice not in ("A", "B"):
+            return await self._handle_edit_request(client, session, text, memory)
 
         if choice == "A":
             content = session.get("version_a", "")
         elif choice == "B":
             content = session.get("version_b", "")
-        else:
-            return "Please reply *A* or *B* to choose which version to post."
 
         if not content:
             return "Something went wrong — I can't find your post versions. Type *post* to start over."
@@ -347,6 +480,64 @@ class LinkedInGhostwriterAgent(BaseAgent):
         except Exception:
             logger.exception("LinkedIn post failed for client=%s", client_id)
             return "Couldn't post to LinkedIn right now. Check your account connection at stratus.ai/dashboard."
+
+    # ── Edit / regenerate ─────────────────────────────────────────────────────
+
+    async def _handle_edit_request(
+        self, client: dict, session: dict, edit_instruction: str, memory: dict
+    ) -> str:
+        """Regenerate posts based on user's edit feedback and learn from it."""
+        topic = session.get("topic", "")
+        version_a = session.get("version_a", "")
+        version_b = session.get("version_b", "")
+
+        if not version_a:
+            return "Something went wrong — I lost your previous versions. Type *post* to start over."
+
+        await self._send_typing(client)
+
+        name = client.get("name", "")
+        voice_profile = memory.get("voice_profile", {})
+        style_notes = memory.get("style_notes", [])
+
+        versions = generate_edited_versions(
+            topic, edit_instruction, version_a, version_b,
+            name, voice_profile, style_notes,
+        )
+
+        if not versions.version_a:
+            return "Couldn't regenerate right now — try again in a moment."
+
+        self._update_session(session["id"], {
+            "version_a": versions.version_a,
+            "version_b": versions.version_b,
+        })
+
+        # Learn from this edit instruction in background (fire and don't block reply)
+        import asyncio
+        asyncio.create_task(
+            self._learn_from_edit(client["id"], edit_instruction, memory)
+        )
+
+        return (
+            f"Here are updated versions:\n\n"
+            f"— VERSION A —\n{versions.version_a}\n\n"
+            f"— — —\n\n"
+            f"— VERSION B —\n{versions.version_b}\n\n"
+            f"— — —\n\n"
+            f"Reply *A* or *B* to post, or keep giving me feedback."
+        )
+
+    async def _learn_from_edit(
+        self, client_id: str, edit_instruction: str, memory: dict
+    ) -> None:
+        """Extract a compact style note from the edit and persist it."""
+        note = _extract_style_note(edit_instruction)
+        if note:
+            updated_memory = _add_style_note(memory, note)
+            from app.agents.memory import save_agent_memory
+            save_agent_memory(client_id, self.slug, updated_memory)
+            logger.info("LinkedIn: learned style note for client=%s: %s", client_id, note)
 
     # ── DB helpers ────────────────────────────────────────────────────────────
 

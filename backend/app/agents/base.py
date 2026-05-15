@@ -64,6 +64,15 @@ class BaseAgent(ABC):
     ) -> dict:
         """Validate/parse the answer and return the updated collected_data dict."""
 
+    def get_onboarding_keyboard(self, step: int, collected: dict) -> list[str] | None:
+        """Return button options for a keyboard prompt, or None for free-text steps."""
+        return None
+
+    def get_completion_message(self, client: dict, collected: dict) -> str:
+        """Return the message sent when onboarding finishes. Override per agent."""
+        name = client.get("name", "there")
+        return f"You're all set, {name}! I'll be in touch shortly."
+
     async def update_memory(
         self,
         client_id: str,
