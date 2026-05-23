@@ -221,6 +221,7 @@ Keep it under 150 words. Telegram-native: you may use *bold* for emphasis, but k
         updated_memory = update_memory_with_haiku(memory, interaction_summary)
 
         from app.agents.memory import save_agent_memory, log_message
+        from app.config import settings as _settings
         from app.telegram.client import send_with_human_feel as tg_send
 
         save_agent_memory(client["id"], self.slug, updated_memory)
@@ -233,10 +234,11 @@ Keep it under 150 words. Telegram-native: you may use *bold* for emphasis, but k
             response=briefing,
         )
 
-        # Push the briefing to Telegram
+        # Push the briefing to Telegram using the Brief bot token
         telegram_chat_id = client.get("telegram_chat_id")
+        brief_token = _settings.telegram_bot_token_brief or _settings.telegram_bot_token
         if telegram_chat_id:
-            await tg_send(telegram_chat_id, briefing)
+            await tg_send(telegram_chat_id, briefing, bot_token=brief_token)
         else:
             logger.warning(
                 "Brief: no telegram_chat_id for client=%s — briefing not sent", client.get("id")

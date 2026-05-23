@@ -1,9 +1,10 @@
 """LinkedIn Ghostwriter Agent.
 
 Telegram-native agent that:
-1. Onboards users: LinkedIn OAuth → industry → paste posts → set time
+1. Onboards users: industry → paste posts → set time → posting frequency
 2. Daily Telegram prompt: 5 Grok-powered topic suggestions
-3. User picks topic → 2 post versions generated → user picks A or B → posted to LinkedIn
+3. User picks topic → 2 post versions + infographic generated → user picks A or B
+4. Bot sends a LinkedIn pre-fill URL as an inline button — one tap to post
 
 Slug: "linkedin"
 Session state machine: IDLE → TOPIC_SENT → VERSIONS_SENT → COMPLETED | EXPIRED
@@ -104,22 +105,22 @@ def _consolidate_style_notes(notes: list[str]) -> list[str]:
 
 
 _ONBOARDING_STEPS = [
-    # step 0: OAuth — special, sends auth link
-    None,
-    # step 1: field (free text)
+    # step 0: field (free text)
     "What's your job title or field?\n\n_(e.g. Head of Sales at AbbVie, Orthopedic Surgeon, Real Estate Broker)_",
-    # step 2: audience — reply keyboard
+    # step 1: audience — reply keyboard
     "Who is your main LinkedIn audience?",
-    # step 3: region — reply keyboard
+    # step 2: region — reply keyboard
     "Where is your audience based?",
-    # step 4: paste posts
+    # step 3: paste posts
     (
         "Now let me learn your voice.\n\n"
         "Paste your last 5–10 LinkedIn posts below — separated by '---', or send them one by one. "
         "Type *done* when finished."
     ),
-    # step 5: time preference
-    "What time would you like your daily topic suggestions?\n\n_(Default is 9:00 AM — just type *default*)_",
+    # step 4: time preference
+    "What time would you like your topic suggestions?\n\n_(Default is 9:00 AM — just type *default*)_",
+    # step 5: posting frequency — reply keyboard
+    "How often do you want to post on LinkedIn?",
 ]
 
 _AUDIENCE_OPTIONS = [
@@ -137,6 +138,20 @@ _REGION_OPTIONS = [
     "Europe",
     "Global",
 ]
+
+_FREQUENCY_OPTIONS = [
+    "Every day",
+    "Every other day",
+    "Twice a week",
+    "Once a week",
+]
+
+_FREQUENCY_MAP = {
+    "every day": "daily",
+    "every other day": "every_other_day",
+    "twice a week": "twice_a_week",
+    "once a week": "once_a_week",
+}
 
 
 class LinkedInGhostwriterAgent(BaseAgent):
@@ -156,30 +171,14 @@ class LinkedInGhostwriterAgent(BaseAgent):
         return (
             f"Hey {first}! I'm your LinkedIn Ghostwriter from Stratus.\n\n"
             f"Every morning I'll send you 5 topic ideas based on what's trending in your industry. "
-            f"You pick one, I write 2 versions in your exact voice, you pick A or B, "
-            f"and I post it to LinkedIn automatically.\n\n"
+            f"You pick one, I write 2 versions in your exact voice plus a chic infographic. "
+            f"Pick A or B and I'll send you a one-tap link to post it straight to LinkedIn.\n\n"
             f"Let's get you set up — takes about 3 minutes."
         )
 
     def get_onboarding_question(self, step: int, collected: dict) -> str | None:
         if step >= len(_ONBOARDING_STEPS):
             return None
-
-        if step == 0:
-            from app.agents.linkedin.oauth import generate_auth_url
-            client_id = collected.get("_client_id", "")
-            if settings.linkedin_client_id and client_id:
-                auth_url, _ = generate_auth_url(client_id)
-                return (
-                    f"First, connect your LinkedIn account so I can post on your behalf.\n\n"
-                    f"Click here to authorize:\n{auth_url}\n\n"
-                    f"Once done, type *connected* or send any message to continue."
-                )
-            return (
-                "LinkedIn OAuth isn't configured yet. "
-                "Ask your Stratus admin to set it up, then type *skip* to continue."
-            )
-
         return _ONBOARDING_STEPS[step]
 
     def get_completion_message(self, client: dict, collected: dict) -> str:
@@ -188,22 +187,33 @@ class LinkedInGhostwriterAgent(BaseAgent):
         audience = collected.get("audience", "your audience")
         region = collected.get("region", "your region")
         post_time = collected.get("post_time", "09:00")
+        freq_raw = collected.get("post_frequency", "daily")
+        freq_label = {
+            "daily": "every day",
+            "every_other_day": "every other day",
+            "twice_a_week": "twice a week (Mon & Thu)",
+            "once_a_week": "once a week (Monday)",
+        }.get(freq_raw, freq_raw)
         return (
             f"You're all set, {name}!\n\n"
             f"Here's what I know about you:\n"
             f"• *Field:* {field}\n"
             f"• *Audience:* {audience}\n"
-            f"• *Region:* {region}\n\n"
-            f"Every morning at *{post_time}* I'll send you 5 topic ideas tailored to your voice. "
-            f"Pick one, I'll write two versions, you pick A or B.\n\n"
-            f"Type *post* any time if you want to write something right now."
+            f"• *Region:* {region}\n"
+            f"• *Posting:* {freq_label} at {post_time}\n\n"
+            f"On your scheduled days I'll research what's trending in your world and send "
+            f"5 fresh topic ideas. Pick one, I write two versions + an infographic, "
+            f"you pick A or B, and I'll give you a one-tap link to post it to LinkedIn.\n\n"
+            f"Type *post* any time to write something right now."
         )
 
     def get_onboarding_keyboard(self, step: int, collected: dict) -> list[str] | None:
-        if step == 2:
+        if step == 1:
             return _AUDIENCE_OPTIONS
-        if step == 3:
+        if step == 2:
             return _REGION_OPTIONS
+        if step == 5:
+            return _FREQUENCY_OPTIONS
         return None
 
     def process_onboarding_answer(self, step: int, answer: str, collected: dict) -> dict:
@@ -211,18 +221,15 @@ class LinkedInGhostwriterAgent(BaseAgent):
         answer_stripped = answer.strip()
 
         if step == 0:
-            updated["oauth_acknowledged"] = True
-
-        elif step == 1:
             updated["field"] = answer_stripped
 
-        elif step == 2:
+        elif step == 1:
             updated["audience"] = answer_stripped
 
-        elif step == 3:
+        elif step == 2:
             updated["region"] = answer_stripped
 
-        elif step == 4:
+        elif step == 3:
             existing: list[str] = updated.get("pasted_posts", [])
             if answer_stripped.lower() == "done":
                 updated["posts_collection_done"] = True
@@ -230,12 +237,17 @@ class LinkedInGhostwriterAgent(BaseAgent):
                 chunks = [p.strip() for p in answer_stripped.split("---") if p.strip()]
                 updated["pasted_posts"] = existing + (chunks or [answer_stripped])
 
-        elif step == 5:
+        elif step == 4:
             if answer_stripped.lower() in ("default", "ok", "yes", "9:00", "9am", "09:00"):
                 updated["post_time"] = "09:00"
             else:
                 updated["post_time"] = answer_stripped
 
+        elif step == 5:
+            freq = _FREQUENCY_MAP.get(answer_stripped.lower(), "daily")
+            updated["post_frequency"] = freq
+
+            # Last step — extract voice profile now that all data is collected
             posts: list[str] = updated.get("pasted_posts", [])
             name = updated.get("_client_name", "")
             if posts:
@@ -409,7 +421,8 @@ class LinkedInGhostwriterAgent(BaseAgent):
             f"— — —\n\n"
             f"— VERSION B —\n{versions.version_b}\n\n"
             f"— — —\n\n"
-            f"Reply *A* or *B* to post it to LinkedIn."
+            f"Reply *A* or *B* to post it to LinkedIn.\n"
+            f"Or reply *visual* to get an infographic."
         )
 
     # ── Version selection ─────────────────────────────────────────────────────
@@ -418,68 +431,98 @@ class LinkedInGhostwriterAgent(BaseAgent):
         self, client: dict, session: dict, text: str, memory: dict
     ) -> str:
         choice = text.upper().strip()
+        lower = text.lower().strip()
+
+        # Infographic request
+        if any(kw in lower for kw in ("visual", "infographic", "image", "graphic", "slide")):
+            return await self._handle_infographic_request(client, session, memory)
 
         # Not A/B → treat as an edit instruction
         if choice not in ("A", "B"):
             return await self._handle_edit_request(client, session, text, memory)
 
-        if choice == "A":
-            content = session.get("version_a", "")
-        elif choice == "B":
-            content = session.get("version_b", "")
-
+        content = session.get("version_a", "") if choice == "A" else session.get("version_b", "")
         if not content:
             return "Something went wrong — I can't find your post versions. Type *post* to start over."
 
-        client_id = client["id"]
-        linkedin_account = self._get_linkedin_account(client_id)
+        chat_id = client.get("telegram_chat_id")
+        topic = session.get("topic", "")
 
-        if not linkedin_account:
-            return (
-                "Your LinkedIn account isn't connected. "
-                "Visit stratus.ai/dashboard to reconnect."
+        await self._send_typing(client)
+
+        from app.agents.linkedin.infographic import generate_infographic
+        from app.agents.linkedin.share_link import build_linkedin_url
+        from app.telegram.client import send_photo, send_with_inline_button
+
+        # Generate and send infographic first
+        author_name = client.get("name", "")
+        author_field = memory.get("field", "")
+        img_bytes = await generate_infographic(topic, content, author_name, author_field)
+        if img_bytes and chat_id:
+            await send_photo(
+                chat_id,
+                img_bytes,
+                caption=f"*{topic}*",
+                bot_token=settings.telegram_bot_token_linkedin,
             )
 
-        try:
-            from app.agents.linkedin.linkedin_api import create_post
-            from app.agents.linkedin.oauth import refresh_access_token
+        # Mark session done and send LinkedIn pre-fill link as inline button
+        self._update_session(session["id"], {
+            "selected_version": choice,
+            "state": "COMPLETED",
+        })
 
-            access_token = linkedin_account["access_token"]
-            expires_at_str = linkedin_account.get("token_expires_at", "")
+        share_url = build_linkedin_url(content)
+        first = client.get("name", "").split()[0] or "there"
 
-            if expires_at_str:
-                exp = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
-                if datetime.now(timezone.utc) > exp - timedelta(minutes=5):
-                    rt = linkedin_account.get("refresh_token")
-                    if rt:
-                        refreshed = refresh_access_token(rt)
-                        access_token = refreshed["access_token"]
-                        self._save_tokens(client_id, refreshed)
-
-            result = create_post(
-                access_token,
-                linkedin_account["linkedin_user_id"],
-                content,
+        if chat_id:
+            await send_with_inline_button(
+                chat_id,
+                f"Your post is ready, {first}! Tap below to open LinkedIn with it pre-filled — just hit *Post* and you're live.",
+                "Post to LinkedIn ↗",
+                share_url,
+                bot_token=settings.telegram_bot_token_linkedin,
             )
-            post_urn = result.get("post_urn", "")
+            return ""
 
-            self._record_post(client_id, session["id"], session.get("topic", ""), content, post_urn)
-            self._update_session(session["id"], {
-                "selected_version": choice,
-                "linkedin_post_id": post_urn,
-                "posted_at": datetime.now(timezone.utc).isoformat(),
-                "state": "COMPLETED",
-            })
+        return f"Here's your LinkedIn post:\n\n{content}\n\nPost it here: {share_url}"
 
-            first = client.get("name", "").split()[0] or "Done"
-            return (
-                f"Posted to LinkedIn, {first}!\n\n"
-                f"I'll send tomorrow's topic ideas at the same time."
-            )
+    # ── Infographic ───────────────────────────────────────────────────────────
 
-        except Exception:
-            logger.exception("LinkedIn post failed for client=%s", client_id)
-            return "Couldn't post to LinkedIn right now. Check your account connection at stratus.ai/dashboard."
+    async def _handle_infographic_request(
+        self, client: dict, session: dict, memory: dict
+    ) -> str:
+        """Generate a chic infographic from the current post and send it as a photo."""
+        topic = session.get("topic", "")
+        post_text = session.get("version_a", "")
+
+        if not topic or not post_text:
+            return "I don't have a post to turn into an infographic yet. Pick a topic first."
+
+        chat_id = client.get("telegram_chat_id")
+        if not chat_id:
+            return "Can't find your Telegram chat — please contact support."
+
+        await self._send_typing(client)
+
+        author_name = client.get("name", "")
+        author_field = memory.get("field", "")
+
+        from app.agents.linkedin.infographic import generate_infographic
+        from app.telegram.client import send_photo
+
+        img_bytes = await generate_infographic(topic, post_text, author_name, author_field)
+
+        if not img_bytes:
+            return "Couldn't generate the infographic right now — try again in a moment."
+
+        await send_photo(
+            chat_id,
+            img_bytes,
+            caption=f"*{topic}*\n\nReply *A* or *B* and I'll send you the LinkedIn link.",
+            bot_token=settings.telegram_bot_token_linkedin,
+        )
+        return ""
 
     # ── Edit / regenerate ─────────────────────────────────────────────────────
 
@@ -541,27 +584,6 @@ class LinkedInGhostwriterAgent(BaseAgent):
 
     # ── DB helpers ────────────────────────────────────────────────────────────
 
-    def _get_linkedin_account(self, client_id: str) -> dict | None:
-        db = get_service_client()
-        result = (
-            db.table("linkedin_accounts")
-            .select("*")
-            .eq("client_id", client_id)
-            .eq("is_active", True)
-            .maybe_single()
-            .execute()
-        )
-        return result.data if result else None
-
-    def _save_tokens(self, client_id: str, token_data: dict) -> None:
-        db = get_service_client()
-        db.table("linkedin_accounts").update({
-            "access_token": token_data["access_token"],
-            "refresh_token": token_data.get("refresh_token"),
-            "token_expires_at": token_data.get("expires_at"),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        }).eq("client_id", client_id).execute()
-
     def _save_voice_profile(self, client_id: str, profile: dict, posts_analyzed: int) -> None:
         if not client_id:
             return
@@ -573,29 +595,13 @@ class LinkedInGhostwriterAgent(BaseAgent):
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }, on_conflict="client_id").execute()
 
-    def _record_post(
-        self,
-        client_id: str,
-        session_id: str,
-        topic: str,
-        content: str,
-        linkedin_post_id: str,
-    ) -> None:
-        db = get_service_client()
-        db.table("linkedin_posts").insert({
-            "client_id": client_id,
-            "session_id": session_id,
-            "topic": topic,
-            "content": content,
-            "linkedin_post_id": linkedin_post_id,
-        }).execute()
-
     async def _send_typing(self, client: dict) -> None:
         chat_id = client.get("telegram_chat_id")
         if chat_id:
             try:
+                from app.config import settings as _settings
                 from app.telegram.client import send_typing
-                await send_typing(chat_id)
+                await send_typing(chat_id, bot_token=_settings.telegram_bot_token_linkedin)
             except Exception:
                 pass
 

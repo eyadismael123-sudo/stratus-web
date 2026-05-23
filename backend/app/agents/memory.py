@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 def load_agent_memory(client_id: str, agent_slug: str) -> dict:
     """Load agent-specific memory for a client. Returns empty dict if not found."""
+    if agent_slug == "linkedin":
+        return _load_linkedin_memory(client_id)
     db = get_service_client()
     try:
         result = (
@@ -35,6 +37,9 @@ def load_agent_memory(client_id: str, agent_slug: str) -> dict:
 
 def save_agent_memory(client_id: str, agent_slug: str, memory: dict) -> None:
     """Upsert agent memory (creates if missing, updates if exists)."""
+    if agent_slug == "linkedin":
+        _save_linkedin_memory(client_id, memory)
+        return
     db = get_service_client()
     db.table("wa_agent_memory").upsert(
         {
@@ -44,6 +49,56 @@ def save_agent_memory(client_id: str, agent_slug: str, memory: dict) -> None:
             "updated_at": datetime.now(timezone.utc).isoformat(),
         },
         on_conflict="client_id,agent_slug",
+    ).execute()
+
+
+# ── LinkedIn structured memory ────────────────────────────────────────────────
+
+_LINKEDIN_INTERNAL_KEYS = {"_client_id", "_client_name", "pasted_posts", "posts_collection_done"}
+
+
+def _load_linkedin_memory(client_id: str) -> dict:
+    db = get_service_client()
+    try:
+        result = (
+            db.table("linkedin_memory")
+            .select("field, audience, region, post_time, post_frequency, voice_profile, style_notes")
+            .eq("client_id", client_id)
+            .maybe_single()
+            .execute()
+        )
+        if result and result.data:
+            row = result.data
+            return {
+                "field": row.get("field") or "",
+                "audience": row.get("audience") or "",
+                "region": row.get("region") or "",
+                "post_time": row.get("post_time") or "09:00",
+                "post_frequency": row.get("post_frequency") or "daily",
+                "voice_profile": row.get("voice_profile") or {},
+                "style_notes": row.get("style_notes") or [],
+            }
+    except Exception:
+        logger.exception("Failed to load linkedin_memory for client=%s", client_id)
+    return {}
+
+
+def _save_linkedin_memory(client_id: str, memory: dict) -> None:
+    clean = {k: v for k, v in memory.items() if k not in _LINKEDIN_INTERNAL_KEYS}
+    db = get_service_client()
+    db.table("linkedin_memory").upsert(
+        {
+            "client_id": client_id,
+            "field": clean.get("field") or "",
+            "audience": clean.get("audience") or "",
+            "region": clean.get("region") or "",
+            "post_time": clean.get("post_time") or "09:00",
+            "post_frequency": clean.get("post_frequency") or "daily",
+            "voice_profile": clean.get("voice_profile") or {},
+            "style_notes": clean.get("style_notes") or [],
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+        on_conflict="client_id",
     ).execute()
 
 

@@ -57,6 +57,28 @@ def _parse_time(time_str: str) -> tuple[int, int]:
         return 9, 0
 
 
+def _should_send_today(frequency: str, timezone_str: str) -> bool:
+    """Return True if the client's posting frequency calls for a send today."""
+    try:
+        tz = ZoneInfo(timezone_str)
+    except (ZoneInfoNotFoundError, Exception):
+        tz = ZoneInfo("Asia/Dubai")
+
+    now = datetime.now(tz)
+    weekday = now.weekday()   # 0=Mon … 6=Sun
+    day_of_year = now.timetuple().tm_yday
+
+    if frequency == "daily":
+        return True
+    if frequency == "every_other_day":
+        return day_of_year % 2 == 0   # deterministic, ~every 48 h
+    if frequency == "twice_a_week":
+        return weekday in (0, 3)      # Monday + Thursday
+    if frequency == "once_a_week":
+        return weekday == 0           # Monday
+    return True  # unknown → default daily
+
+
 async def _run_topic_check() -> None:
     """Send topic suggestions to clients whose configured time has come."""
     clients = _get_active_linkedin_clients()
@@ -78,14 +100,25 @@ async def _run_topic_check() -> None:
         if not _local_time_matches(timezone_str, target_hour, target_minute):
             continue
 
+        frequency = memory.get("post_frequency", "daily")
+        if not _should_send_today(frequency, timezone_str):
+            logger.info(
+                "LinkedIn scheduler: skipping client=%s today (frequency=%s)", client_id, frequency
+            )
+            continue
+
         logger.info("LinkedIn scheduler: sending topics to client=%s", client_id)
 
         try:
             profile = load_master_profile(client_id)
             msg = await _agent.proactive_outreach(client, memory, profile)
             if msg:
+                from app.config import settings as _settings
                 from app.telegram.client import send_with_human_feel
-                await send_with_human_feel(telegram_chat_id, msg)
+                await send_with_human_feel(
+                    telegram_chat_id, msg,
+                    bot_token=_settings.telegram_bot_token_linkedin,
+                )
                 logger.info("LinkedIn: topics delivered to client=%s", client_id)
 
         except Exception:

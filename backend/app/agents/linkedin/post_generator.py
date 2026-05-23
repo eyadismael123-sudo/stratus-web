@@ -167,16 +167,23 @@ def generate_edited_versions(
         return PostVersions("", "")
 
 
+def _join_field(value) -> str:
+    """Join a list field or return as-is if already a string."""
+    if isinstance(value, list):
+        return ", ".join(value)
+    return str(value) if value else ""
+
+
 def _voice_kwargs(voice_profile: dict) -> dict:
     return {
         "tone": voice_profile.get("tone", "professional"),
-        "sentence_patterns": ", ".join(voice_profile.get("sentence_patterns", [])),
+        "sentence_patterns": _join_field(voice_profile.get("sentence_patterns", [])),
         "formatting_style": voice_profile.get("formatting_style", "clear paragraphs"),
-        "signature_phrases": ", ".join(voice_profile.get("signature_phrases", [])),
+        "signature_phrases": _join_field(voice_profile.get("signature_phrases", [])),
         "emoji_usage": voice_profile.get("emoji_usage", "minimal"),
         "post_length": voice_profile.get("post_length", "medium"),
-        "engagement_hooks": ", ".join(voice_profile.get("engagement_hooks", [])),
-        "calls_to_action": ", ".join(voice_profile.get("calls_to_action", [])),
+        "engagement_hooks": _join_field(voice_profile.get("engagement_hooks", [])),
+        "calls_to_action": _join_field(voice_profile.get("calls_to_action", [])),
         "voice_summary": voice_profile.get("voice_summary", ""),
     }
 

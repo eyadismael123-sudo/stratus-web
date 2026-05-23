@@ -26,8 +26,10 @@ class Settings(BaseSettings):
     # News (Doctor Morning Briefing)
     news_api_key: str = ""  # newsapi.org — free tier: 100 req/day
 
-    # Telegram (Brief doctor briefing agent)
-    telegram_bot_token: str = ""
+    # Telegram bots (one per agent)
+    telegram_bot_token_brief: str = ""
+    telegram_bot_token_linkedin: str = ""
+    telegram_bot_token: str = ""  # legacy fallback — prefer the per-agent tokens above
 
     # WhatsApp Cloud API (Meta)
     whatsapp_access_token: str = ""       # permanent system user token

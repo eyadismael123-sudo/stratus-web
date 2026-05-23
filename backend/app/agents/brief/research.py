@@ -4,23 +4,18 @@ Two sources:
 1. PubMed E-utilities API — recent peer-reviewed literature (no key required)
 2. Grok API (xAI) — real-time X/Twitter clinical signals (requires GROK_API_KEY)
 
-PubMed strategy (4-layer fallback to guarantee results):
-  Layer 1: Specialty journals + focus terms, 30 days
-             (journals define the specialty — no redundant specialty text filter)
-  Layer 2: Specialty journals only, 30 days
-             (catches papers that don't mention clinical focus terms explicitly)
-  Layer 3: Any journal, specialty name + focus terms in text, 60 days
-             (broadens beyond curated journals when they're thin)
-  Layer 4: Free-text keyword fallback, 90 days
-             (last resort — captures anything tangentially relevant)
+PubMed strategy (4-layer cascade — all layers run, guaranteed results):
+  Layer 1: Specialty journals + focus terms, 60 days
+  Layer 2: Specialty journals only, 60 days  (always runs — supplements layer 1)
+  Layer 3: Any journal, specialty name + focus terms in text, 90 days
+             (triggers if total < 4 after layers 1+2)
+  Layer 4: Free-text keyword fallback, 180 days
+             (triggers if total still < 4 — last resort)
 
-Why the old code returned 0 results most days:
-  - `[MeSH Major Topic]` is invalid for most specialty names
-    (e.g. "interventional cardiology" has no such MeSH entry)
-  - Requiring specialty name as text inside specialty journals is redundant —
-    papers in JACC Cardiovasc Interv don't say "interventional cardiology"
-    in every abstract, they just write "TAVI" or "PCI"
-  - `reldate: 14` is too short for monthly journals
+Why broader windows are correct:
+  - Monthly specialty journals publish 4-8 papers/month — 30 days often yields 0
+  - Layer 1 AND logic (focus AND journals) is strict; Layer 2 always fills the gap
+  - 180-day fallback guarantees at least a couple results for any specialty
 """
 
 from __future__ import annotations
@@ -56,8 +51,8 @@ def _build_journal_filter(pubmed_abbrevs: list[str]) -> str:
 
 
 def _build_focus_terms(clinical_focus: list[str]) -> str:
-    """Build focus-terms query fragment (Title/Abstract)."""
-    return " OR ".join(f'"{f}"[Title/Abstract]' for f in clinical_focus[:3])
+    """Build focus-terms query fragment (Title/Abstract). Uses all focus terms."""
+    return " OR ".join(f'"{f}"[Title/Abstract]' for f in clinical_focus)
 
 
 def _run_pubmed_query(query: str, max_results: int, reldate: int = 30) -> list[str]:
@@ -84,16 +79,31 @@ def _run_pubmed_query(query: str, max_results: int, reldate: int = 30) -> list[s
 
 
 def _fetch_summaries(pmids: list[str]) -> dict:
-    """Fetch PubMed article summaries for a list of PMIDs."""
+    """Fetch PubMed article summaries for a list of PMIDs.
+
+    Retries up to 3 times on 429 (rate-limit) with exponential back-off.
+    NCBI allows 3 req/s without an API key; a brief wait resolves transient limits.
+    """
+    import time
+
     if not pmids:
         return {}
-    resp = httpx.get(
-        _PUBMED_SUMMARY,
-        params={"db": "pubmed", "id": ",".join(pmids), "retmode": "json"},
-        timeout=12.0,
-    )
-    resp.raise_for_status()
-    return resp.json().get("result", {})
+
+    for attempt in range(3):
+        resp = httpx.get(
+            _PUBMED_SUMMARY,
+            params={"db": "pubmed", "id": ",".join(pmids), "retmode": "json"},
+            timeout=12.0,
+        )
+        if resp.status_code == 429:
+            wait = 2 ** attempt  # 1s, 2s, 4s
+            logger.warning("PubMed 429 — retrying in %ds (attempt %d/3)", wait, attempt + 1)
+            time.sleep(wait)
+            continue
+        resp.raise_for_status()
+        return resp.json().get("result", {})
+
+    raise RuntimeError("PubMed esummary returned 429 after 3 retries")
 
 
 def _parse_articles(
@@ -146,12 +156,12 @@ def fetch_pubmed(
     trusted_journals: list[str],
     dislikes: list[str],
     specialty_pubmed: list[str] | None = None,
-    max_results: int = 8,
+    max_results: int = 15,
 ) -> list[dict]:
     """Fetch recent PubMed articles matching the doctor's profile.
 
-    4-layer fallback to guarantee articles even for narrow specialties
-    or slow publication weeks. Returns up to 5 articles sorted:
+    4-layer cascade to guarantee at least a couple of articles daily even for
+    narrow specialties. Returns up to 8 articles sorted:
     specialty journals → trusted → rest.
     """
     specialty_pubmed = specialty_pubmed or []
@@ -161,42 +171,42 @@ def fetch_pubmed(
     try:
         dislike_sfx = _dislike_suffix(dislikes)
 
-        # Layer 1: journals + focus terms, 30 days
-        # The journal IS the specialty — no redundant specialty text filter needed.
+        # Layer 1: journals + focus terms, 60 days
         if specialty_pubmed and clinical_focus:
             journal_filter = _build_journal_filter(specialty_pubmed)
             focus_terms = _build_focus_terms(clinical_focus)
             layer1_q = f"({focus_terms}) AND ({journal_filter}){dislike_sfx}"
-            layer1_ids = _run_pubmed_query(layer1_q, max_results, reldate=30)
+            layer1_ids = _run_pubmed_query(layer1_q, max_results, reldate=60)
             added = _add_unique(all_pmids, seen, layer1_ids)
-            logger.info("PubMed layer 1 (journals+focus, 30d): %d results", added)
+            logger.info("PubMed layer 1 (journals+focus, 60d): %d results", added)
 
-        # Layer 2: journals only, 30 days — catches papers that don't mention focus keywords
-        if specialty_pubmed and len(all_pmids) < 5:
+        # Layer 2: journals only, 60 days — always runs to supplement layer 1
+        # Monthly journals publish infrequently; combining both layers fills the pool.
+        if specialty_pubmed:
             journal_filter = _build_journal_filter(specialty_pubmed)
             layer2_q = f"({journal_filter}){dislike_sfx}"
-            layer2_ids = _run_pubmed_query(layer2_q, max_results, reldate=30)
+            layer2_ids = _run_pubmed_query(layer2_q, max_results, reldate=60)
             added = _add_unique(all_pmids, seen, layer2_ids)
-            logger.info("PubMed layer 2 (journals only, 30d): %d new results", added)
+            logger.info("PubMed layer 2 (journals only, 60d): %d new results", added)
 
-        # Layer 3: any journal, specialty name + focus in text, 60 days
-        if len(all_pmids) < 3:
+        # Layer 3: any journal, specialty name + focus in text, 90 days
+        if len(all_pmids) < 4:
             if clinical_focus:
                 focus_terms = _build_focus_terms(clinical_focus)
                 specialty_text = f'("{specialty}"[MeSH Terms] OR "{specialty}"[Title/Abstract])'
                 layer3_q = f"({specialty_text}) AND ({focus_terms}){dislike_sfx}"
             else:
                 layer3_q = f'("{specialty}"[MeSH Terms] OR "{specialty}"[Title/Abstract]){dislike_sfx}'
-            layer3_ids = _run_pubmed_query(layer3_q, max_results, reldate=60)
+            layer3_ids = _run_pubmed_query(layer3_q, max_results, reldate=90)
             added = _add_unique(all_pmids, seen, layer3_ids)
-            logger.info("PubMed layer 3 (broad text+focus, 60d): %d new results", added)
+            logger.info("PubMed layer 3 (broad text+focus, 90d): %d new results", added)
 
-        # Layer 4: pure keyword fallback, 90 days
-        if len(all_pmids) < 3:
+        # Layer 4: pure keyword fallback, 180 days
+        if len(all_pmids) < 4:
             layer4_q = f"{specialty}[Title/Abstract]{dislike_sfx}"
-            layer4_ids = _run_pubmed_query(layer4_q, max_results, reldate=90)
+            layer4_ids = _run_pubmed_query(layer4_q, max_results, reldate=180)
             added = _add_unique(all_pmids, seen, layer4_ids)
-            logger.info("PubMed layer 4 (keyword fallback, 90d): %d new results", added)
+            logger.info("PubMed layer 4 (keyword fallback, 180d): %d new results", added)
 
         if not all_pmids:
             logger.warning("PubMed returned 0 results for specialty=%r after all layers", specialty)
@@ -209,8 +219,8 @@ def fetch_pubmed(
         articles.sort(key=lambda a: (
             0 if a["specialty_journal"] else 1 if a["trusted"] else 2
         ))
-        logger.info("PubMed final: %d articles for specialty=%r", len(articles[:5]), specialty)
-        return articles[:5]
+        logger.info("PubMed final: %d articles for specialty=%r", len(articles[:8]), specialty)
+        return articles[:8]
 
     except Exception:
         logger.exception("PubMed fetch failed for specialty=%r", specialty)
