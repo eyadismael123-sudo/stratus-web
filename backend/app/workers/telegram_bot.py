@@ -192,6 +192,17 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
+async def cmd_myid(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/myid — returns the user's Telegram chat ID (used during registration)."""
+    chat_id = update.effective_chat.id
+    username = update.effective_user.username or ""
+    await update.message.reply_text(
+        f"Your Telegram chat ID is: {chat_id}\n"
+        f"Username: @{username}\n\n"
+        "Send this to Eyad to get registered."
+    )
+
+
 # ---------------------------------------------------------------------------
 # Text message handler
 # ---------------------------------------------------------------------------
@@ -259,6 +270,7 @@ def main() -> None:
 
     application.add_handler(CommandHandler("start", cmd_start))
     application.add_handler(CommandHandler("help", cmd_help))
+    application.add_handler(CommandHandler("myid", cmd_myid))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     # Register the LinkedIn morning briefing scheduler
