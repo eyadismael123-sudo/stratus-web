@@ -24,6 +24,8 @@ def get_session(client_id: str, agent_slug: str) -> dict | None:
         .maybe_single()
         .execute()
     )
+    if result is None:
+        return None
     return result.data
 
 
