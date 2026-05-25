@@ -12,13 +12,14 @@ import logging
 
 from app.agents.base import BaseAgent
 from app.agents.brief.agent import DoctorBriefAgent
+from app.agents.linkedin.agent import LinkedInPostAgent
 
 logger = logging.getLogger(__name__)
 
 AGENT_REGISTRY: dict[str, BaseAgent] = {
     "brief": DoctorBriefAgent(),
-    # "linkedin": LinkedInPostAgent(),  # plug in when built
-    # "flash": CarIntelAgent(),         # plug in when built
+    "linkedin": LinkedInPostAgent(),
+    # "flash": CarIntelAgent(),        # plug in when built
 }
 
 
