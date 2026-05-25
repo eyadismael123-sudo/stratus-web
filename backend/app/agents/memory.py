@@ -25,7 +25,7 @@ def load_agent_memory(client_id: str, agent_slug: str) -> dict:
         .maybe_single()
         .execute()
     )
-    if result.data:
+    if result is not None and result.data:
         return result.data.get("memory_json") or {}
     return {}
 
@@ -54,7 +54,7 @@ def load_master_profile(client_id: str) -> dict:
         .maybe_single()
         .execute()
     )
-    if result.data:
+    if result is not None and result.data:
         return result.data.get("profile_json") or {}
     return {}
 
