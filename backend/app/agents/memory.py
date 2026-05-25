@@ -18,7 +18,7 @@ def load_agent_memory(client_id: str, agent_slug: str) -> dict:
     """Load agent-specific memory for a client. Returns empty dict if not found."""
     db = get_service_client()
     result = (
-        db.table("agent_memory")
+        db.table("wa_agent_memory")
         .select("memory_json")
         .eq("client_id", client_id)
         .eq("agent_slug", agent_slug)
@@ -33,7 +33,7 @@ def load_agent_memory(client_id: str, agent_slug: str) -> dict:
 def save_agent_memory(client_id: str, agent_slug: str, memory: dict) -> None:
     """Upsert agent memory (creates if missing, updates if exists)."""
     db = get_service_client()
-    db.table("agent_memory").upsert(
+    db.table("wa_agent_memory").upsert(
         {
             "client_id": client_id,
             "agent_slug": agent_slug,
@@ -48,7 +48,7 @@ def load_master_profile(client_id: str) -> dict:
     """Load the client's master personality profile. Returns empty dict if not found."""
     db = get_service_client()
     result = (
-        db.table("user_profiles")
+        db.table("wa_user_profiles")
         .select("profile_json")
         .eq("client_id", client_id)
         .maybe_single()
@@ -62,7 +62,7 @@ def load_master_profile(client_id: str) -> dict:
 def save_master_profile(client_id: str, profile: dict) -> None:
     """Upsert master profile."""
     db = get_service_client()
-    db.table("user_profiles").upsert(
+    db.table("wa_user_profiles").upsert(
         {
             "client_id": client_id,
             "profile_json": profile,
@@ -85,7 +85,7 @@ def log_message(
     """Append a message to agent_logs (Layer 1 — raw audit trail)."""
     db = get_service_client()
     try:
-        db.table("agent_logs").insert({
+        db.table("wa_agent_logs").insert({
             "client_id": client_id,
             "agent_slug": agent_slug,
             "direction": direction,
@@ -103,7 +103,7 @@ def get_recent_messages(client_id: str, agent_slug: str, limit: int = 10) -> lis
     """Fetch last N messages from agent_logs for context building."""
     db = get_service_client()
     result = (
-        db.table("agent_logs")
+        db.table("wa_agent_logs")
         .select("direction, message_type, raw_content, response, created_at")
         .eq("client_id", client_id)
         .eq("agent_slug", agent_slug)
