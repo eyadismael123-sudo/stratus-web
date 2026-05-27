@@ -11,3 +11,10 @@ anthropic==0.40.0
 email-validator==2.2.0
 gspread==6.1.4
 apscheduler==3.10.4
+slowapi==0.1.9
+# 3D Print Agent
+python-telegram-bot[webhooks]==21.9
+openai>=1.50.0
+python-multipart>=0.0.20
+trimesh==4.6.13
+scikit-learn

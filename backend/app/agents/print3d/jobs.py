@@ -1,0 +1,121 @@
+"""Async pipeline runner for /v1 print3d jobs.
+
+Analogous to _run_pipeline in web.py but job-id-keyed and Supabase-backed
+rather than session-keyed and in-memory.
+"""
+from __future__ import annotations
+
+import asyncio
+import logging
+import os
+import tempfile
+from pathlib import Path
+
+from app.agents.print3d.core import _build_generation_prompt, _download
+from app.agents.print3d.email import send_order_email
+from app.agents.print3d.glb_to_3mf import convert as glb_to_3mf_convert
+from app.agents.print3d.meshy import generate_from_image, generate_from_text
+from app.agents.print3d.quoter import calculate_quote
+from app.agents.print3d.slicer import slice_model
+from app.repositories.print3d_jobs import get_job, update_job
+
+logger = logging.getLogger(__name__)
+
+MESHY_API_KEY = os.environ.get("MESHY_API_KEY", "")
+
+
+def _job_dir() -> Path:
+    d = Path(tempfile.gettempdir()) / "print3d_v1"
+    d.mkdir(exist_ok=True)
+    return d
+
+
+def glb_path(job_id: str) -> Path:
+    return _job_dir() / f"{job_id}.glb"
+
+
+def tmf_path(job_id: str) -> Path:
+    return _job_dir() / f"{job_id}.3mf"
+
+
+def _patch(job_id: str, data: dict) -> None:
+    try:
+        update_job(job_id, data)
+    except Exception:
+        logger.exception("Failed to patch job %s", job_id)
+
+
+async def run_pipeline(job_id: str) -> None:
+    """Run the full generation pipeline for a job. Updates Supabase as it progresses."""
+    _patch(job_id, {"status": "processing", "progress": 5})
+
+    try:
+        job = get_job(job_id)
+        if not job:
+            logger.error("Job %s not found at pipeline start", job_id)
+            return
+
+        brief: dict       = job.get("brief") or {}
+        image_url: str    = brief.get("_image_url", "")
+        texture_prompt    = brief.get("_texture_prompt", "")
+        material: str     = brief.get("material", "PLA")
+        dimensions: str   = brief.get("dimensions", "")
+
+        # 1. Generate 3D model
+        if image_url:
+            model = await generate_from_image(
+                image_url=image_url,
+                api_key=MESHY_API_KEY,
+                texture_prompt=texture_prompt,
+            )
+        else:
+            prompt = await asyncio.to_thread(_build_generation_prompt, brief)
+            model  = await generate_from_text(prompt, MESHY_API_KEY)
+
+        _patch(job_id, {"meshy_task_id": model.get("task_id", ""), "progress": 40})
+
+        # 2. Download GLB while the signed URL is fresh
+        glb = glb_path(job_id)
+        glb_url = model.get("glb_url", "")
+        if glb_url:
+            glb_bytes = await _download(glb_url)
+            if glb_bytes:
+                glb.write_bytes(glb_bytes)
+                _patch(job_id, {"glb_path": str(glb), "progress": 55})
+                logger.info("GLB saved: %s (%d bytes)", glb, len(glb_bytes))
+
+        # 3. Slice + quote
+        slice_result = await asyncio.to_thread(
+            slice_model, model["model_url"], material, dimensions
+        )
+        quote = calculate_quote(slice_result.grams, slice_result.print_hours)
+
+        _patch(
+            job_id,
+            {
+                "slice_result": {
+                    "grams":       slice_result.grams,
+                    "print_hours": slice_result.print_hours,
+                },
+                "quote_result": {
+                    "filament_cost_egp": quote.filament_cost_egp,
+                    "machine_cost_egp":  quote.machine_cost_egp,
+                    "markup_egp":        quote.markup_egp,
+                    "total_egp":         quote.total_egp,
+                    "grams":             quote.grams,
+                    "print_hours":       quote.print_hours,
+                },
+                "status":   "complete",
+                "progress": 100,
+            },
+        )
+
+    except Exception as exc:
+        logger.exception("Pipeline failed for job %s", job_id)
+        _patch(
+            job_id,
+            {
+                "status": "failed",
+                "error":  {"code": "PIPELINE_ERROR", "message": str(exc)},
+            },
+        )
