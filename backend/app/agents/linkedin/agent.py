@@ -23,22 +23,6 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-_ONBOARDING_QUESTIONS = [
-    # step 0: role and field
-    "What's your role and industry? (e.g. 'Regional Sales Manager at AbbVie Pharmaceuticals')",
-    # step 1: target audience
-    "Who do you want to reach on LinkedIn? (e.g. 'Cardiologists and GPs in the UAE')",
-    # step 2: core topics
-    "What topics do you want to build authority in? (e.g. 'pharma innovation, patient outcomes, leadership')",
-    # step 3: voice and tone
-    "How would you describe your voice? (e.g. 'Authoritative but human. I use data but also tell stories.')",
-    # step 4: avoid list
-    "Anything to avoid in your posts? (e.g. 'no politics, no competitor mentions') — or reply 'none'",
-    # step 5: briefing time
-    "What time should I send your morning briefing? Default is 08:00 your local time. Reply with a time or 'default'.",
-]
-
-
 class LinkedInPostAgent(BaseAgent):
     """LinkedIn Post Agent — daily post ideas in the client's voice."""
 
@@ -50,53 +34,6 @@ class LinkedInPostAgent(BaseAgent):
         "that actually gets engagement — not generic corporate fluff. "
         "Every post you write sounds like a human, not a marketing department."
     )
-
-    def get_intro_message(self, client: dict) -> str:
-        name = client.get("name", "")
-        first = name.split()[0] if name else "there"
-        return (
-            f"Hey {first}! I'm your LinkedIn Post Agent.\n\n"
-            f"Every morning at 08:00, I'll send you 3 post ideas written in your voice — "
-            f"based on what's trending in your industry right now.\n\n"
-            f"Takes 2 minutes to set up. Let's go."
-        )
-
-    def get_onboarding_question(self, step: int, collected: dict) -> str | None:
-        if step >= len(_ONBOARDING_QUESTIONS):
-            return None
-        return _ONBOARDING_QUESTIONS[step]
-
-    def process_onboarding_answer(self, step: int, answer: str, collected: dict) -> dict:
-        updated = dict(collected)
-        answer = answer.strip()
-
-        if step == 0:
-            updated["field"] = answer
-        elif step == 1:
-            updated["audience"] = answer
-        elif step == 2:
-            items = [i.strip() for i in answer.replace("\n", ",").split(",") if i.strip()]
-            updated["topics"] = items
-        elif step == 3:
-            updated["voice_tone"] = answer
-        elif step == 4:
-            if answer.lower() in ("none", "no", "nothing", "-", "n/a"):
-                updated["avoid"] = []
-            else:
-                items = [i.strip() for i in answer.replace("\n", ",").split(",") if i.strip()]
-                updated["avoid"] = items
-        elif step == 5:
-            if answer.lower() in ("default", "ok", "yes", "fine", "08:00", "8:00", "8am"):
-                updated["post_time"] = "08:00"
-            else:
-                updated["post_time"] = answer
-            updated.setdefault("familiarity_level", 0)
-            updated.setdefault("style_notes", [])
-
-            # Write structured fields to linkedin_memory table
-            _upsert_linkedin_memory(updated)
-
-        return updated
 
     async def handle_message(
         self,
