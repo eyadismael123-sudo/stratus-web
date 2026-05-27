@@ -50,19 +50,20 @@ class BaseAgent(ABC):
         Return None if there's nothing meaningful to send today.
         """
 
-    @abstractmethod
     def get_intro_message(self, client: dict) -> str:
-        """Return the intro message sent automatically when the agent is hired."""
+        """Return the intro message sent when the agent is first contacted."""
+        name = client.get("name", "").split()[0] or "there"
+        return f"Hey {name}! Your agent is active and ready."
 
-    @abstractmethod
     def get_onboarding_question(self, step: int, collected: dict) -> str | None:
-        """Return the question for the given onboarding step, or None when done."""
+        """Return None — onboarding handled externally via Google Form."""
+        return None
 
-    @abstractmethod
     def process_onboarding_answer(
         self, step: int, answer: str, collected: dict
     ) -> dict:
-        """Validate/parse the answer and return the updated collected_data dict."""
+        """No-op — onboarding handled externally via Google Form."""
+        return dict(collected)
 
     async def update_memory(
         self,
