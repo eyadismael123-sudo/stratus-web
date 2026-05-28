@@ -78,18 +78,33 @@ async def _briefing_check(context) -> None:
         logger.info("LinkedIn scheduler: sending briefing to client=%s", client_id)
 
         try:
+            from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
             profile = load_master_profile(client_id)
             briefing = await _agent.proactive_outreach(client, memory, profile)
 
-            if briefing:
+            if not briefing:
+                logger.info("LinkedIn: no briefing generated for client=%s", client_id)
+                continue
+
+            if isinstance(briefing, dict):
+                keyboard = InlineKeyboardMarkup([
+                    [InlineKeyboardButton(opt["label"], callback_data=opt["data"])]
+                    for opt in briefing.get("options", [])
+                ])
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=briefing["text"],
+                    reply_markup=keyboard,
+                    disable_web_page_preview=True,
+                )
+            else:
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=briefing,
                     disable_web_page_preview=True,
                 )
-                logger.info("LinkedIn: briefing delivered to client=%s", client_id)
-            else:
-                logger.info("LinkedIn: no briefing generated for client=%s", client_id)
+            logger.info("LinkedIn: briefing delivered to client=%s", client_id)
 
         except Exception:
             logger.exception("LinkedIn: briefing failed for client=%s", client_id)

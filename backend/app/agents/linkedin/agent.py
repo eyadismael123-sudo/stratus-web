@@ -108,10 +108,17 @@ class LinkedInPostAgent(BaseAgent):
 
         intent = _detect_intent(text)
 
-        if intent == "new_post":
-            return await self._research_and_present_angles(client, memory, profile)
+        # Only genuine strategy questions get a conversational reply.
+        # Everything else — vague messages, post requests, anything unclear — goes
+        # straight to research. The agent should always come with options, not ask
+        # what to write about.
+        if intent == "question":
+            return await self._converse(text, client, memory, profile)
 
-        return await self._converse(text, client, memory, profile)
+        if intent == "refine":
+            return await self._refine_draft(text, client, memory, profile)
+
+        return await self._research_and_present_angles(client, memory, profile)
 
     async def handle_callback(
         self,
@@ -386,22 +393,21 @@ Keep replies under 200 words. Plain text for Telegram. No markdown."""
         client: dict,
         memory: dict,
         profile: dict,
-    ) -> str | None:
+    ) -> dict | None:
+        """Morning briefing — same research + angle flow as on-demand, sent proactively."""
         field = memory.get("field")
         if not field:
             logger.info("LinkedIn: no field in memory for client=%s — skipping", client.get("id"))
             return None
 
-        audience = memory.get("audience", "professionals")
-        topics = memory.get("topics", [])
+        result = await self._research_and_present_angles(client, memory, profile)
 
-        signals = await fetch_all_signals(field, audience, topics)
-        ideas = generate_post_ideas(memory, profile, signals)
+        if isinstance(result, str):
+            # research failed — skip briefing rather than send empty message
+            logger.warning("LinkedIn morning briefing skipped for client=%s: %s", client.get("id"), result)
+            return None
 
-        from app.agents.linkedin.generator import format_briefing_message
-        briefing = format_briefing_message(ideas, client.get("name", ""))
-
-        interaction_summary = f"Sent morning briefing with {len(ideas)} post ideas."
+        interaction_summary = "Sent morning briefing with 3 research-backed angles."
         updated_memory = update_memory_with_haiku(memory, interaction_summary)
 
         from app.agents.memory import save_agent_memory, log_message
@@ -411,8 +417,8 @@ Keep replies under 200 words. Plain text for Telegram. No markdown."""
             agent_slug=self.slug,
             direction="out",
             message_type="text",
-            raw_content=f"Morning briefing — {len(ideas)} post ideas",
-            response=briefing,
+            raw_content="Morning briefing — 3 angles",
+            response=result.get("text", ""),
         )
 
-        return briefing
+        return result
