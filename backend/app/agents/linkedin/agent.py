@@ -47,17 +47,29 @@ LinkedIn post craft principles (always apply these):
 def _detect_intent(text: str) -> str:
     """Classify user intent: new_post | refine | question | other."""
     lowered = text.lower()
-    new_post_kws = [
+    words = set(lowered.split())
+
+    # Exact phrase matches
+    new_post_phrases = [
         "make a post", "write a post", "new post", "create a post",
         "post idea", "wanna post", "generate a post", "draft a post",
         "i want a post", "write me a post", "help me post", "let's post",
+        "write up a post", "post something", "lets post", "make post",
+    ]
+    # Word-pair combos — catches "write up a post", "ts write a post", etc.
+    new_post_pairs = [
+        ("write", "post"), ("make", "post"), ("create", "post"),
+        ("draft", "post"), ("generate", "post"), ("need", "post"),
+        ("want", "post"), ("post", "today"), ("post", "now"),
     ]
     refine_kws = [
         "refine", "shorter", "longer", "make it", "rewrite", "change it",
         "edit", "idea 1", "idea 2", "idea 3", "option 1", "option 2",
         "more personal", "stronger hook", "too long", "too short",
     ]
-    if any(kw in lowered for kw in new_post_kws):
+    if any(phrase in lowered for phrase in new_post_phrases):
+        return "new_post"
+    if any(a in words and b in words for a, b in new_post_pairs):
         return "new_post"
     if any(kw in lowered for kw in refine_kws):
         return "refine"
