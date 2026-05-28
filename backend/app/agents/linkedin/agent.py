@@ -35,6 +35,8 @@ class LinkedInPostAgent(BaseAgent):
         "Every post you write sounds like a human, not a marketing department."
     )
 
+    _MAX_HISTORY = 20  # max turns kept in memory (user+assistant pairs)
+
     async def handle_message(
         self,
         client: dict,
@@ -46,12 +48,10 @@ class LinkedInPostAgent(BaseAgent):
         if not text:
             return "Send me a message — or a number (1/2/3) to refine one of today's ideas."
 
-        name = client.get("name", "")
-        familiarity = memory.get("familiarity_level", 0)
-
         if not settings.anthropic_api_key:
             return "Claude API not configured — can't process this right now."
 
+        name = client.get("name", "")
         field = memory.get("field", "your industry")
         audience = memory.get("audience", "professionals")
         voice_tone = memory.get("voice_tone", "professional")
@@ -63,7 +63,7 @@ class LinkedInPostAgent(BaseAgent):
         avoid_note = f"Never write about: {', '.join(avoid)}." if avoid else ""
         style_note = f"Style notes: {'; '.join(style_notes)}." if style_notes else ""
 
-        prompt = f"""{self.personality_prompt}
+        system_prompt = f"""{self.personality_prompt}
 
 Client profile:
 - Name: {name}
@@ -74,8 +74,6 @@ Client profile:
 - {style_note}
 - {avoid_note}
 
-The client just sent: "{text}"
-
 You know this client's voice and topics well — use them. If they want to make a post,
 pick the most relevant topic from their list and write a full draft immediately.
 Don't ask what they want to write about — you already know.
@@ -83,17 +81,31 @@ If they're asking to refine a post idea, rewrite it in their voice.
 If they're giving feedback, acknowledge and adapt.
 Keep replies under 250 words. No markdown — plain text for Telegram."""
 
+        # Build multi-turn conversation history
+        history: list[dict] = memory.get("conversation_history", [])
+        messages = [*history, {"role": "user", "content": text}]
+
         try:
             anthropic = Anthropic(api_key=settings.anthropic_api_key)
             resp = anthropic.messages.create(
                 model="claude-haiku-4-5-20251001",
-                max_tokens=400,
-                messages=[{"role": "user", "content": prompt}],
+                max_tokens=600,
+                system=system_prompt,
+                messages=messages,
             )
             reply = resp.content[0].text.strip()
 
+            # Append this turn and trim to window
+            updated_history = [
+                *history,
+                {"role": "user", "content": text},
+                {"role": "assistant", "content": reply},
+            ]
+            updated_history = updated_history[-(self._MAX_HISTORY * 2):]
+
             interaction_summary = f"Client said: {text}\nAgent replied: {reply}"
             updated_memory = update_memory_with_haiku(memory, interaction_summary)
+            updated_memory = {**updated_memory, "conversation_history": updated_history}
 
             from app.agents.memory import save_agent_memory
             save_agent_memory(client["id"], self.slug, updated_memory)
