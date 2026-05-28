@@ -15,9 +15,10 @@ from __future__ import annotations
 import logging
 import sys
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
+    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     MessageHandler,
@@ -126,6 +127,22 @@ async def cmd_myid(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # Text message handler
 # ---------------------------------------------------------------------------
 
+async def _send_reply(message, reply) -> None:
+    """Send a reply — plain text or dict with inline keyboard options."""
+    if isinstance(reply, dict):
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(opt["label"], callback_data=opt["data"])]
+            for opt in reply.get("options", [])
+        ])
+        await message.reply_text(
+            reply["text"],
+            reply_markup=keyboard,
+            disable_web_page_preview=True,
+        )
+    else:
+        await message.reply_text(str(reply), disable_web_page_preview=True)
+
+
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
     user_text = update.message.text or ""
@@ -160,7 +177,45 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         profile=profile,
     )
 
-    await update.message.reply_text(reply, disable_web_page_preview=True)
+    await _send_reply(update.message, reply)
+
+
+# ---------------------------------------------------------------------------
+# Inline keyboard callback handler
+# ---------------------------------------------------------------------------
+
+async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
+
+    chat_id = query.message.chat.id
+    client = _get_client_by_chat_id(chat_id)
+    if not client:
+        await query.message.reply_text("You're not registered. Contact Eyad to get started.")
+        return
+
+    active_agents = _get_active_agents(client["id"])
+    if not active_agents:
+        await query.message.reply_text("No active agents on your account.")
+        return
+
+    slug = active_agents[0]
+    agent = get_agent(slug)
+    if not agent:
+        await query.message.reply_text("Agent unavailable — try again later.")
+        return
+
+    memory = load_agent_memory(client["id"], slug)
+    profile = load_master_profile(client["id"])
+
+    reply = await agent.handle_callback(
+        callback_data=query.data,
+        client=client,
+        memory=memory,
+        profile=profile,
+    )
+
+    await _send_reply(query.message, reply)
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +238,7 @@ def main() -> None:
     application.add_handler(CommandHandler("help", cmd_help))
     application.add_handler(CommandHandler("myid", cmd_myid))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    application.add_handler(CallbackQueryHandler(handle_callback_query))
 
     # Register the LinkedIn morning briefing scheduler
     setup_jobs(application)
