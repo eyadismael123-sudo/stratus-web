@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 INPUT_FILE = "input.glb"
 OUTPUT_FILE = "output.3mf"
-TEMPLATE_BAMBU_PROJECT = Path(r"C:\Users\Lenovo\Desktop\michael jackson final.3mf")
+TEMPLATE_BAMBU_PROJECT = Path("")  # no template — always use empty-dict fallback
 NUM_COLORS = 4
 BUILD_SCALE = 100.0
 SMOOTHING_ITERATIONS = 4

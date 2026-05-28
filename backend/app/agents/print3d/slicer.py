@@ -23,10 +23,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-BAMBU_STUDIO_PATH = os.getenv(
-    "BAMBU_STUDIO_PATH",
-    "/Applications/BambuStudio.app/Contents/MacOS/BambuStudio",
-)
+BAMBU_STUDIO_PATH = os.getenv("BAMBU_STUDIO_PATH", "")
 BAMBU_PRINTER_MODEL = os.getenv("BAMBU_PRINTER_MODEL", "A1")  # A1, P1S, X1C, A1M …
 ORCA_SLICER_PATH = os.getenv(
     "ORCA_SLICER_PATH",
@@ -34,7 +31,19 @@ ORCA_SLICER_PATH = os.getenv(
 )
 
 _BAMBU_PROFILES = Path("/Applications/BambuStudio.app/Contents/resources/profiles/BBL")
-_ORCA_PROFILES  = Path("/Applications/OrcaSlicer.app/Contents/resources/profiles/BBL")
+
+# OrcaSlicer profiles: Linux AppImage extracted path takes priority over macOS path
+_ORCA_PROFILES = next(
+    (
+        p
+        for p in [
+            Path("/opt/OrcaSlicer/squashfs-root/resources/profiles/BBL"),
+            Path("/Applications/OrcaSlicer.app/Contents/resources/profiles/BBL"),
+        ]
+        if p.exists()
+    ),
+    Path("/opt/OrcaSlicer/squashfs-root/resources/profiles/BBL"),
+)
 
 # Support settings requested by client (Bambu tree support, 0.276 Z distance)
 _SUPPORT_SETTINGS: dict = {
@@ -270,12 +279,18 @@ def _slice_with_orca(model_url: str, material: str, dimensions_hint: str = "") -
         output_dir = tmpdir / "output"
         output_dir.mkdir()
 
-        cmd = [
+        slice_cmd = [
             ORCA_SLICER_PATH,
             "--slice", "0",
             "--outputdir", str(output_dir),
             str(model_in),
         ] + _orca_profile_args()
+
+        # On Linux, OrcaSlicer needs a virtual display
+        if os.name != "nt" and not os.getenv("DISPLAY"):
+            cmd = ["xvfb-run", "--auto-servernum", "--server-args=-screen 0 1024x768x24"] + slice_cmd
+        else:
+            cmd = slice_cmd
 
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=180, check=False,
