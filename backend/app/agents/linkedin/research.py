@@ -6,6 +6,7 @@ thought-leader signals relevant to the client's field and audience.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 
@@ -73,6 +74,67 @@ async def fetch_linkedin_signals(
         logger.exception("Grok LinkedIn research failed for field=%s", field)
 
     return []
+
+
+async def fetch_web_signals(
+    field: str,
+    audience: str,
+    topics: list[str],
+) -> list[dict]:
+    """DuckDuckGo news search for recent articles relevant to the client's field.
+
+    Returns up to 5 signal dicts: {title, summary, angle, source, hashtags}.
+    No API key required.
+    """
+    try:
+        from duckduckgo_search import DDGS
+
+        focus = ", ".join(topics[:2]) if topics else field
+        query = f"{field} {focus} professionals news 2025"
+
+        results = await asyncio.to_thread(
+            lambda: list(DDGS().news(query, max_results=5))
+        )
+
+        signals = []
+        for r in results:
+            title = r.get("title", "")
+            body = r.get("body", "") or r.get("excerpt", "")
+            source = r.get("source", "") or r.get("url", "")
+            signals.append({
+                "title": title,
+                "summary": body[:300] if body else title,
+                "angle": f"What {audience} should know about: {title}",
+                "source": source,
+                "hashtags": [f"#{field.replace(' ', '')}", f"#{audience.replace(' ', '')}", "#LinkedIn"],
+            })
+        return signals
+
+    except Exception:
+        logger.exception("DuckDuckGo web search failed for field=%s", field)
+        return []
+
+
+async def fetch_all_signals(
+    field: str,
+    audience: str,
+    topics: list[str],
+) -> list[dict]:
+    """Run Grok + DuckDuckGo in parallel and return merged, deduplicated signals."""
+    grok_signals, web_signals = await asyncio.gather(
+        fetch_linkedin_signals(field, audience, topics),
+        fetch_web_signals(field, audience, topics),
+    )
+
+    seen_titles: set[str] = set()
+    merged: list[dict] = []
+    for s in grok_signals + web_signals:
+        title = s.get("title", "").lower()[:60]
+        if title not in seen_titles:
+            seen_titles.add(title)
+            merged.append(s)
+
+    return merged[:8]
 
 
 async def generate_angles_from_signals(

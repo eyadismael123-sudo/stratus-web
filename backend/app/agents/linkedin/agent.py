@@ -19,7 +19,10 @@ from anthropic import Anthropic
 from app.agents.base import BaseAgent
 from app.agents.brief.formatter import update_memory_with_haiku
 from app.agents.linkedin.generator import generate_post_ideas
-from app.agents.linkedin.research import fetch_linkedin_signals, generate_angles_from_signals
+from app.agents.linkedin.research import (
+    fetch_all_signals,
+    generate_angles_from_signals,
+)
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -137,7 +140,7 @@ class LinkedInPostAgent(BaseAgent):
         audience = memory.get("audience", "professionals")
         topics = memory.get("topics", [])
 
-        signals = await fetch_linkedin_signals(field, audience, topics)
+        signals = await fetch_all_signals(field, audience, topics)
         angles = await generate_angles_from_signals(signals, memory)
 
         if not angles:
@@ -388,7 +391,7 @@ Keep replies under 200 words. Plain text for Telegram. No markdown."""
         audience = memory.get("audience", "professionals")
         topics = memory.get("topics", [])
 
-        signals = await fetch_linkedin_signals(field, audience, topics)
+        signals = await fetch_all_signals(field, audience, topics)
         ideas = generate_post_ideas(memory, profile, signals)
 
         from app.agents.linkedin.generator import format_briefing_message

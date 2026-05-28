@@ -18,3 +18,4 @@ openai>=1.50.0
 python-multipart>=0.0.20
 trimesh==4.6.13
 scikit-learn
+duckduckgo-search==6.3.7
