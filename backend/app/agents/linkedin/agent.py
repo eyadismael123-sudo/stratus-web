@@ -53,24 +53,35 @@ class LinkedInPostAgent(BaseAgent):
             return "Claude API not configured — can't process this right now."
 
         field = memory.get("field", "your industry")
+        audience = memory.get("audience", "professionals")
         voice_tone = memory.get("voice_tone", "professional")
+        topics = memory.get("topics", [])
+        style_notes = memory.get("style_notes", [])
         avoid = memory.get("avoid", [])
-        avoid_note = f"Avoid: {', '.join(avoid)}." if avoid else ""
+
+        topics_note = f"Their go-to topics: {', '.join(topics)}." if topics else ""
+        avoid_note = f"Never write about: {', '.join(avoid)}." if avoid else ""
+        style_note = f"Style notes: {'; '.join(style_notes)}." if style_notes else ""
 
         prompt = f"""{self.personality_prompt}
 
-Client: {name}
-Field: {field}
-Voice: {voice_tone}
-{avoid_note}
+Client profile:
+- Name: {name}
+- Field: {field}
+- Audience: {audience}
+- Voice: {voice_tone}
+- {topics_note}
+- {style_note}
+- {avoid_note}
 
 The client just sent: "{text}"
 
-If they're asking to refine a post idea (they may say "refine idea 1" or just "make it shorter"
-or "more personal"), rewrite the relevant post accordingly.
-If they're giving feedback on their voice or preferences, acknowledge and note it.
-If they're asking a question about LinkedIn strategy, give a direct, expert answer.
-Keep replies under 200 words. No markdown — plain text for Telegram."""
+You know this client's voice and topics well — use them. If they want to make a post,
+pick the most relevant topic from their list and write a full draft immediately.
+Don't ask what they want to write about — you already know.
+If they're asking to refine a post idea, rewrite it in their voice.
+If they're giving feedback, acknowledge and adapt.
+Keep replies under 250 words. No markdown — plain text for Telegram."""
 
         try:
             anthropic = Anthropic(api_key=settings.anthropic_api_key)
