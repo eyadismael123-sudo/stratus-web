@@ -186,7 +186,10 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    await query.answer()
+    try:
+        await query.answer()
+    except Exception:
+        pass  # stale callback queries expire after bot restarts — safe to ignore
 
     chat_id = query.message.chat.id
     client = _get_client_by_chat_id(chat_id)

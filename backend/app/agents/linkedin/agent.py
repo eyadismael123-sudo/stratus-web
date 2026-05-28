@@ -153,13 +153,13 @@ class LinkedInPostAgent(BaseAgent):
         topics = memory.get("topics", [])
 
         signals = await fetch_all_signals(field, audience, topics)
+        if not signals:
+            return "Research came back empty — web search is down. Try again in a minute."
+
         angles = await generate_angles_from_signals(signals, memory)
-
         if not angles:
-            # Fallback to topic-based angles without research
-            angles = self._fallback_angles(memory)
+            return "Got the research but couldn't generate angles — try again."
 
-        # Store angles in memory for when they pick one
         updated_memory = {**memory, "pending_angles": angles, "pending_signals": signals}
         from app.agents.memory import save_agent_memory
         save_agent_memory(client["id"], self.slug, updated_memory)
@@ -173,14 +173,6 @@ class LinkedInPostAgent(BaseAgent):
             "text": "Done the research. Pick an angle:",
             "options": options,
         }
-
-    def _fallback_angles(self, memory: dict) -> list[dict]:
-        topics = memory.get("topics", ["your work"])
-        return [
-            {"hook": f"The truth about {topics[i % len(topics)]}", "angle": topics[i % len(topics)],
-             "signal_index": 0, "hashtags": ["#MedStudent", "#LinkedIn", "#PersonalGrowth"]}
-            for i in range(3)
-        ]
 
     # ------------------------------------------------------------------
     # Internal: draft from selected angle

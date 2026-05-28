@@ -81,7 +81,7 @@ async def fetch_web_signals(
     audience: str,
     topics: list[str],
 ) -> list[dict]:
-    """DuckDuckGo news search for recent articles relevant to the client's field.
+    """DuckDuckGo search (news + text fallback) for recent signals in the client's field.
 
     Returns up to 5 signal dicts: {title, summary, angle, source, hashtags}.
     No API key required.
@@ -89,25 +89,48 @@ async def fetch_web_signals(
     try:
         from duckduckgo_search import DDGS
 
-        focus = ", ".join(topics[:2]) if topics else field
-        query = f"{field} {focus} professionals news 2025"
+        focus = topics[0] if topics else field
+        # Broad queries get more results than niche combos
+        queries = [
+            f"{field} {focus}",
+            f"{field} professionals 2025",
+            f"{focus} lessons learned",
+        ]
 
-        results = await asyncio.to_thread(
-            lambda: list(DDGS().news(query, max_results=5))
-        )
+        ddgs = DDGS()
+        results: list[dict] = []
 
+        # Try news first, fall back to text search
+        for q in queries:
+            if len(results) >= 5:
+                break
+            news = await asyncio.to_thread(lambda q=q: list(ddgs.news(q, max_results=5)))
+            if news:
+                results.extend(news)
+                continue
+            text = await asyncio.to_thread(lambda q=q: list(ddgs.text(q, max_results=3)))
+            results.extend(text)
+
+        seen: set[str] = set()
         signals = []
         for r in results:
             title = r.get("title", "")
-            body = r.get("body", "") or r.get("excerpt", "")
+            if not title or title.lower()[:40] in seen:
+                continue
+            seen.add(title.lower()[:40])
+            body = r.get("body", "") or r.get("excerpt", "") or r.get("snippet", "")
             source = r.get("source", "") or r.get("url", "")
             signals.append({
                 "title": title,
                 "summary": body[:300] if body else title,
-                "angle": f"What {audience} should know about: {title}",
+                "angle": f"What {audience} should know: {title}",
                 "source": source,
-                "hashtags": [f"#{field.replace(' ', '')}", f"#{audience.replace(' ', '')}", "#LinkedIn"],
+                "hashtags": [f"#{field.replace(' ', '')}", "#LinkedIn", "#PersonalGrowth"],
             })
+            if len(signals) >= 5:
+                break
+
+        logger.info("Web search returned %d signals for field=%s", len(signals), field)
         return signals
 
     except Exception:
