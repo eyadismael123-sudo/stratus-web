@@ -15,7 +15,9 @@ from __future__ import annotations
 import logging
 import sys
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from urllib.parse import quote
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -35,6 +37,14 @@ from app.db.connection import get_service_client
 logger = logging.getLogger(__name__)
 
 _linkedin_agent = LinkedInPostAgent()
+
+_MENU_KEYBOARD = ReplyKeyboardMarkup(
+    [["💡 New Post Ideas", "✏️ Refine", "🚀 Post to LinkedIn"]],
+    resize_keyboard=True,
+    is_persistent=True,
+)
+
+_LINKEDIN_URL = "https://www.linkedin.com/feed/?shareActive=true&text={text}"
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +107,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         f"Hey {name}! Your LinkedIn Post Agent is active.\n\n"
         f"Every morning at {post_time} I'll send you 3 post ideas written in your voice.\n\n"
-        "Message me anytime to refine ideas or ask about LinkedIn strategy."
+        "Use the buttons below anytime.",
+        reply_markup=_MENU_KEYBOARD,
     )
 
 
@@ -128,7 +139,7 @@ async def cmd_myid(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # ---------------------------------------------------------------------------
 
 async def _send_reply(message, reply) -> None:
-    """Send a reply — plain text or dict with inline keyboard options."""
+    """Send a reply — inline keyboard dict or plain text with persistent menu."""
     if isinstance(reply, dict):
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton(opt["label"], callback_data=opt["data"])]
@@ -140,7 +151,11 @@ async def _send_reply(message, reply) -> None:
             disable_web_page_preview=True,
         )
     else:
-        await message.reply_text(str(reply), disable_web_page_preview=True)
+        await message.reply_text(
+            str(reply),
+            reply_markup=_MENU_KEYBOARD,
+            disable_web_page_preview=True,
+        )
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -150,21 +165,45 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     client = _get_client_by_chat_id(chat_id)
     if not client:
         await update.message.reply_text(
-            "You're not registered. Contact Eyad to get started."
+            "You're not registered. Contact Eyad to get started.",
+            reply_markup=_MENU_KEYBOARD,
         )
         return
 
     active_agents = _get_active_agents(client["id"])
     if not active_agents:
         await update.message.reply_text(
-            "No active agents on your account. Contact Eyad."
+            "No active agents on your account. Contact Eyad.",
+            reply_markup=_MENU_KEYBOARD,
         )
         return
 
     slug = active_agents[0]
+
+    # "🚀 Post to LinkedIn" persistent keyboard tap — serve URL directly from memory
+    if "post to linkedin" in user_text.lower():
+        memory = load_agent_memory(client["id"], slug)
+        draft = memory.get("current_draft", "")
+        if not draft:
+            await update.message.reply_text(
+                "No draft saved yet — tap 💡 New Post Ideas to get started.",
+                reply_markup=_MENU_KEYBOARD,
+            )
+            return
+        url = _LINKEDIN_URL.format(text=quote(draft[:700]))
+        await update.message.reply_text(
+            f"Ready to post:\n{url}",
+            reply_markup=_MENU_KEYBOARD,
+            disable_web_page_preview=True,
+        )
+        return
+
     agent = get_agent(slug)
     if not agent:
-        await update.message.reply_text("Agent unavailable — try again later.")
+        await update.message.reply_text(
+            "Agent unavailable — try again later.",
+            reply_markup=_MENU_KEYBOARD,
+        )
         return
 
     memory = load_agent_memory(client["id"], slug)
