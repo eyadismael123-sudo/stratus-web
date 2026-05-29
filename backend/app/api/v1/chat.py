@@ -6,6 +6,7 @@ import json
 import logging
 import time
 from collections import defaultdict
+from uuid import UUID
 
 from anthropic import Anthropic
 from fastapi import APIRouter, Depends, File, Form, Request, Response, UploadFile
@@ -173,6 +174,13 @@ async def _run_orchestrator(history: list[dict], image_url: str) -> dict:
     return {"type": "message", "content": text}
 
 
+def _validate_customer_id(customer_id: str) -> None:
+    try:
+        UUID(customer_id)
+    except ValueError:
+        raise bad_request("Invalid customer_id", {"expected": "UUID"})
+
+
 @router.post("/chat")
 async def chat(
     request:     Request,
@@ -186,6 +194,9 @@ async def chat(
     _api_key:    str              = Depends(require_api_key),
     _stage:      str              = Depends(require_app_stage),
 ):
+    # 0. Validate customer_id before touching anything
+    _validate_customer_id(customer_id)
+
     # 1. Idempotency
     idempotency_key = request.headers.get("Idempotency-Key")
     if idempotency_key:

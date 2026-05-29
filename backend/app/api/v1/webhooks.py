@@ -21,12 +21,22 @@ from app.repositories.print3d_jobs import get_job, update_job
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["v1"])
 
+# Per-job lock prevents duplicate webhook retries from corrupting the same 3MF file
+_finalize_locks: dict[str, asyncio.Lock] = {}
+
+
+def _get_finalize_lock(job_id: str) -> asyncio.Lock:
+    if job_id not in _finalize_locks:
+        _finalize_locks[job_id] = asyncio.Lock()
+    return _finalize_locks[job_id]
+
 
 def _verify_layered_hmac(body: bytes, hmac_header: str | None) -> bool:
     secret = settings.shopify_webhook_secret
     if not secret:
-        logger.warning("shopify_webhook_secret not set — skipping HMAC verification")
-        return True
+        # Fail closed — never accept webhooks without a configured secret
+        logger.error("shopify_webhook_secret not configured — rejecting webhook")
+        return False
     if not hmac_header:
         return False
     digest = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
@@ -61,36 +71,38 @@ async def order_paid(
 
 
 async def _finalize_order(payload: OrderPaidWebhook, job: dict) -> None:
-    job_id    = payload.job_id
-    glb       = glb_path(job_id)
-    tmf       = tmf_path(job_id)
-    brief     = job.get("brief") or {}
-    quote     = job.get("quote_result") or {}
-    total_egp = float(quote.get("total_egp", 0))
+    job_id = payload.job_id
 
-    # Convert GLB → 3MF
-    tmf_str: str | None = None
-    if glb.exists():
+    async with _get_finalize_lock(job_id):
+        glb       = glb_path(job_id)
+        tmf       = tmf_path(job_id)
+        brief     = job.get("brief") or {}
+        quote     = job.get("quote_result") or {}
+        total_egp = float(quote.get("total_egp", 0))
+
+        # Convert GLB → 3MF
+        tmf_str: str | None = None
+        if glb.exists():
+            try:
+                await asyncio.to_thread(glb_to_3mf_convert, str(glb), str(tmf))
+                tmf_str = str(tmf)
+                update_job(job_id, {"stl_path": tmf_str})
+                logger.info("3MF ready: %s", tmf)
+            except Exception:
+                logger.exception("GLB→3MF failed for job %s", job_id)
+        else:
+            logger.warning("GLB missing for job %s — emailing brief only", job_id)
+
+        # Email the cousin
         try:
-            await asyncio.to_thread(glb_to_3mf_convert, str(glb), str(tmf))
-            tmf_str = str(tmf)
-            update_job(job_id, {"stl_path": tmf_str})
-            logger.info("3MF ready: %s", tmf)
+            await asyncio.to_thread(
+                send_order_email,
+                payload.order_id,
+                brief,
+                total_egp,
+                str(glb) if glb.exists() else "",
+                tmf_str or "",
+                "",
+            )
         except Exception:
-            logger.exception("GLB→3MF failed for job %s", job_id)
-    else:
-        logger.warning("GLB missing for job %s — emailing brief only", job_id)
-
-    # Email the cousin
-    try:
-        await asyncio.to_thread(
-            send_order_email,
-            payload.order_id,
-            brief,
-            total_egp,
-            str(glb) if glb.exists() else "",
-            tmf_str or "",
-            "",
-        )
-    except Exception:
-        logger.exception("Email failed for order %s", payload.order_id)
+            logger.exception("Email failed for order %s", payload.order_id)

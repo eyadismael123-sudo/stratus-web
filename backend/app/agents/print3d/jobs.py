@@ -110,12 +110,9 @@ async def run_pipeline(job_id: str) -> None:
             },
         )
 
+    except TimeoutError as exc:
+        logger.error("Meshy timeout for job %s: %s", job_id, exc)
+        _patch(job_id, {"status": "failed", "error": {"code": "MESHY_TIMEOUT", "message": str(exc)}})
     except Exception as exc:
         logger.exception("Pipeline failed for job %s", job_id)
-        _patch(
-            job_id,
-            {
-                "status": "failed",
-                "error":  {"code": "PIPELINE_ERROR", "message": str(exc)},
-            },
-        )
+        _patch(job_id, {"status": "failed", "error": {"code": "PIPELINE_ERROR", "message": str(exc)}})
