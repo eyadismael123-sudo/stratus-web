@@ -13,7 +13,7 @@ def create_job(customer_id: str) -> dict[str, Any]:
     db = get_service_client()
     result = (
         db.table("print3d_jobs")
-        .insert({"customer_id": customer_id, "status": "pending", "progress": 0})
+        .insert({"customer_id": customer_id, "status": "queued", "progress": 0})
         .execute()
     )
     if not result.data:

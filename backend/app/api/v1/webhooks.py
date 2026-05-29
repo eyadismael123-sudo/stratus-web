@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["v1"])
 
 
-def _verify_shopify_hmac(body: bytes, hmac_header: str | None) -> bool:
+def _verify_layered_hmac(body: bytes, hmac_header: str | None) -> bool:
     secret = settings.shopify_webhook_secret
     if not secret:
         logger.warning("shopify_webhook_secret not set — skipping HMAC verification")
@@ -36,12 +36,12 @@ def _verify_shopify_hmac(body: bytes, hmac_header: str | None) -> bool:
 @router.post("/webhooks/order-paid")
 async def order_paid(
     request: Request,
-    x_shopify_hmac_sha256: str | None = Header(None),
+    x_layered_signature: str | None = Header(None),
 ) -> JSONResponse:
     # Read raw bytes first — HMAC must be verified before any parsing
     body = await request.body()
 
-    if not _verify_shopify_hmac(body, x_shopify_hmac_sha256):
+    if not _verify_layered_hmac(body, x_layered_signature):
         raise unauthorized("Invalid webhook signature")
 
     try:

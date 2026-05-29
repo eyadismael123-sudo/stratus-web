@@ -36,8 +36,8 @@ class ChatGenerationStartedResponse(BaseModel):
 # ── /v1/generate/{jobId} ──────────────────────────────────────────────────────
 
 class JobStatus(str, Enum):
-    pending    = "pending"
-    processing = "processing"
+    queued     = "queued"
+    running    = "running"
     complete   = "complete"
     failed     = "failed"
 
@@ -62,6 +62,7 @@ class GenerateStatusResponse(BaseModel):
     status:            JobStatus
     progress:          int                   # 0–100
     model_url:         str | None = Field(None, alias="modelUrl")
+    format:            str | None = None
     pricing:           PricingBreakdown | None = None
     estimated_seconds: int | None = Field(None, alias="estimatedSeconds")
     error:             dict[str, Any] | None = None

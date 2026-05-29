@@ -33,6 +33,7 @@ async def generate_status(
     progress = int(job.get("progress") or 0)
 
     model_url = None
+    format_   = None
     pricing   = None
     estimated = None
     error     = None
@@ -40,6 +41,7 @@ async def generate_status(
     if status == JobStatus.complete:
         signed_path = sign_url(f"/v1/models/{job_id}.glb", job_id)
         model_url   = f"{settings.api_base_url}{signed_path}"
+        format_     = "glb"
 
         q = job.get("quote_result") or {}
         if q:
@@ -50,7 +52,7 @@ async def generate_status(
                 total_egp=q.get("total_egp", 0),
             )
 
-    elif status in (JobStatus.pending, JobStatus.processing):
+    elif status in (JobStatus.queued, JobStatus.running):
         estimated = max(30, 120 - progress)
 
     elif status == JobStatus.failed:
@@ -60,6 +62,7 @@ async def generate_status(
         status=status,
         progress=progress,
         model_url=model_url,
+        format=format_,
         pricing=pricing,
         estimated_seconds=estimated,
         error=error,

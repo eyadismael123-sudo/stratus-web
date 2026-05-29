@@ -47,7 +47,7 @@ def _patch(job_id: str, data: dict) -> None:
 
 async def run_pipeline(job_id: str) -> None:
     """Run the full generation pipeline for a job. Updates Supabase as it progresses."""
-    _patch(job_id, {"status": "processing", "progress": 5})
+    _patch(job_id, {"status": "running", "progress": 5})
 
     try:
         job = get_job(job_id)
