@@ -23,14 +23,19 @@ def create_job(customer_id: str) -> dict[str, Any]:
 
 def get_job(job_id: str) -> dict[str, Any] | None:
     db = get_service_client()
-    result = (
-        db.table("print3d_jobs")
-        .select("*")
-        .eq("id", job_id)
-        .maybe_single()
-        .execute()
-    )
-    return result.data
+    try:
+        result = (
+            db.table("print3d_jobs")
+            .select("*")
+            .eq("id", job_id)
+            .maybe_single()
+            .execute()
+        )
+        return result.data
+    except Exception as exc:
+        if "204" in str(exc) or "Missing response" in str(exc):
+            return None
+        raise
 
 
 def update_job(job_id: str, patch: dict[str, Any]) -> dict[str, Any]:
