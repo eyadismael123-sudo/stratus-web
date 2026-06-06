@@ -1,8 +1,12 @@
 """GET /v1/generate/{jobId} — poll job status."""
 from __future__ import annotations
 
+import logging
+from pathlib import Path
+
+import httpx
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from app.api.v1.auth import require_api_key, require_app_stage
 from app.api.v1.errors import not_found
@@ -17,7 +21,52 @@ from app.api.v1.signed_urls import sign_url
 from app.config import settings
 from app.repositories.print3d_jobs import get_job
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["v1"])
+
+_BUCKET   = "print3d-uploads"
+_GLB_PATH = "models/{job_id}.glb"
+
+
+async def _https_model_url(job_id: str, glb_path_str: str | None) -> str:
+    """Upload GLB to Supabase Storage (HTTPS) and return its public URL.
+    Falls back to the signed VPS URL if Supabase is unavailable or the file is missing."""
+    glb = Path(glb_path_str) if glb_path_str else None
+    if glb and glb.exists() and settings.supabase_url and settings.supabase_service_role_key:
+        filename   = _GLB_PATH.format(job_id=job_id)
+        public_url = f"{settings.supabase_url}/storage/v1/object/public/{_BUCKET}/{filename}"
+        try:
+            async with httpx.AsyncClient() as client:
+                # Skip upload if already present
+                head = await client.head(public_url, timeout=5.0)
+                if head.status_code == 200:
+                    return public_url
+                up = await client.post(
+                    f"{settings.supabase_url}/storage/v1/object/{_BUCKET}/{filename}",
+                    headers={
+                        "Authorization": f"Bearer {settings.supabase_service_role_key}",
+                        "Content-Type":  "model/gltf-binary",
+                    },
+                    content=glb.read_bytes(),
+                    timeout=30.0,
+                )
+                if up.status_code in (200, 201):
+                    return public_url
+        except Exception as exc:
+            logger.warning("Supabase GLB upload failed: %s", exc)
+
+    signed = sign_url(f"/v1/models/{job_id}.glb", job_id)
+    return f"{settings.api_base_url}{signed}"
+
+
+@router.head("/generate/{job_id}")
+async def generate_status_head(
+    job_id:   str,
+    _api_key: str = Depends(require_api_key),
+    _stage:   str = Depends(require_app_stage),
+) -> Response:
+    job = get_job(job_id)
+    return Response(status_code=200 if job else 404)
 
 
 @router.get("/generate/{job_id}")
@@ -40,9 +89,8 @@ async def generate_status(
     error     = None
 
     if status == JobStatus.complete:
-        signed_path = sign_url(f"/v1/models/{job_id}.glb", job_id)
-        model_url   = f"{settings.api_base_url}{signed_path}"
-        format_     = "glb"
+        model_url = await _https_model_url(job_id, job.get("glb_path"))
+        format_   = "glb"
 
         q = job.get("quote_result") or {}
         if q:
