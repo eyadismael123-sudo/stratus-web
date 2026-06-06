@@ -33,7 +33,7 @@ from app.agents.print3d.core import (
 )
 from app.agents.print3d.meshy import generate_from_image, generate_from_text
 from app.agents.print3d.quoter import calculate_quote
-from app.agents.print3d.slicer import get_viewer_stl_path, slice_model
+from app.agents.print3d.slicer import get_viewer_stl_path, slice_3mf
 from app.agents.print3d.glb_to_3mf import convert as glb_to_3mf_convert
 from app.agents.print3d.email import send_order_email
 
@@ -658,23 +658,26 @@ async def _run_pipeline(sid: str) -> None:
         if glb_url:
             glb_bytes = await _download(glb_url)
             if glb_bytes:
-                path = _glb_path(sid)
-                path.write_bytes(glb_bytes)
-                state.model_result["glb_path"] = str(path)
+                glb_p = _glb_path(sid)
+                glb_p.write_bytes(glb_bytes)
+                state.model_result["glb_path"] = str(glb_p)
                 has_glb = True
-                logger.info("GLB persisted to %s (%d bytes)", path, len(glb_bytes))
+                logger.info("GLB persisted to %s (%d bytes)", glb_p, len(glb_bytes))
 
-        # 3. Slice + quote
-        slice_result = await asyncio.to_thread(
-            slice_model,
-            model["model_url"],
-            state.brief.get("material", "PLA"),
-            state.brief.get("dimensions", ""),
-        )
+        # 3. Convert GLB → 3MF before slicing
+        tmf_p = _3mf_path(sid, "pending")
+        glb_p = _glb_path(sid)
+        if glb_p.exists():
+            await asyncio.to_thread(glb_to_3mf_convert, str(glb_p), str(tmf_p))
+            state.model_result["tmf_path"] = str(tmf_p)
+            logger.info("3MF ready: %s", tmf_p)
+
+        # 4. Slice the 3MF + quote
+        slice_result = await asyncio.to_thread(slice_3mf, state.model_result.get("tmf_path") or str(tmf_p))
         quote             = calculate_quote(slice_result.grams, slice_result.print_hours)
         state.quote_result = quote
 
-        # 4. Preview thumbnail → base64
+        # 5. Preview thumbnail → base64
         preview_b64 = ""
         if model.get("preview_url"):
             preview_bytes = await _download(model["preview_url"])
@@ -712,11 +715,12 @@ async def _confirm_order(sid: str) -> dict:
 
     order_id = random.randint(1000, 9999)
     quote    = state.quote_result
-    glb_path = str(_glb_path(sid))
+    glb_p    = str(_glb_path(sid))
+    tmf_p    = state.model_result.get("tmf_path", "")
     brief    = dict(state.brief) if state.brief else {}
 
     _reset(sid)
-    asyncio.create_task(_finalize_order(sid, order_id, brief, quote.total_egp, glb_path))
+    asyncio.create_task(_finalize_order(order_id, brief, quote.total_egp, glb_p, tmf_p))
 
     return {
         "type": "message",
@@ -729,29 +733,21 @@ async def _confirm_order(sid: str) -> dict:
 
 
 async def _finalize_order(
-    sid: str,
     order_id: int,
     brief: dict,
     total_egp: float,
-    glb_path: str,
+    glb_p: str,
+    tmf_p: str,
 ) -> None:
-    output_path = _3mf_path(sid, order_id)
-    try:
-        if Path(glb_path).exists():
-            logger.info("Converting GLB → 3MF for order %d…", order_id)
-            await asyncio.to_thread(glb_to_3mf_convert, glb_path, str(output_path))
-            logger.info("3MF ready: %s", output_path)
-        else:
-            logger.warning("GLB missing for order %d — will email brief only", order_id)
-            output_path = None  # type: ignore[assignment]
-    except Exception:
-        logger.exception("GLB→3MF conversion failed for order %d", order_id)
-        output_path = None  # type: ignore[assignment]
+    # 3MF was already built during slicing — use it directly
+    output_path: str | None = tmf_p if tmf_p and Path(tmf_p).exists() else None
+
+    if not output_path:
+        logger.warning("3MF missing for order %d — emailing brief only", order_id)
 
     try:
-        model_url = ""  # already dropped from customer view; kept for cousin fallback
         await asyncio.to_thread(
-            send_order_email, order_id, brief, total_egp, glb_path, output_path, model_url
+            send_order_email, order_id, brief, total_egp, glb_p, output_path, ""
         )
     except Exception:
         logger.exception("Failed to send order email for order %d", order_id)

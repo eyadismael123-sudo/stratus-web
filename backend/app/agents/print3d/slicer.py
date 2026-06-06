@@ -83,6 +83,77 @@ def slice_model(
     return _slice_with_trimesh(model_url, dimensions_hint)
 
 
+def slice_3mf(tmf_path: str) -> SliceResult:
+    """Slice a pre-built .3mf directly with OrcaSlicer. Falls back to trimesh on failure."""
+    if ORCA_SLICER_PATH and Path(ORCA_SLICER_PATH).exists():
+        try:
+            return _slice_3mf_with_orca(tmf_path)
+        except Exception as exc:
+            logger.warning("OrcaSlicer failed on 3MF (%s) — falling back to trimesh", exc)
+    return _slice_3mf_with_trimesh(tmf_path)
+
+
+def _slice_3mf_with_orca(tmf_path: str) -> SliceResult:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_dir = Path(tmpdir) / "output"
+        output_dir.mkdir()
+
+        slice_cmd = [
+            ORCA_SLICER_PATH,
+            "--slice", "0",
+            "--outputdir", str(output_dir),
+            tmf_path,
+        ] + _orca_profile_args()
+
+        if os.name != "nt" and not os.getenv("DISPLAY"):
+            cmd = ["xvfb-run", "--auto-servernum", "--server-args=-screen 0 1024x768x24"] + slice_cmd
+        else:
+            cmd = slice_cmd
+
+        env = {**os.environ, "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"}
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, check=False, env=env)
+        combined = result.stdout + result.stderr
+        logger.info("OrcaSlicer 3MF output:\n%s", combined[:800])
+
+        gcodes = list(output_dir.glob("*.gcode"))
+        if not gcodes:
+            raise RuntimeError(
+                f"OrcaSlicer produced no gcode (exit {result.returncode}): {combined[:300]}"
+            )
+
+        grams, hours = _parse_orca_gcode(gcodes[0])
+        if grams == 0.0:
+            raise RuntimeError("OrcaSlicer gcode has no filament data")
+
+        grams = round(max(5.0, min(300.0, grams)), 1)
+        hours = round(max(0.25, min(20.0, hours)), 2)
+        logger.info("OrcaSlicer 3MF — %.1fg, %.2fh", grams, hours)
+        return SliceResult(grams=grams, print_hours=hours, tmf_path=tmf_path, stl_path=None)
+
+
+def _slice_3mf_with_trimesh(tmf_path: str) -> SliceResult:
+    try:
+        import trimesh as tm  # type: ignore
+        scene = tm.load(tmf_path)
+        mesh  = tm.util.concatenate(scene.dump()) if isinstance(scene, tm.Scene) else scene
+        raw_vol    = abs(mesh.volume)
+        max_extent = float(max(mesh.bounding_box.extents)) if len(mesh.bounding_box.extents) else 1.0
+        if max_extent < 5.0:
+            volume_cm3 = raw_vol * 1_000_000.0
+        elif max_extent > 500.0:
+            volume_cm3 = raw_vol / 1_000.0
+        else:
+            volume_cm3 = raw_vol
+        fill  = _INFILL_FACTOR + _WALL_FACTOR
+        grams = round(max(5.0, min(300.0, volume_cm3 * fill * _PLA_DENSITY_G_PER_CM3)), 1)
+        hours = round(max(0.25, min(24.0, (grams / _PRINT_SPEED_G_PER_MIN) / 60.0)), 2)
+        logger.info("trimesh 3MF fallback — %.1fg, %.2fh", grams, hours)
+        return SliceResult(grams=grams, print_hours=hours, tmf_path=tmf_path, stl_path=None)
+    except Exception as exc:
+        logger.warning("trimesh 3MF fallback failed (%s) — using default estimate", exc)
+        return SliceResult(grams=45.0, print_hours=2.5, tmf_path=tmf_path, stl_path=None)
+
+
 # ── BambuStudio CLI ───────────────────────────────────────────────────────────
 
 def _bambu_profile_paths(printer: str) -> tuple[list[str], str | None]:

@@ -16,7 +16,7 @@ from app.agents.print3d.email import send_order_email
 from app.agents.print3d.glb_to_3mf import convert as glb_to_3mf_convert
 from app.agents.print3d.meshy import generate_from_image, generate_from_text
 from app.agents.print3d.quoter import calculate_quote
-from app.agents.print3d.slicer import slice_model
+from app.agents.print3d.slicer import slice_3mf
 from app.repositories.print3d_jobs import get_job, update_job
 
 logger = logging.getLogger(__name__)
@@ -77,17 +77,23 @@ async def run_pipeline(job_id: str) -> None:
         # 2. Download GLB while the signed URL is fresh
         glb = glb_path(job_id)
         glb_url = model.get("glb_url", "")
-        if glb_url:
-            glb_bytes = await _download(glb_url)
-            if glb_bytes:
-                glb.write_bytes(glb_bytes)
-                _patch(job_id, {"glb_path": str(glb), "progress": 55})
-                logger.info("GLB saved: %s (%d bytes)", glb, len(glb_bytes))
+        if not glb_url:
+            raise RuntimeError("Meshy returned no GLB URL")
+        glb_bytes = await _download(glb_url)
+        if not glb_bytes:
+            raise RuntimeError("Failed to download GLB")
+        glb.write_bytes(glb_bytes)
+        _patch(job_id, {"glb_path": str(glb), "progress": 45})
+        logger.info("GLB saved: %s (%d bytes)", glb, len(glb_bytes))
 
-        # 3. Slice + quote
-        slice_result = await asyncio.to_thread(
-            slice_model, model["model_url"], material, dimensions
-        )
+        # 3. Convert GLB → 3MF (before slicing — OrcaSlicer slices the 3MF directly)
+        tmf = tmf_path(job_id)
+        await asyncio.to_thread(glb_to_3mf_convert, str(glb), str(tmf))
+        _patch(job_id, {"stl_path": str(tmf), "progress": 65})
+        logger.info("3MF ready: %s", tmf)
+
+        # 4. Slice the 3MF + quote
+        slice_result = await asyncio.to_thread(slice_3mf, str(tmf))
         quote = calculate_quote(slice_result.grams, slice_result.print_hours)
 
         _patch(
