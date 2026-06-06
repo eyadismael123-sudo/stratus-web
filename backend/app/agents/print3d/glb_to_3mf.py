@@ -338,7 +338,7 @@ def build_3dmodel_xml(mesh, face_color_idx):
 
 
 def template_project_settings(palette):
-    if TEMPLATE_BAMBU_PROJECT.exists():
+    if TEMPLATE_BAMBU_PROJECT.is_file():
         with zipfile.ZipFile(TEMPLATE_BAMBU_PROJECT) as template:
             settings = json.loads(
                 template.read("Metadata/project_settings.config").decode("utf-8", "replace")
