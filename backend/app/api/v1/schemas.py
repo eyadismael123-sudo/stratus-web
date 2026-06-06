@@ -43,17 +43,19 @@ class JobStatus(str, Enum):
 
 
 class PricingLineItem(BaseModel):
-    label: str
-    amount_egp: float = Field(alias="amountEgp")
+    label:  str
+    amount: float
 
-    model_config = {"populate_by_name": True}
+
+class PricingOption(BaseModel):
+    amount:    float
+    breakdown: list[PricingLineItem]
 
 
 class PricingBreakdown(BaseModel):
-    filament:    PricingLineItem
-    machine:     PricingLineItem
-    markup:      PricingLineItem
-    total_egp:   float = Field(alias="totalEgp")
+    currency:     str = "EGP"
+    print_cost:   PricingOption = Field(alias="printCost")
+    download_cost: PricingOption = Field(alias="downloadCost")
 
     model_config = {"populate_by_name": True}
 
@@ -92,6 +94,7 @@ class OrderPaidWebhook(BaseModel):
     job_id:      str = Field(alias="jobId")
     customer_id: str = Field(alias="customerId")
     order_id:    str = Field(alias="orderId")
+    order_type:  str | None = Field(None, alias="orderType")   # "print" | "download"
     amount_paid: float | None = Field(None, alias="amountPaid")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "ignore"}

@@ -11,6 +11,7 @@ from app.api.v1.schemas import (
     JobStatus,
     PricingBreakdown,
     PricingLineItem,
+    PricingOption,
 )
 from app.api.v1.signed_urls import sign_url
 from app.config import settings
@@ -45,11 +46,17 @@ async def generate_status(
 
         q = job.get("quote_result") or {}
         if q:
+            total = q.get("total_egp", 0)
             pricing = PricingBreakdown(
-                filament=PricingLineItem(label="Filament",     amount_egp=q.get("filament_cost_egp", 0)),
-                machine=PricingLineItem(label="Machine time",  amount_egp=q.get("machine_cost_egp", 0)),
-                markup=PricingLineItem(label="Service fee",    amount_egp=q.get("markup_egp", 0)),
-                total_egp=q.get("total_egp", 0),
+                print_cost=PricingOption(
+                    amount=total,
+                    breakdown=[
+                        PricingLineItem(label="Filament",     amount=q.get("filament_cost_egp", 0)),
+                        PricingLineItem(label="Machine time", amount=q.get("machine_cost_egp", 0)),
+                        PricingLineItem(label="Service fee",  amount=q.get("markup_egp", 0)),
+                    ],
+                ),
+                download_cost=PricingOption(amount=0, breakdown=[]),
             )
 
     elif status in (JobStatus.queued, JobStatus.running):
