@@ -436,13 +436,18 @@ async def _web_search_visual_context(subject: str, notes: str) -> str:
 
     prompt = (
         f"Search the web and find the exact visual appearance of: {search_query}\n\n"
+        "IMPORTANT — be specific about context:\n"
+        "- If this is a footballer, specify WHICH kit: national team kit vs club kit are "
+        "completely different colours. A goalkeeper's national team kit is different from "
+        "their club kit. Make sure you are describing the correct one based on the context given.\n"
+        "- If a specific tournament or season is mentioned, only describe that version.\n\n"
         "I need precise details for 3D model texturing:\n"
-        "- Exact colours for every part (jersey, shorts, gloves, boots, skin, hair)\n"
-        "- Any numbers, logos, badge placement and their colours\n"
-        "- Surface materials and finishes\n"
-        "- Position-specific equipment (e.g. goalkeeper gloves vs outfield gloves)\n"
-        "- Any distinctive markings, patterns, or features\n\n"
-        "Be factually accurate. Cite the specific tournament/season/version if relevant."
+        "- Exact jersey colour (for footballers: national team kit, not club kit unless specified)\n"
+        "- Shorts colour, socks colour, boot brand and colour\n"
+        "- For goalkeepers: glove colour and design\n"
+        "- Kit numbers, name printing, badge/logo placement and colours\n"
+        "- Skin tone, hair colour, any facial features\n\n"
+        "Be factually accurate and specific. If unsure between two versions, say so."
     )
 
     try:
