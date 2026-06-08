@@ -22,31 +22,38 @@ POLL_TIMEOUT_S = 480     # max wait before giving up (image-to-3d can take ~5-6 
 
 
 async def generate_from_text(prompt: str, api_key: str) -> dict:
-    """Submit a text-to-3D job and block until complete.
+    """Submit a text-to-3D job (preview → refine) and block until complete.
 
-    Returns:
-        {
-            "task_id": str,
-            "model_url": str,   # OBJ format — usable by OrcaSlicer
-            "preview_url": str, # thumbnail shown to customer
-        }
+    Two-step: preview builds geometry, refine adds PBR colour/textures.
+    Returns the refined result so text prompts get the same colour quality as images.
     """
+    # Step 1 — preview (geometry only, ~1 min)
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             f"{MESHY_BASE}/openapi/v2/text-to-3d",
             headers={"Authorization": f"Bearer {api_key}"},
-            json={
-                "mode": "preview",
-                "prompt": prompt,
-                "art_style": "realistic",
-            },
+            json={"mode": "preview", "prompt": prompt, "art_style": "realistic"},
             timeout=30.0,
         )
         resp.raise_for_status()
-        task_id = resp.json()["result"]
+        preview_task_id = resp.json()["result"]
 
-    logger.info("Meshy text_to_3d submitted — task_id=%s", task_id)
-    return await _poll_until_done(task_id, "v2/text-to-3d", api_key)
+    logger.info("Meshy text_to_3d preview submitted — task_id=%s", preview_task_id)
+    await _poll_until_done(preview_task_id, "v2/text-to-3d", api_key)
+
+    # Step 2 — refine (adds PBR textures/colours, ~2 min)
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{MESHY_BASE}/openapi/v2/text-to-3d",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={"mode": "refine", "preview_task_id": preview_task_id},
+            timeout=30.0,
+        )
+        resp.raise_for_status()
+        refine_task_id = resp.json()["result"]
+
+    logger.info("Meshy text_to_3d refine submitted — task_id=%s", refine_task_id)
+    return await _poll_until_done(refine_task_id, "v2/text-to-3d", api_key)
 
 
 async def generate_from_image(image_url: str, api_key: str, texture_prompt: str = "") -> dict:
