@@ -645,10 +645,10 @@ async def _run_pipeline(sid: str) -> None:
             else:
                 logger.warning("Image upload failed — falling back to text-to-3d")
                 prompt = await asyncio.to_thread(_build_generation_prompt, state.brief)
-                model  = await generate_from_text(prompt, MESHY_API_KEY)
+                model  = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=state.brief.get("color", ""))
         else:
             prompt = await asyncio.to_thread(_build_generation_prompt, state.brief)
-            model  = await generate_from_text(prompt, MESHY_API_KEY)
+            model  = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=state.brief.get("color", ""))
 
         state.model_result = model
 

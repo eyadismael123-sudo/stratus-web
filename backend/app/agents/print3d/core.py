@@ -91,7 +91,20 @@ You are an LLM. Use your world knowledge to fill in the brief intelligently:
   - any phone model → look up its real dimensions
 
 ━━━ DEFAULTS (apply silently, never ask) ━━━
-  color    → "matte white"
+  color    → Use your world knowledge. For specific people, characters, animals,
+             vehicles, landmarks, or any object with a known real-world appearance,
+             describe their ACTUAL colours in detail — skin tone, clothing colours,
+             markings, number/text on uniform, hair colour, shoe colour, etc.
+             Examples:
+             • Cristiano Ronaldo figurine → "Portugal red jersey, number 7 in white
+               on back, tan Mediterranean skin, short dark hair, white Nike boots,
+               black shorts"
+             • Pikachu → "bright yellow body, red cheek circles, black-tipped ears,
+               brown stripe on back, white belly"
+             • Ferrari F40 → "bright red body, black interior visible through windows,
+               silver alloy wheels, Ferrari prancing horse badge in yellow"
+             Only default to "matte white" for fully generic abstract objects
+             with no specific real-world colour identity.
   material → "PLA"
   style    → infer from the object (animal = organic, gadget holder = minimalist, etc.)
   function → "decorative"
@@ -461,6 +474,7 @@ def _build_generation_prompt(brief: dict) -> str:
         f"Object:     {brief.get('object', '')}\n"
         f"Function:   {brief.get('function', '')}\n"
         f"Dimensions: {brief.get('dimensions', '~10-15cm')}\n"
+        f"Color:      {brief.get('color', 'matte white')}\n"
         f"Material:   {brief.get('material', 'PLA')}\n"
         f"Style:      {brief.get('style', 'minimalist')}\n"
         f"Notes:      {brief.get('notes', '')}"

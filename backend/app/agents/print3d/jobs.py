@@ -69,8 +69,9 @@ async def run_pipeline(job_id: str) -> None:
                 texture_prompt=texture_prompt,
             )
         else:
-            prompt = await asyncio.to_thread(_build_generation_prompt, brief)
-            model  = await generate_from_text(prompt, MESHY_API_KEY)
+            prompt       = await asyncio.to_thread(_build_generation_prompt, brief)
+            style_prompt = brief.get("color", "")
+            model        = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=style_prompt)
 
         _patch(job_id, {"meshy_task_id": model.get("task_id", ""), "progress": 40})
 

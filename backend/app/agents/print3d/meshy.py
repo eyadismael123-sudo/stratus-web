@@ -21,11 +21,12 @@ POLL_INTERVAL_S = 5      # seconds between status checks
 POLL_TIMEOUT_S = 480     # max wait before giving up (image-to-3d can take ~5-6 min)
 
 
-async def generate_from_text(prompt: str, api_key: str) -> dict:
+async def generate_from_text(prompt: str, api_key: str, style_prompt: str = "") -> dict:
     """Submit a text-to-3D job (preview → refine) and block until complete.
 
     Two-step: preview builds geometry, refine adds PBR colour/textures.
-    Returns the refined result so text prompts get the same colour quality as images.
+    style_prompt should describe the object's real-world colours (skin tone,
+    clothing colours, markings, etc.) so Meshy applies the right textures.
     """
     # Step 1 — preview (geometry only, ~1 min)
     async with httpx.AsyncClient() as client:
@@ -42,17 +43,25 @@ async def generate_from_text(prompt: str, api_key: str) -> dict:
     await _poll_until_done(preview_task_id, "v2/text-to-3d", api_key)
 
     # Step 2 — refine (adds PBR textures/colours, ~2 min)
+    refine_payload: dict = {
+        "mode": "refine",
+        "preview_task_id": preview_task_id,
+        "texture_richness": "high",
+    }
+    if style_prompt.strip():
+        refine_payload["style_prompt"] = style_prompt.strip()[:600]
+
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             f"{MESHY_BASE}/openapi/v2/text-to-3d",
             headers={"Authorization": f"Bearer {api_key}"},
-            json={"mode": "refine", "preview_task_id": preview_task_id},
+            json=refine_payload,
             timeout=30.0,
         )
         resp.raise_for_status()
         refine_task_id = resp.json()["result"]
 
-    logger.info("Meshy text_to_3d refine submitted — task_id=%s", refine_task_id)
+    logger.info("Meshy text_to_3d refine submitted — task_id=%s  style=%s", refine_task_id, bool(style_prompt))
     return await _poll_until_done(refine_task_id, "v2/text-to-3d", api_key)
 
 
