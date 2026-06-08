@@ -29,6 +29,7 @@ from app.agents.print3d.core import (
     _build_generation_prompt,
     _download,
     _upload_to_public_url,
+    build_visual_research,
     run_vision,
 )
 from app.agents.print3d.meshy import generate_from_image, generate_from_text
@@ -644,11 +645,17 @@ async def _run_pipeline(sid: str) -> None:
                 )
             else:
                 logger.warning("Image upload failed — falling back to text-to-3d")
-                prompt = await asyncio.to_thread(_build_generation_prompt, state.brief)
-                model  = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=state.brief.get("color", ""))
+                prompt, style_prompt = await asyncio.gather(
+                    asyncio.to_thread(_build_generation_prompt, state.brief),
+                    build_visual_research(state.brief),
+                )
+                model = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=style_prompt)
         else:
-            prompt = await asyncio.to_thread(_build_generation_prompt, state.brief)
-            model  = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=state.brief.get("color", ""))
+            prompt, style_prompt = await asyncio.gather(
+                asyncio.to_thread(_build_generation_prompt, state.brief),
+                build_visual_research(state.brief),
+            )
+            model = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=style_prompt)
 
         state.model_result = model
 

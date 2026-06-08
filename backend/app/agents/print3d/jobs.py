@@ -11,7 +11,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from app.agents.print3d.core import _build_generation_prompt, _download
+from app.agents.print3d.core import _build_generation_prompt, _download, build_visual_research
 from app.agents.print3d.email import send_order_email
 from app.agents.print3d.glb_to_3mf import convert as glb_to_3mf_convert
 from app.agents.print3d.meshy import generate_from_image, generate_from_text
@@ -69,9 +69,11 @@ async def run_pipeline(job_id: str) -> None:
                 texture_prompt=texture_prompt,
             )
         else:
-            prompt       = await asyncio.to_thread(_build_generation_prompt, brief)
-            style_prompt = brief.get("color", "")
-            model        = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=style_prompt)
+            prompt, style_prompt = await asyncio.gather(
+                asyncio.to_thread(_build_generation_prompt, brief),
+                build_visual_research(brief),
+            )
+            model = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=style_prompt)
 
         _patch(job_id, {"meshy_task_id": model.get("task_id", ""), "progress": 40})
 

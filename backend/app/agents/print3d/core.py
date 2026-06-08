@@ -362,6 +362,69 @@ BRIEF:
 """
 
 
+_VISUAL_RESEARCH_PROMPT = """\
+You are a visual research specialist preparing a texture brief for a 3D printing AI.
+Given a description of an object, use your world knowledge to produce an extremely
+detailed colour and surface description that will guide Meshy's texture generation.
+
+Write a single paragraph (under 500 words) covering every surface of the object:
+
+COLOURS & GRADIENTS
+- Primary colours with precise descriptions (e.g. "vibrant crimson red", "deep navy blue")
+- Gradient transitions (e.g. skin lightens toward the palm, jersey has a darker shadow fold)
+- Secondary and accent colours and exactly where they appear
+
+SURFACE MATERIALS & FINISH
+- Each surface's material (jersey fabric, leather, bare skin, hair, metal, painted plastic)
+- Finish per surface (matte fabric, satin skin, gloss logo, metallic boot buckle)
+- Texture feel (ribbed knit, smooth rubber sole, coarse stubble, silky hair)
+
+FINE DETAILS
+- Text, numbers, logos with exact colour and placement (e.g. "white number 7 centred
+  on the back of a red jersey", "golden Nike swoosh on the outer ankle of white boots")
+- Patterns: stripes, badges, sponsor logos, seams, stitching colour
+- Any distinctive markings: tattoos, face paint, scars, freckles, unique features
+
+LIGHTING RESPONSE
+- Which surfaces are specular/reflective (boot patent leather, trophy metal, wet skin)
+- Which are fully diffuse (cotton jersey, matte hair, rubber sole)
+
+Be precise and exhaustive. Cover every visible surface — front, back, sides.
+If a detail is uncertain, reason from what you know and make your best call.
+Do not use vague terms like "colourful" or "vibrant" without specifying the colour.
+
+Object to research:
+"""
+
+
+async def build_visual_research(brief: dict) -> str:
+    """Use Claude Sonnet to produce a detailed colour/texture description from world knowledge.
+
+    Called for text-only requests (no photo). The output becomes the style_prompt
+    sent to Meshy's refine step, giving it the same colour depth that vision provides
+    when an image is available.
+    """
+    subject = brief.get("object", "")
+    color_hint = brief.get("color", "")
+    notes = brief.get("notes", "")
+
+    query = subject
+    if color_hint and color_hint.lower() not in ("matte white", ""):
+        query += f" — known colours: {color_hint}"
+    if notes:
+        query += f". Additional context: {notes}"
+
+    response = await asyncio.to_thread(
+        _anthropic.messages.create,
+        model="claude-sonnet-4-6",
+        max_tokens=600,
+        messages=[{"role": "user", "content": f"{_VISUAL_RESEARCH_PROMPT}{query}"}],
+    )
+    result = response.content[0].text.strip()
+    logger.info("Visual research (%d chars): %s", len(result), result[:120])
+    return result
+
+
 # ── Utilities ─────────────────────────────────────────────────────────────────
 
 def _strip_code_fence(text: str) -> str:
