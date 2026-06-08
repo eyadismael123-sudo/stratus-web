@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 SUPABASE_URL      = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY      = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+GROK_API_KEY      = os.getenv("GROK_API_KEY", "")
 
 _anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -398,38 +399,108 @@ covering every surface. Write in flowing prose, surface by surface.
    - Diffuse/flat zones (unglazed pottery, fabric, rubber, raw concrete)
    - Translucent or glowing zones (LED elements, glass, gemstones, amber)
 
-━━━ RULES ━━━
+━━━ CRITICAL RULES ━━━
 - Cover front, back, top, bottom, sides — every face
 - Never say "colourful" or "vibrant" without naming the colour
 - If uncertain, reason from world knowledge and commit — do not skip surfaces
 - For fictional/fantasy objects, draw from the most widely recognised depiction
 - Under 550 words total — dense and specific, no filler
 
+━━━ SPORTS FIGURES — READ THIS FIRST ━━━
+Position and role determine kit colour — NEVER assume the iconic team colours apply
+to every player. Research the EXACT kit worn by the EXACT position:
+- Goalkeepers always wear a DIFFERENT coloured jersey from outfield players.
+  Their kit is specifically chosen to contrast with both teams and the referee.
+  Research what colour that specific goalkeeper wore in that specific tournament/season —
+  do NOT guess or borrow the outfield kit colours.
+- Look up the exact tournament/season kit for that player's specific role.
+- If a captain: note the armband colour and placement.
+- Describe the correct gloves for a goalkeeper (larger, padded, latex grip palm).
+
 Object to research:
 """
 
 
-async def build_visual_research(brief: dict) -> str:
-    """Use Claude Sonnet to produce a detailed colour/texture description from world knowledge.
+async def _web_search_visual_context(subject: str, notes: str) -> str:
+    """Search the web via Grok for accurate visual details of the subject.
 
-    Called for text-only requests (no photo). The output becomes the style_prompt
-    sent to Meshy's refine step, giving it the same colour depth that vision provides
-    when an image is available.
+    Returns a plain-text summary of real colours, kit details, markings, etc.
+    Falls back to empty string if GROK_API_KEY is not set or search fails.
     """
-    subject = brief.get("object", "")
+    if not GROK_API_KEY:
+        return ""
+
+    search_query = subject
+    if notes:
+        search_query += f" {notes}"
+
+    prompt = (
+        f"Search the web and find the exact visual appearance of: {search_query}\n\n"
+        "I need precise details for 3D model texturing:\n"
+        "- Exact colours for every part (jersey, shorts, gloves, boots, skin, hair)\n"
+        "- Any numbers, logos, badge placement and their colours\n"
+        "- Surface materials and finishes\n"
+        "- Position-specific equipment (e.g. goalkeeper gloves vs outfield gloves)\n"
+        "- Any distinctive markings, patterns, or features\n\n"
+        "Be factually accurate. Cite the specific tournament/season/version if relevant."
+    )
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                "https://api.x.ai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {GROK_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "grok-3",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "search_parameters": {"mode": "on"},
+                    "max_tokens": 600,
+                },
+                timeout=25.0,
+            )
+            if resp.status_code == 200:
+                content = resp.json()["choices"][0]["message"]["content"].strip()
+                logger.info("Grok web search (%d chars): %s", len(content), content[:120])
+                return content
+            logger.warning("Grok search returned %s", resp.status_code)
+    except Exception as exc:
+        logger.warning("Grok web search failed: %s", exc)
+
+    return ""
+
+
+async def build_visual_research(brief: dict) -> str:
+    """Produce a detailed colour/texture brief for any object.
+
+    Step 1 — Grok live web search: gets factually accurate visual details
+              (exact kit colours, real product specs, etc.)
+    Step 2 — Claude Sonnet: turns web results + world knowledge into an
+              exhaustive surface-by-surface texture brief for Meshy.
+
+    Falls back to Sonnet-only if GROK_API_KEY is not configured.
+    """
+    subject    = brief.get("object", "")
     color_hint = brief.get("color", "")
-    notes = brief.get("notes", "")
+    notes      = brief.get("notes", "")
+
+    # Run web search and build query in parallel
+    web_context = await _web_search_visual_context(subject, notes)
 
     query = subject
     if color_hint and color_hint.lower() not in ("matte white", ""):
         query += f" — known colours: {color_hint}"
     if notes:
         query += f". Additional context: {notes}"
+    if web_context:
+        query += f"\n\n━━━ VERIFIED WEB SEARCH RESULTS (use these as ground truth) ━━━\n{web_context}"
 
     response = await asyncio.to_thread(
         _anthropic.messages.create,
         model="claude-sonnet-4-6",
-        max_tokens=600,
+        max_tokens=700,
         messages=[{"role": "user", "content": f"{_VISUAL_RESEARCH_PROMPT}{query}"}],
     )
     result = response.content[0].text.strip()
