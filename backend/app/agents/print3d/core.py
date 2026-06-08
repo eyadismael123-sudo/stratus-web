@@ -91,20 +91,19 @@ You are an LLM. Use your world knowledge to fill in the brief intelligently:
   - any phone model → look up its real dimensions
 
 ━━━ DEFAULTS (apply silently, never ask) ━━━
-  color    → Use your world knowledge. For specific people, characters, animals,
-             vehicles, landmarks, or any object with a known real-world appearance,
-             describe their ACTUAL colours in detail — skin tone, clothing colours,
-             markings, number/text on uniform, hair colour, shoe colour, etc.
-             Examples:
-             • Cristiano Ronaldo figurine → "Portugal red jersey, number 7 in white
-               on back, tan Mediterranean skin, short dark hair, white Nike boots,
-               black shorts"
-             • Pikachu → "bright yellow body, red cheek circles, black-tipped ears,
-               brown stripe on back, white belly"
-             • Ferrari F40 → "bright red body, black interior visible through windows,
-               silver alloy wheels, Ferrari prancing horse badge in yellow"
-             Only default to "matte white" for fully generic abstract objects
-             with no specific real-world colour identity.
+  color    → ALWAYS use world knowledge — for every object without exception.
+             Research what this thing actually looks like in real life:
+             • Real people / characters → exact skin tone, clothing colours, markings,
+               numbers, logos, hair, shoes, accessories
+             • Animals → exact species colouring, patterns, gradients, markings
+             • Vehicles → body colour, trim, wheels, glass, badges, interiors
+             • Landmarks / buildings → stone type, weathering, window colour, ironwork
+             • Everyday objects → typical material finish (ceramic glaze, brushed steel,
+               matte rubber, glossy plastic), dominant colour family, accent colours
+             • Fantasy / fictional → infer from lore, media, common depictions
+             • Abstract / geometric → describe the surface material and finish that
+               would make it look best (e.g. "polished silver metal with mirror finish")
+             NEVER output "matte white" — always research and commit to real colours.
   material → "PLA"
   style    → infer from the object (animal = organic, gadget holder = minimalist, etc.)
   function → "decorative"
@@ -363,35 +362,48 @@ BRIEF:
 
 
 _VISUAL_RESEARCH_PROMPT = """\
-You are a visual research specialist preparing a texture brief for a 3D printing AI.
-Given a description of an object, use your world knowledge to produce an extremely
-detailed colour and surface description that will guide Meshy's texture generation.
+You are a visual research specialist. Your job is to study ANY object — real, fictional,
+everyday, or abstract — and produce an exhaustive colour and surface texture brief that
+will guide a 3D texturing AI (Meshy) to apply exactly the right appearance.
 
-Write a single paragraph (under 500 words) covering every surface of the object:
+This applies to EVERYTHING: a coffee mug, a dragon, Cristiano Ronaldo, a chess rook,
+a Nike Air Max, a medieval sword, a garden snail, an abstract geometric sculpture.
 
-COLOURS & GRADIENTS
-- Primary colours with precise descriptions (e.g. "vibrant crimson red", "deep navy blue")
-- Gradient transitions (e.g. skin lightens toward the palm, jersey has a darker shadow fold)
-- Secondary and accent colours and exactly where they appear
+Research the object thoroughly using all your knowledge and produce a detailed brief
+covering every surface. Write in flowing prose, surface by surface.
 
-SURFACE MATERIALS & FINISH
-- Each surface's material (jersey fabric, leather, bare skin, hair, metal, painted plastic)
-- Finish per surface (matte fabric, satin skin, gloss logo, metallic boot buckle)
-- Texture feel (ribbed knit, smooth rubber sole, coarse stubble, silky hair)
+━━━ WHAT TO COVER ━━━
 
-FINE DETAILS
-- Text, numbers, logos with exact colour and placement (e.g. "white number 7 centred
-  on the back of a red jersey", "golden Nike swoosh on the outer ankle of white boots")
-- Patterns: stripes, badges, sponsor logos, seams, stitching colour
-- Any distinctive markings: tattoos, face paint, scars, freckles, unique features
+1. COLOURS & GRADIENTS
+   - Name exact colours for every region (not "red" — "deep crimson scarlet", "warm
+     ivory with cream undertones", "gunmetal grey with blue-black sheen")
+   - Describe gradient transitions: where does one colour fade into another?
+   - Identify which colour is dominant vs accent
 
-LIGHTING RESPONSE
-- Which surfaces are specular/reflective (boot patent leather, trophy metal, wet skin)
-- Which are fully diffuse (cotton jersey, matte hair, rubber sole)
+2. SURFACE MATERIAL & FINISH PER ZONE
+   - What material is each surface made of? (glazed ceramic, brushed stainless steel,
+     worn leather, smooth silicone, knitted cotton, reptile scales, polished obsidian)
+   - Finish type: matte / satin / semi-gloss / high-gloss / metallic / translucent /
+     subsurface-scattering (skin, wax, marble)
+   - Physical texture: smooth, pored, grainy, fibrous, faceted, pitted, burnished
 
-Be precise and exhaustive. Cover every visible surface — front, back, sides.
-If a detail is uncertain, reason from what you know and make your best call.
-Do not use vague terms like "colourful" or "vibrant" without specifying the colour.
+3. FINE SURFACE DETAILS
+   - Text, numbers, logos: exact colour + placement + size relative to object
+   - Patterns: describe stripe width, repeat, colour order, orientation
+   - Seams, stitching, rivets, panel lines: colour and material
+   - Wear, aging, imperfections if appropriate: scratches, patina, dirt accumulation zones
+
+4. SPECULAR & LIGHTING BEHAVIOUR
+   - Highly reflective zones (chrome trim, patent leather, wet surfaces, polished metal)
+   - Diffuse/flat zones (unglazed pottery, fabric, rubber, raw concrete)
+   - Translucent or glowing zones (LED elements, glass, gemstones, amber)
+
+━━━ RULES ━━━
+- Cover front, back, top, bottom, sides — every face
+- Never say "colourful" or "vibrant" without naming the colour
+- If uncertain, reason from world knowledge and commit — do not skip surfaces
+- For fictional/fantasy objects, draw from the most widely recognised depiction
+- Under 550 words total — dense and specific, no filler
 
 Object to research:
 """
