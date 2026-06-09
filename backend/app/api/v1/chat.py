@@ -38,6 +38,13 @@ _anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
 _rl_windows: dict[str, list[float]] = defaultdict(list)
 _rl_lock = asyncio.Lock()
 
+_MAX_HISTORY = 12  # ~6 turns — prevents context drift on long conversations
+
+
+def _trim_history(history: list[dict]) -> list[dict]:
+    """Keep only the last N messages before each Claude call."""
+    return history[-_MAX_HISTORY:] if len(history) > _MAX_HISTORY else history
+
 _SYSTEM = """\
 You are a 3D print order assistant. Your job is to understand what the customer wants and generate their model.
 
@@ -143,7 +150,7 @@ async def _run_orchestrator(history: list[dict], image_url: str) -> dict:
         system=_SYSTEM,
         tools=_TOOLS,
         tool_choice={"type": "any"},
-        messages=history,
+        messages=_trim_history(history),
     )
 
     tool_block = next((b for b in response.content if b.type == "tool_use"), None)
