@@ -460,55 +460,31 @@ Object to research:
 
 
 async def _web_search_visual_context(subject: str, notes: str) -> str:
-    """Search the web via Grok for accurate visual details of the subject."""
-    if not GROK_API_KEY:
-        return ""
-
+    """Search the web via DuckDuckGo for accurate visual details of the subject."""
     search_query = subject
     if notes:
         search_query += f" {notes}"
-
-    prompt = (
-        f"Search the web and find the exact visual appearance of: {search_query}\n\n"
-        "IMPORTANT — be specific about context:\n"
-        "- If this is a footballer, specify WHICH kit: national team kit vs club kit are "
-        "completely different colours. A goalkeeper's national team kit is different from "
-        "their club kit. Make sure you are describing the correct one based on the context given.\n"
-        "- If a specific tournament or season is mentioned, only describe that version.\n\n"
-        "I need precise details for 3D model texturing:\n"
-        "- Exact jersey colour (for footballers: national team kit, not club kit unless specified)\n"
-        "- Shorts colour, socks colour, boot brand and colour\n"
-        "- For goalkeepers: glove colour and design\n"
-        "- Kit numbers, name printing, badge/logo placement and colours\n"
-        "- Skin tone, hair colour, any facial features\n\n"
-        "Be factually accurate and specific. If unsure between two versions, say so."
-    )
+    search_query += " appearance colors kit"
 
     try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                "https://api.x.ai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {GROK_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "grok-3-latest",
-                    "messages": [{"role": "user", "content": prompt}],
-                    "search_parameters": {"mode": "on"},
-                    "max_tokens": 600,
-                },
-                timeout=25.0,
-            )
-            if resp.status_code == 200:
-                content = resp.json()["choices"][0]["message"]["content"].strip()
-                logger.info("Grok web search (%d chars): %s", len(content), content[:120])
-                return content
-            logger.warning("Grok search returned %s", resp.status_code)
-    except Exception as exc:
-        logger.warning("Grok web search failed: %s", exc)
+        from duckduckgo_search import DDGS
 
-    return ""
+        def _ddg_search() -> list[dict]:
+            return list(DDGS().text(search_query, max_results=5))
+
+        results = await asyncio.to_thread(_ddg_search)
+        if not results:
+            return ""
+
+        snippets = "\n\n".join(
+            f"[{r.get('title', '')}]\n{r.get('body', '')}"
+            for r in results
+        )
+        logger.info("DDG web search got %d results for: %s", len(results), search_query[:80])
+        return snippets
+    except Exception as exc:
+        logger.warning("DDG web search failed: %s", exc)
+        return ""
 
 
 async def find_reference_image(subject: str, notes: str = "") -> str | None:
@@ -516,7 +492,7 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
 
     Pipeline:
       1. Wikipedia search API — full-text search, then fetch page image
-      2. Grok web search — fallback for things Wikipedia doesn't cover
+      2. DuckDuckGo image search — fallback for things Wikipedia doesn't cover
 
     Returns a public HTTPS URL Meshy can fetch, or None if nothing found.
     """
@@ -564,45 +540,23 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
         except Exception as exc:
             logger.debug("Wikipedia search failed: %s", exc)
 
-    # ── 2. Grok image URL search ──────────────────────────────────────────────
-    if not GROK_API_KEY:
-        return None
-
+    # ── 2. DuckDuckGo image search ────────────────────────────────────────────
     context = f"{subject} {notes}".strip()
-    grok_prompt = (
-        f"Find a direct URL to a high-quality, publicly accessible photo of: {context}\n\n"
-        "Requirements:\n"
-        "- The URL must be a direct image link (ending in .jpg, .jpeg, .png, or .webp)\n"
-        "- Prefer Wikimedia Commons, Reuters, AP, or official sports body sites\n"
-        "- The image must be free to access without login\n\n"
-        "Return ONLY the raw image URL. No explanation, no markdown, just the URL."
-    )
 
     try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                "https://api.x.ai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROK_API_KEY}", "Content-Type": "application/json"},
-                json={
-                    "model": "grok-3-latest",
-                    "messages": [{"role": "user", "content": grok_prompt}],
-                    "search_parameters": {"mode": "on"},
-                    "max_tokens": 150,
-                },
-                timeout=20.0,
-            )
-            if resp.status_code == 200:
-                content = resp.json()["choices"][0]["message"]["content"].strip()
-                urls = re.findall(
-                    r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)(?:\?[^\s<>"\']*)?',
-                    content, re.IGNORECASE,
-                )
-                if urls:
-                    logger.info("Grok image URL: %s", urls[0][:80])
-                    return urls[0]
-            logger.warning("Grok image search returned %s", resp.status_code)
+        from duckduckgo_search import DDGS
+
+        def _ddg_images() -> list[dict]:
+            return list(DDGS().images(context, max_results=5))
+
+        image_results = await asyncio.to_thread(_ddg_images)
+        for img in image_results:
+            url = img.get("image", "")
+            if url and re.search(r'\.(jpg|jpeg|png|webp)', url, re.IGNORECASE):
+                logger.info("DDG image URL for '%s': %s", context[:50], url[:80])
+                return url
     except Exception as exc:
-        logger.warning("Grok image search failed: %s", exc)
+        logger.warning("DDG image search failed: %s", exc)
 
     return None
 
@@ -610,12 +564,10 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
 async def build_visual_research(brief: dict) -> str:
     """Produce a detailed colour/texture brief for any object.
 
-    Step 1 — Grok live web search: gets factually accurate visual details
+    Step 1 — DuckDuckGo web search: gets factually accurate visual details
               (exact kit colours, real product specs, etc.)
     Step 2 — Claude Sonnet: turns web results + world knowledge into an
               exhaustive surface-by-surface texture brief for Meshy.
-
-    Falls back to Sonnet-only if GROK_API_KEY is not configured.
     """
     subject    = brief.get("object", "")
     color_hint = brief.get("color", "")
