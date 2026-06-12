@@ -362,6 +362,44 @@ BRIEF:
 """
 
 
+_FIGURINE_PROMPT = """\
+You are a Meshy 3D generation specialist. The object is a HUMAN FIGURINE or CHARACTER FIGURE.
+Generate a geometry-first description optimised for Meshy to produce a high-quality 3D figurine.
+
+━━━ OUTPUT TEMPLATE (fill every slot, return as a single paragraph) ━━━
+
+[CHARACTER NAME] figurine, [H]cm tall × [W]cm wide × [D]cm deep, realistic human proportions,
+[POSE — one sentence: stance, weight distribution, arm/hand position, head angle],
+[FACE — hair colour, hair length/style, facial hair if any, expression],
+[UPPER BODY — garment type, collar style, sleeve length],
+[LOWER BODY — shorts or trousers: colour, length],
+[FOOTWEAR — boot or shoe type and colour],
+[ACCESSORIES — gloves, armband, equipment, ball if relevant],
+solid oval base [W]cm × [D]cm, flat bottom, self-supporting
+
+━━━ RULES ━━━
+• Pose must be stable — feet flat on base, weight centred over feet
+• Height = total figure height including base; base adds ~1cm to total
+• Never mention walls, material, FDM, overhangs, or printing constraints
+• Never use "elegant", "high quality", "beautiful", "intricate", "detailed"
+• Under 130 words total
+
+BRIEF:
+"""
+
+_FIGURINE_KEYWORDS = frozenset({
+    "figurine", "figure", "player", "footballer", "goalkeeper", "striker",
+    "athlete", "ronaldo", "messi", "neymar", "statue", "character",
+    "soldier", "knight", "warrior", "hero", "villain", "mascot",
+    "anime", "chibi", "person", "man", "woman", "boy", "girl",
+})
+
+
+def _is_figurine(brief: dict) -> bool:
+    obj = brief.get("object", "").lower()
+    return any(kw in obj for kw in _FIGURINE_KEYWORDS)
+
+
 _VISUAL_RESEARCH_PROMPT = """\
 You are a visual research specialist. Your job is to study ANY object — real, fictional,
 everyday, or abstract — and produce an exhaustive colour and surface texture brief that
@@ -477,37 +515,54 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
     """Find a real reference photo URL for a person or object.
 
     Pipeline:
-      1. Wikipedia REST API — instant, reliable for any famous person/place
+      1. Wikipedia search API — full-text search, then fetch page image
       2. Grok web search — fallback for things Wikipedia doesn't cover
 
     Returns a public HTTPS URL Meshy can fetch, or None if nothing found.
     """
     import re
 
-    # ── 1. Wikipedia ──────────────────────────────────────────────────────────
-    # Extract the cleanest searchable name from the subject string.
-    # "Cristiano Ronaldo doing SUIII celebration" → "Cristiano_Ronaldo"
-    # We just try the first 3 words as a heuristic before any AI call.
-    name_guess = "_".join(subject.split()[:3])
-    wiki_candidates = [name_guess, "_".join(subject.split()[:2])]
+    # ── 1. Wikipedia search API ───────────────────────────────────────────────
+    # Use MediaWiki search (not REST summary by title) — reliable for any name
+    # variation: "Cristiano Ronaldo World Cup" still finds "Cristiano Ronaldo"
+    search_query = subject.split(",")[0].strip()  # drop qualifiers after comma
 
     async with httpx.AsyncClient() as client:
-        for name in wiki_candidates:
-            try:
-                resp = await client.get(
-                    f"https://en.wikipedia.org/api/rest_v1/page/summary/{name}",
-                    headers={"User-Agent": "Stratus3DPrint/1.0 (3dprint assistant)"},
-                    timeout=8.0,
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    thumb = data.get("originalimage", {}).get("source") or \
-                            data.get("thumbnail", {}).get("source", "")
-                    if thumb:
-                        logger.info("Wikipedia image found for '%s': %s", name, thumb[:80])
-                        return thumb
-            except Exception as exc:
-                logger.debug("Wikipedia lookup failed for '%s': %s", name, exc)
+        try:
+            search_resp = await client.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={
+                    "action": "query",
+                    "list": "search",
+                    "srsearch": search_query,
+                    "srlimit": 3,
+                    "format": "json",
+                },
+                headers={"User-Agent": "Stratus3DPrint/1.0"},
+                timeout=8.0,
+            )
+            if search_resp.status_code == 200:
+                results = search_resp.json().get("query", {}).get("search", [])
+                for result in results:
+                    page_title = result["title"].replace(" ", "_")
+                    try:
+                        summary_resp = await client.get(
+                            f"https://en.wikipedia.org/api/rest_v1/page/summary/{page_title}",
+                            headers={"User-Agent": "Stratus3DPrint/1.0"},
+                            timeout=8.0,
+                        )
+                        if summary_resp.status_code == 200:
+                            data = summary_resp.json()
+                            # Prefer originalimage (higher res) over thumbnail
+                            thumb = data.get("originalimage", {}).get("source") or \
+                                    data.get("thumbnail", {}).get("source", "")
+                            if thumb:
+                                logger.info("Wikipedia image '%s': %s", page_title, thumb[:80])
+                                return thumb
+                    except Exception as exc:
+                        logger.debug("Wikipedia summary failed for '%s': %s", page_title, exc)
+        except Exception as exc:
+            logger.debug("Wikipedia search failed: %s", exc)
 
     # ── 2. Grok image URL search ──────────────────────────────────────────────
     if not GROK_API_KEY:
@@ -696,6 +751,8 @@ def _build_generation_prompt(brief: dict) -> str:
     if brief.get("_generation_prompt"):
         return brief["_generation_prompt"]
 
+    template = _FIGURINE_PROMPT if _is_figurine(brief) else _DESIGN_PROMPT
+
     brief_text = (
         f"Object:     {brief.get('object', '')}\n"
         f"Function:   {brief.get('function', '')}\n"
@@ -708,7 +765,7 @@ def _build_generation_prompt(brief: dict) -> str:
     response = _anthropic.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=200,
-        messages=[{"role": "user", "content": f"{_DESIGN_PROMPT}{brief_text}"}],
+        messages=[{"role": "user", "content": f"{template}{brief_text}"}],
     )
     prompt = response.content[0].text.strip()
     logger.info("Generated Meshy prompt (%d chars): %s", len(prompt), prompt[:120])

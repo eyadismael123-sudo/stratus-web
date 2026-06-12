@@ -33,7 +33,13 @@ async def generate_from_text(prompt: str, api_key: str, style_prompt: str = "") 
         resp = await client.post(
             f"{MESHY_BASE}/openapi/v2/text-to-3d",
             headers={"Authorization": f"Bearer {api_key}"},
-            json={"mode": "preview", "prompt": prompt, "art_style": "realistic"},
+            json={
+                    "mode": "preview",
+                    "prompt": prompt,
+                    "art_style": "realistic",
+                    "topology": "quad",        # smoother organic mesh, better for figurines
+                    "target_polycount": 30000,
+                },
             timeout=30.0,
         )
         resp.raise_for_status()
@@ -49,7 +55,7 @@ async def generate_from_text(prompt: str, api_key: str, style_prompt: str = "") 
         "texture_richness": "high",
     }
     if style_prompt.strip():
-        refine_payload["style_prompt"] = style_prompt.strip()[:600]
+        refine_payload["style_prompt"] = style_prompt.strip()[:1000]
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(
@@ -76,9 +82,9 @@ async def generate_from_image(image_url: str, api_key: str, texture_prompt: str 
         api_key:        Meshy API key
         texture_prompt: Optional Sonnet-written surface description (max 600 chars)
     """
-    payload: dict = {"image_url": image_url}
+    payload: dict = {"image_url": image_url, "enable_pbr": True}
     if texture_prompt.strip():
-        payload["texture_prompt"] = texture_prompt.strip()[:600]
+        payload["texture_prompt"] = texture_prompt.strip()[:1000]
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(
