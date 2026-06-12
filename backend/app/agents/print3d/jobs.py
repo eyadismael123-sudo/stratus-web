@@ -135,6 +135,20 @@ async def run_pipeline(job_id: str) -> None:
             },
         )
 
+        # 5. Email cousin the .3mf + .glb (non-blocking, failure must not crash the job)
+        try:
+            await asyncio.to_thread(
+                send_order_email,
+                job_id,
+                brief,
+                quote.total_egp,
+                str(glb),
+                str(tmf),
+                model.get("model_urls", {}).get("glb", ""),
+            )
+        except Exception:
+            logger.exception("Order email failed for job %s (job still complete)", job_id)
+
     except TimeoutError as exc:
         logger.error("Meshy timeout for job %s: %s", job_id, exc)
         _patch(job_id, {"status": "failed", "error": {"code": "MESHY_TIMEOUT", "message": str(exc)}})
