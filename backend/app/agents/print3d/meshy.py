@@ -76,9 +76,9 @@ async def generate_from_image(image_url: str, api_key: str, texture_prompt: str 
         api_key:        Meshy API key
         texture_prompt: Optional Sonnet-written surface description (max 600 chars)
     """
-    # texture_prompt triggers a slow second texturing pass — Meshy reads colour
-    # from the photo itself, so skipping it keeps generation under 2 min.
     payload: dict = {"image_url": image_url}
+    if texture_prompt.strip():
+        payload["texture_prompt"] = texture_prompt.strip()[:600]
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(

@@ -422,11 +422,7 @@ Object to research:
 
 
 async def _web_search_visual_context(subject: str, notes: str) -> str:
-    """Search the web via Grok for accurate visual details of the subject.
-
-    Returns a plain-text summary of real colours, kit details, markings, etc.
-    Falls back to empty string if GROK_API_KEY is not set or search fails.
-    """
+    """Search the web via Grok for accurate visual details of the subject."""
     if not GROK_API_KEY:
         return ""
 
@@ -459,7 +455,7 @@ async def _web_search_visual_context(subject: str, notes: str) -> str:
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "grok-3",
+                    "model": "grok-3-latest",
                     "messages": [{"role": "user", "content": prompt}],
                     "search_parameters": {"mode": "on"},
                     "max_tokens": 600,
@@ -475,6 +471,85 @@ async def _web_search_visual_context(subject: str, notes: str) -> str:
         logger.warning("Grok web search failed: %s", exc)
 
     return ""
+
+
+async def find_reference_image(subject: str, notes: str = "") -> str | None:
+    """Find a real reference photo URL for a person or object.
+
+    Pipeline:
+      1. Wikipedia REST API — instant, reliable for any famous person/place
+      2. Grok web search — fallback for things Wikipedia doesn't cover
+
+    Returns a public HTTPS URL Meshy can fetch, or None if nothing found.
+    """
+    import re
+
+    # ── 1. Wikipedia ──────────────────────────────────────────────────────────
+    # Extract the cleanest searchable name from the subject string.
+    # "Cristiano Ronaldo doing SUIII celebration" → "Cristiano_Ronaldo"
+    # We just try the first 3 words as a heuristic before any AI call.
+    name_guess = "_".join(subject.split()[:3])
+    wiki_candidates = [name_guess, "_".join(subject.split()[:2])]
+
+    async with httpx.AsyncClient() as client:
+        for name in wiki_candidates:
+            try:
+                resp = await client.get(
+                    f"https://en.wikipedia.org/api/rest_v1/page/summary/{name}",
+                    headers={"User-Agent": "Stratus3DPrint/1.0 (3dprint assistant)"},
+                    timeout=8.0,
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    thumb = data.get("originalimage", {}).get("source") or \
+                            data.get("thumbnail", {}).get("source", "")
+                    if thumb:
+                        logger.info("Wikipedia image found for '%s': %s", name, thumb[:80])
+                        return thumb
+            except Exception as exc:
+                logger.debug("Wikipedia lookup failed for '%s': %s", name, exc)
+
+    # ── 2. Grok image URL search ──────────────────────────────────────────────
+    if not GROK_API_KEY:
+        return None
+
+    context = f"{subject} {notes}".strip()
+    grok_prompt = (
+        f"Find a direct URL to a high-quality, publicly accessible photo of: {context}\n\n"
+        "Requirements:\n"
+        "- The URL must be a direct image link (ending in .jpg, .jpeg, .png, or .webp)\n"
+        "- Prefer Wikimedia Commons, Reuters, AP, or official sports body sites\n"
+        "- The image must be free to access without login\n\n"
+        "Return ONLY the raw image URL. No explanation, no markdown, just the URL."
+    )
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                "https://api.x.ai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {GROK_API_KEY}", "Content-Type": "application/json"},
+                json={
+                    "model": "grok-3-latest",
+                    "messages": [{"role": "user", "content": grok_prompt}],
+                    "search_parameters": {"mode": "on"},
+                    "max_tokens": 150,
+                },
+                timeout=20.0,
+            )
+            if resp.status_code == 200:
+                content = resp.json()["choices"][0]["message"]["content"].strip()
+                urls = re.findall(
+                    r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)(?:\?[^\s<>"\']*)?',
+                    content, re.IGNORECASE,
+                )
+                if urls:
+                    logger.info("Grok image URL: %s", urls[0][:80])
+                    return urls[0]
+            logger.warning("Grok image search returned %s", resp.status_code)
+    except Exception as exc:
+        logger.warning("Grok image search failed: %s", exc)
+
+    return None
 
 
 async def build_visual_research(brief: dict) -> str:
