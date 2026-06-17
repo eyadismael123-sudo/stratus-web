@@ -84,7 +84,7 @@ async def generate_from_image(image_url: str, api_key: str, texture_prompt: str 
     """
     payload: dict = {"image_url": image_url, "enable_pbr": True}
     if texture_prompt.strip():
-        payload["texture_prompt"] = texture_prompt.strip()[:1000]
+        payload["texture_prompt"] = texture_prompt.strip()[:800]
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(

@@ -490,22 +490,15 @@ async def _web_search_visual_context(subject: str, notes: str) -> str:
         return ""
 
 
-async def find_reference_image(subject: str, notes: str = "") -> str | None:
-    """Find a real reference photo URL for a person or object.
-
-    Pipeline:
-      1. Google Custom Search API (authenticated — no IP rate limits)
-      2. Wikipedia search API — reliable fallback for well-known subjects
-      3. DuckDuckGo image search — last resort
-
-    Returns a public HTTPS URL Meshy can fetch, or None if nothing found.
-    """
+async def _collect_candidate_images(subject: str, notes: str) -> list[str]:
+    """Gather up to 10 candidate image URLs from all sources."""
     import re
 
     query = f"{subject} {notes}".strip()
     clean_subject = subject.split(",")[0].strip()
+    candidates: list[str] = []
 
-    # ── 1. Google Custom Search (image search) ────────────────────────────────
+    # ── Google Custom Search ──────────────────────────────────────────────────
     if GOOGLE_API_KEY and GOOGLE_CSE_ID:
         try:
             async with httpx.AsyncClient() as client:
@@ -516,7 +509,7 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
                         "cx": GOOGLE_CSE_ID,
                         "q": query,
                         "searchType": "image",
-                        "num": 5,
+                        "num": 8,
                         "imgSize": "large",
                         "imgType": "photo",
                         "safe": "off",
@@ -524,73 +517,155 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
                     timeout=10.0,
                 )
                 if resp.status_code == 200:
-                    items = resp.json().get("items", [])
-                    for item in items:
+                    for item in resp.json().get("items", []):
                         url = item.get("link", "")
                         if url and url.startswith("http"):
-                            logger.info("Google image for '%s': %s", query[:50], url[:80])
-                            return url
+                            candidates.append(url)
                 else:
                     logger.warning("Google CSE returned %s: %s", resp.status_code, resp.text[:200])
         except Exception as exc:
             logger.warning("Google image search failed: %s", exc)
 
-    # ── 2. Wikipedia search API ───────────────────────────────────────────────
-    async with httpx.AsyncClient() as client:
+    # ── Wikimedia Commons ─────────────────────────────────────────────────────
+    if len(candidates) < 5:
         try:
-            search_resp = await client.get(
-                "https://en.wikipedia.org/w/api.php",
-                params={
-                    "action": "query",
-                    "list": "search",
-                    "srsearch": clean_subject,
-                    "srlimit": 3,
-                    "format": "json",
-                },
-                headers={"User-Agent": "Stratus3DPrint/1.0"},
-                timeout=8.0,
-            )
-            if search_resp.status_code == 200:
-                results = search_resp.json().get("query", {}).get("search", [])
-                for result in results:
-                    page_title = result["title"].replace(" ", "_")
-                    try:
-                        summary_resp = await client.get(
-                            f"https://en.wikipedia.org/api/rest_v1/page/summary/{page_title}",
-                            headers={"User-Agent": "Stratus3DPrint/1.0"},
-                            timeout=8.0,
-                        )
-                        if summary_resp.status_code == 200:
-                            data = summary_resp.json()
-                            thumb = (
-                                data.get("originalimage", {}).get("source")
-                                or data.get("thumbnail", {}).get("source", "")
-                            )
-                            if thumb:
-                                logger.info("Wikipedia image '%s': %s", page_title, thumb[:80])
-                                return thumb
-                    except Exception as exc:
-                        logger.debug("Wikipedia summary failed for '%s': %s", page_title, exc)
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(
+                    "https://commons.wikimedia.org/w/api.php",
+                    params={
+                        "action": "query",
+                        "generator": "search",
+                        "gsrnamespace": 6,
+                        "gsrsearch": clean_subject,
+                        "gsrlimit": 10,
+                        "prop": "imageinfo",
+                        "iiprop": "url|mime",
+                        "format": "json",
+                    },
+                    headers={"User-Agent": "Stratus3DPrint/1.0"},
+                    timeout=8.0,
+                )
+                if resp.status_code == 200:
+                    pages = resp.json().get("query", {}).get("pages", {})
+                    for page in pages.values():
+                        for ii in page.get("imageinfo", []):
+                            url = ii.get("url", "")
+                            mime = ii.get("mime", "")
+                            if url and mime.startswith("image/") and mime != "image/svg+xml":
+                                candidates.append(url)
+                    logger.info("Wikimedia Commons: %d images for '%s'", len(candidates), query[:60])
         except Exception as exc:
-            logger.debug("Wikipedia search failed: %s", exc)
+            logger.debug("Wikimedia Commons search failed: %s", exc)
 
-    # ── 3. DuckDuckGo image search (last resort — rate-limited on VPS) ────────
+    # ── Wikipedia (article lead images) ───────────────────────────────────────
+    if len(candidates) < 5:
+        async with httpx.AsyncClient() as client:
+            try:
+                search_resp = await client.get(
+                    "https://en.wikipedia.org/w/api.php",
+                    params={"action": "query", "list": "search", "srsearch": clean_subject,
+                            "srlimit": 3, "format": "json"},
+                    headers={"User-Agent": "Stratus3DPrint/1.0"},
+                    timeout=8.0,
+                )
+                if search_resp.status_code == 200:
+                    for result in search_resp.json().get("query", {}).get("search", []):
+                        page_title = result["title"].replace(" ", "_")
+                        try:
+                            s = await client.get(
+                                f"https://en.wikipedia.org/api/rest_v1/page/summary/{page_title}",
+                                headers={"User-Agent": "Stratus3DPrint/1.0"},
+                                timeout=8.0,
+                            )
+                            if s.status_code == 200:
+                                data = s.json()
+                                thumb = (data.get("originalimage", {}).get("source")
+                                         or data.get("thumbnail", {}).get("source", ""))
+                                if thumb:
+                                    candidates.append(thumb)
+                        except Exception:
+                            pass
+            except Exception as exc:
+                logger.debug("Wikipedia search failed: %s", exc)
+
+    # ── DuckDuckGo (last resort) ──────────────────────────────────────────────
+    if len(candidates) < 3:
+        try:
+            from duckduckgo_search import DDGS
+
+            def _ddg() -> list[dict]:
+                return list(DDGS().images(query, max_results=5))
+
+            for img in await asyncio.to_thread(_ddg):
+                url = img.get("image", "")
+                if url and re.search(r'\.(jpg|jpeg|png|webp)', url, re.IGNORECASE):
+                    candidates.append(url)
+        except Exception as exc:
+            logger.warning("DDG image search failed: %s", exc)
+
+    return candidates
+
+
+async def _pick_best_image(subject: str, notes: str, candidates: list[str]) -> str | None:
+    """Ask Claude Haiku to pick the best candidate URL for 3D reconstruction."""
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+
+    numbered = "\n".join(f"{i+1}. {url}" for i, url in enumerate(candidates))
+    prompt = f"""You are selecting the best reference photo for 3D model reconstruction.
+
+Subject: {subject}
+Notes: {notes}
+
+Candidate image URLs:
+{numbered}
+
+Pick the single best URL for generating an accurate 3D model. Prefer:
+- 3/4 angle shots (show front + side simultaneously)
+- Clean studio or isolated backgrounds
+- Full body/object visible
+- High quality, clear shot
+- For people: action/sport poses over formal portraits
+- For cars: 3/4 front or rear angle over straight-on front/side
+
+Respond with ONLY the number of your chosen image (e.g. "3"). Nothing else."""
+
+    resp = await asyncio.to_thread(
+        _anthropic.messages.create,
+        model="claude-haiku-4-5-20251001",
+        max_tokens=10,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    choice = resp.content[0].text.strip()
     try:
-        from duckduckgo_search import DDGS
+        idx = int(choice) - 1
+        if 0 <= idx < len(candidates):
+            chosen = candidates[idx]
+            logger.info("Claude picked image %s/%s for '%s': %s", idx + 1, len(candidates), subject[:40], chosen[:80])
+            return chosen
+    except ValueError:
+        pass
 
-        def _ddg_images() -> list[dict]:
-            return list(DDGS().images(query, max_results=5))
+    logger.warning("Claude returned unexpected choice %r — falling back to first", choice)
+    return candidates[0]
 
-        image_results = await asyncio.to_thread(_ddg_images)
-        for img in image_results:
-            url = img.get("image", "")
-            if url and re.search(r'\.(jpg|jpeg|png|webp)', url, re.IGNORECASE):
-                logger.info("DDG image URL for '%s': %s", query[:50], url[:80])
-                return url
-    except Exception as exc:
-        logger.warning("DDG image search failed: %s", exc)
 
-    return None
+async def find_reference_image(subject: str, notes: str = "") -> str | None:
+    """Find the best reference photo URL for a person or object.
+
+    Collects candidates from Google, Wikipedia, and DDG, then asks
+    Claude Haiku to pick the best angle for 3D reconstruction.
+
+    Returns a public HTTPS URL Meshy can fetch, or None if nothing found.
+    """
+    candidates = await _collect_candidate_images(subject, notes)
+    if not candidates:
+        return None
+
+    logger.info("Found %d candidate images for '%s'", len(candidates), subject[:50])
+    return await _pick_best_image(subject, notes, candidates)
 
 
 async def build_visual_research(brief: dict) -> str:
