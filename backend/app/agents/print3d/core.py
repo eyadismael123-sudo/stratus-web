@@ -528,34 +528,50 @@ async def _collect_candidate_images(subject: str, notes: str) -> list[str]:
 
     # ── Wikimedia Commons ─────────────────────────────────────────────────────
     if len(candidates) < 5:
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(
-                    "https://commons.wikimedia.org/w/api.php",
-                    params={
-                        "action": "query",
-                        "generator": "search",
-                        "gsrnamespace": 6,
-                        "gsrsearch": clean_subject,
-                        "gsrlimit": 10,
-                        "prop": "imageinfo",
-                        "iiprop": "url|mime",
-                        "format": "json",
-                    },
-                    headers={"User-Agent": "Stratus3DPrint/1.0"},
-                    timeout=8.0,
-                )
-                if resp.status_code == 200:
-                    pages = resp.json().get("query", {}).get("pages", {})
-                    for page in pages.values():
-                        for ii in page.get("imageinfo", []):
-                            url = ii.get("url", "")
-                            mime = ii.get("mime", "")
-                            if url and mime.startswith("image/") and mime != "image/svg+xml":
-                                candidates.append(url)
-                    logger.info("Wikimedia Commons: %d images for '%s'", len(candidates), query[:60])
-        except Exception as exc:
-            logger.debug("Wikimedia Commons search failed: %s", exc)
+        commons_queries = [clean_subject]
+        # Fallback: first 3 words when full subject is too specific
+        short = " ".join(clean_subject.split()[:3])
+        if short and short != clean_subject:
+            commons_queries.append(short)
+
+        for cq in commons_queries:
+            if len(candidates) >= 5:
+                break
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(
+                        "https://commons.wikimedia.org/w/api.php",
+                        params={
+                            "action": "query",
+                            "generator": "search",
+                            "gsrnamespace": 6,
+                            "gsrsearch": cq,
+                            "gsrlimit": 10,
+                            "prop": "imageinfo",
+                            "iiprop": "url|mime|thumburl",
+                            "iiurlwidth": 640,
+                            "format": "json",
+                        },
+                        headers={"User-Agent": "Stratus3DPrint/1.0 (stratus.ai; contact@stratus.ai)"},
+                        timeout=8.0,
+                    )
+                    if resp.status_code == 200:
+                        pages = resp.json().get("query", {}).get("pages", {})
+                        before = len(candidates)
+                        for page in pages.values():
+                            for ii in page.get("imageinfo", []):
+                                mime = ii.get("mime", "")
+                                if not mime.startswith("image/") or mime == "image/svg+xml":
+                                    continue
+                                url = ii.get("thumburl") or ii.get("url", "")
+                                if url and url not in candidates:
+                                    candidates.append(url)
+                        logger.info(
+                            "Wikimedia Commons '%s': %d new images",
+                            cq[:40], len(candidates) - before,
+                        )
+            except Exception as exc:
+                logger.debug("Wikimedia Commons search failed for '%s': %s", cq, exc)
 
     # ── Wikipedia (article lead images) ───────────────────────────────────────
     if len(candidates) < 5:
@@ -606,50 +622,106 @@ async def _collect_candidate_images(subject: str, notes: str) -> list[str]:
     return candidates
 
 
+def _commons_thumbnail(url: str, width: int = 400) -> str:
+    """Convert a Wikimedia Commons full-res URL to its thumbnail URL."""
+    if "/wikipedia/commons/" in url and "/thumb/" not in url:
+        # https://upload.wikimedia.org/wikipedia/commons/e/e1/FILE.jpg
+        # → https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FILE.jpg/400px-FILE.jpg
+        parts = url.split("/wikipedia/commons/", 1)
+        if len(parts) == 2:
+            path = parts[1]  # e/e1/FILE.jpg
+            filename = path.rsplit("/", 1)[-1]
+            return f"https://upload.wikimedia.org/wikipedia/commons/thumb/{path}/{width}px-{filename}"
+    return url
+
+
+async def _fetch_thumbnail(url: str) -> bytes | None:
+    """Download a thumbnail for vision evaluation. Returns None on any failure."""
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                url, timeout=12.0, follow_redirects=True,
+                headers={"User-Agent": "Stratus3DPrint/1.0 (stratus.ai; contact@stratus.ai)"},
+            )
+            ct = r.headers.get("content-type", "")
+            if r.status_code == 200 and ct.startswith("image/") and "svg" not in ct:
+                return r.content
+    except Exception:
+        pass
+    return None
+
+
 async def _pick_best_image(subject: str, notes: str, candidates: list[str]) -> str | None:
-    """Ask Claude Haiku to pick the best candidate URL for 3D reconstruction."""
+    """Ask Claude Haiku vision to pick the best candidate for 3D reconstruction.
+
+    Downloads thumbnails so Claude can actually see color, angle, and composition
+    rather than guessing from URL names.
+    """
     if not candidates:
         return None
     if len(candidates) == 1:
         return candidates[0]
 
-    numbered = "\n".join(f"{i+1}. {url}" for i, url in enumerate(candidates))
-    prompt = f"""You are selecting the best reference photo for 3D model reconstruction.
+    # Download all thumbnails in parallel
+    thumbs = await asyncio.gather(*[_fetch_thumbnail(u) for u in candidates])
+
+    # Build vision content — only include candidates where we got a real image
+    content: list[dict] = []
+    valid_indices: list[int] = []
+    for i, (url, img_bytes) in enumerate(zip(candidates, thumbs)):
+        if img_bytes:
+            content.append({"type": "text", "text": f"Image {i + 1}:"})
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": _detect_media_type(img_bytes),
+                    "data": base64.standard_b64encode(img_bytes).decode(),
+                },
+            })
+            valid_indices.append(i)
+
+    if not valid_indices:
+        logger.warning("No thumbnails downloaded — falling back to first candidate")
+        return candidates[0]
+
+    content.append({
+        "type": "text",
+        "text": f"""You are selecting the best reference photo for 3D model reconstruction.
 
 Subject: {subject}
 Notes: {notes}
 
-Candidate image URLs:
-{numbered}
+From the images above, pick the single best one. Prefer:
+- 3/4 angle (shows front + side simultaneously) — ideal for cars
+- Correct colour match when specified in Notes
+- Full exterior visible, clean background
+- Reject: interior shots, engine bays, logos, wrong model/variant, SVG icons
 
-Pick the single best URL for generating an accurate 3D model. Prefer:
-- 3/4 angle shots (show front + side simultaneously)
-- Clean studio or isolated backgrounds
-- Full body/object visible
-- High quality, clear shot
-- For people: action/sport poses over formal portraits
-- For cars: 3/4 front or rear angle over straight-on front/side
-
-Respond with ONLY the number of your chosen image (e.g. "3"). Nothing else."""
+Reply with ONLY the image number (e.g. "3"). Nothing else.""",
+    })
 
     resp = await asyncio.to_thread(
         _anthropic.messages.create,
         model="claude-haiku-4-5-20251001",
         max_tokens=10,
-        messages=[{"role": "user", "content": prompt}],
+        messages=[{"role": "user", "content": content}],
     )
     choice = resp.content[0].text.strip()
     try:
         idx = int(choice) - 1
         if 0 <= idx < len(candidates):
             chosen = candidates[idx]
-            logger.info("Claude picked image %s/%s for '%s': %s", idx + 1, len(candidates), subject[:40], chosen[:80])
+            logger.info(
+                "Claude vision picked image %s/%s for '%s': %s",
+                idx + 1, len(candidates), subject[:40], chosen[:80],
+            )
             return chosen
     except ValueError:
         pass
 
     logger.warning("Claude returned unexpected choice %r — falling back to first", choice)
-    return candidates[0]
+    return candidates[valid_indices[0]]
 
 
 async def find_reference_image(subject: str, notes: str = "") -> str | None:
