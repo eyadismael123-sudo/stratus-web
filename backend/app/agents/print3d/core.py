@@ -21,10 +21,12 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
-SUPABASE_URL      = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY      = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-GROK_API_KEY      = os.getenv("GROK_API_KEY", "")
+ANTHROPIC_API_KEY  = os.environ["ANTHROPIC_API_KEY"]
+SUPABASE_URL       = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY       = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+GROK_API_KEY       = os.getenv("GROK_API_KEY", "")
+GOOGLE_API_KEY     = os.getenv("GOOGLE_API_KEY", "")
+GOOGLE_CSE_ID      = os.getenv("GOOGLE_CSE_ID", "")
 
 _anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -492,18 +494,48 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
     """Find a real reference photo URL for a person or object.
 
     Pipeline:
-      1. Wikipedia search API — full-text search, then fetch page image
-      2. DuckDuckGo image search — fallback for things Wikipedia doesn't cover
+      1. Google Custom Search API (authenticated — no IP rate limits)
+      2. Wikipedia search API — reliable fallback for well-known subjects
+      3. DuckDuckGo image search — last resort
 
     Returns a public HTTPS URL Meshy can fetch, or None if nothing found.
     """
     import re
 
-    # ── 1. Wikipedia search API ───────────────────────────────────────────────
-    # Use MediaWiki search (not REST summary by title) — reliable for any name
-    # variation: "Cristiano Ronaldo World Cup" still finds "Cristiano Ronaldo"
-    search_query = subject.split(",")[0].strip()  # drop qualifiers after comma
+    query = f"{subject} {notes}".strip()
+    clean_subject = subject.split(",")[0].strip()
 
+    # ── 1. Google Custom Search (image search) ────────────────────────────────
+    if GOOGLE_API_KEY and GOOGLE_CSE_ID:
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(
+                    "https://www.googleapis.com/customsearch/v1",
+                    params={
+                        "key": GOOGLE_API_KEY,
+                        "cx": GOOGLE_CSE_ID,
+                        "q": query,
+                        "searchType": "image",
+                        "num": 5,
+                        "imgSize": "large",
+                        "imgType": "photo",
+                        "safe": "off",
+                    },
+                    timeout=10.0,
+                )
+                if resp.status_code == 200:
+                    items = resp.json().get("items", [])
+                    for item in items:
+                        url = item.get("link", "")
+                        if url and url.startswith("http"):
+                            logger.info("Google image for '%s': %s", query[:50], url[:80])
+                            return url
+                else:
+                    logger.warning("Google CSE returned %s: %s", resp.status_code, resp.text[:200])
+        except Exception as exc:
+            logger.warning("Google image search failed: %s", exc)
+
+    # ── 2. Wikipedia search API ───────────────────────────────────────────────
     async with httpx.AsyncClient() as client:
         try:
             search_resp = await client.get(
@@ -511,7 +543,7 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
                 params={
                     "action": "query",
                     "list": "search",
-                    "srsearch": search_query,
+                    "srsearch": clean_subject,
                     "srlimit": 3,
                     "format": "json",
                 },
@@ -530,9 +562,10 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
                         )
                         if summary_resp.status_code == 200:
                             data = summary_resp.json()
-                            # Prefer originalimage (higher res) over thumbnail
-                            thumb = data.get("originalimage", {}).get("source") or \
-                                    data.get("thumbnail", {}).get("source", "")
+                            thumb = (
+                                data.get("originalimage", {}).get("source")
+                                or data.get("thumbnail", {}).get("source", "")
+                            )
                             if thumb:
                                 logger.info("Wikipedia image '%s': %s", page_title, thumb[:80])
                                 return thumb
@@ -541,20 +574,18 @@ async def find_reference_image(subject: str, notes: str = "") -> str | None:
         except Exception as exc:
             logger.debug("Wikipedia search failed: %s", exc)
 
-    # ── 2. DuckDuckGo image search ────────────────────────────────────────────
-    context = f"{subject} {notes}".strip()
-
+    # ── 3. DuckDuckGo image search (last resort — rate-limited on VPS) ────────
     try:
         from duckduckgo_search import DDGS
 
         def _ddg_images() -> list[dict]:
-            return list(DDGS().images(context, max_results=5))
+            return list(DDGS().images(query, max_results=5))
 
         image_results = await asyncio.to_thread(_ddg_images)
         for img in image_results:
             url = img.get("image", "")
             if url and re.search(r'\.(jpg|jpeg|png|webp)', url, re.IGNORECASE):
-                logger.info("DDG image URL for '%s': %s", context[:50], url[:80])
+                logger.info("DDG image URL for '%s': %s", query[:50], url[:80])
                 return url
     except Exception as exc:
         logger.warning("DDG image search failed: %s", exc)
