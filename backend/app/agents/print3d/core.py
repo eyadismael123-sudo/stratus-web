@@ -651,24 +651,24 @@ async def _fetch_thumbnail(url: str) -> bytes | None:
     return None
 
 
-async def _pick_best_image(subject: str, notes: str, candidates: list[str]) -> str | None:
-    """Ask Claude Haiku vision to pick the best candidate for 3D reconstruction.
+async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> list[str]:
+    """Ask Claude Haiku vision to pick up to 4 diverse-angle images for multi-image-to-3D.
 
     Downloads thumbnails so Claude can actually see color, angle, and composition
-    rather than guessing from URL names.
+    rather than guessing from URL names. Returns 1–4 URLs covering different angles.
     """
     if not candidates:
-        return None
+        return []
     if len(candidates) == 1:
-        return candidates[0]
+        return [candidates[0]]
 
-    # Download all thumbnails in parallel
-    thumbs = await asyncio.gather(*[_fetch_thumbnail(u) for u in candidates])
+    # Download all thumbnails in parallel (cap at 12 to keep vision payload small)
+    limited = candidates[:12]
+    thumbs = await asyncio.gather(*[_fetch_thumbnail(u) for u in limited])
 
-    # Build vision content — only include candidates where we got a real image
     content: list[dict] = []
     valid_indices: list[int] = []
-    for i, (url, img_bytes) in enumerate(zip(candidates, thumbs)):
+    for i, (url, img_bytes) in enumerate(zip(limited, thumbs)):
         if img_bytes:
             content.append({"type": "text", "text": f"Image {i + 1}:"})
             content.append({
@@ -683,61 +683,70 @@ async def _pick_best_image(subject: str, notes: str, candidates: list[str]) -> s
 
     if not valid_indices:
         logger.warning("No thumbnails downloaded — falling back to first candidate")
-        return candidates[0]
+        return [candidates[0]]
 
     content.append({
         "type": "text",
-        "text": f"""You are selecting the best reference photo for 3D model reconstruction.
+        "text": f"""You are selecting reference photos for multi-angle 3D model reconstruction.
 
 Subject: {subject}
 Notes: {notes}
 
-From the images above, pick the single best one. Prefer:
-- 3/4 angle (shows front + side simultaneously) — ideal for cars
-- Correct colour match when specified in Notes
-- Full exterior visible, clean background
-- Reject: interior shots, engine bays, logos, wrong model/variant, SVG icons
+Pick UP TO 4 images that together show the most diverse angles of this subject.
+Ideal combination: front, 3/4 front, side/rear, 3/4 rear.
 
-Reply with ONLY the image number (e.g. "3"). Nothing else.""",
+Priority rules:
+- Correct colour match when specified in Notes — wrong colour = discard immediately
+- Correct model/variant — wrong body style or generation = discard
+- Full exterior visible, clean background
+- Each selected image must show a DIFFERENT angle — no duplicates
+- Reject: interior shots, engine bays, logo-only shots, wrong model/variant, SVG icons
+
+Reply with ONLY the image numbers separated by commas (e.g. "2, 5, 8"). Nothing else.""",
     })
 
     resp = await asyncio.to_thread(
         _anthropic.messages.create,
         model="claude-haiku-4-5-20251001",
-        max_tokens=10,
+        max_tokens=20,
         messages=[{"role": "user", "content": content}],
     )
-    choice = resp.content[0].text.strip()
-    try:
-        idx = int(choice) - 1
-        if 0 <= idx < len(candidates):
-            chosen = candidates[idx]
-            logger.info(
-                "Claude vision picked image %s/%s for '%s': %s",
-                idx + 1, len(candidates), subject[:40], chosen[:80],
-            )
-            return chosen
-    except ValueError:
-        pass
+    raw = resp.content[0].text.strip()
+    chosen: list[str] = []
+    for token in raw.replace(",", " ").split():
+        try:
+            idx = int(token) - 1
+            if 0 <= idx < len(limited) and limited[idx] not in chosen:
+                chosen.append(limited[idx])
+        except ValueError:
+            pass
 
-    logger.warning("Claude returned unexpected choice %r — falling back to first", choice)
-    return candidates[valid_indices[0]]
+    if chosen:
+        logger.info(
+            "Claude vision picked %d image(s) for '%s': %s",
+            len(chosen), subject[:40],
+            " | ".join(u[:60] for u in chosen),
+        )
+        return chosen[:4]
+
+    logger.warning("Claude returned unexpected choice %r — falling back to first valid", raw)
+    return [limited[valid_indices[0]]]
 
 
-async def find_reference_image(subject: str, notes: str = "") -> str | None:
-    """Find the best reference photo URL for a person or object.
+async def find_reference_images(subject: str, notes: str = "") -> list[str]:
+    """Find up to 4 reference photo URLs covering different angles of the subject.
 
-    Collects candidates from Google, Wikipedia, and DDG, then asks
-    Claude Haiku to pick the best angle for 3D reconstruction.
+    Collects candidates from Google, Wikipedia, and DDG, then asks Claude Haiku
+    vision to pick the best diverse set for multi-image 3D reconstruction.
 
-    Returns a public HTTPS URL Meshy can fetch, or None if nothing found.
+    Returns a list of 1–4 public HTTPS URLs Meshy can fetch, or [] if nothing found.
     """
     candidates = await _collect_candidate_images(subject, notes)
     if not candidates:
-        return None
+        return []
 
     logger.info("Found %d candidate images for '%s'", len(candidates), subject[:50])
-    return await _pick_best_image(subject, notes, candidates)
+    return await _pick_best_images(subject, notes, candidates)
 
 
 async def build_visual_research(brief: dict) -> str:

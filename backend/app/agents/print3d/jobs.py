@@ -11,10 +11,10 @@ import os
 import tempfile
 from pathlib import Path
 
-from app.agents.print3d.core import _build_generation_prompt, _download, _is_figurine, build_visual_research, find_reference_image
+from app.agents.print3d.core import _build_generation_prompt, _download, _is_figurine, build_visual_research, find_reference_images
 from app.agents.print3d.email import send_order_email
 from app.agents.print3d.glb_to_3mf import convert as glb_to_3mf_convert
-from app.agents.print3d.meshy import generate_from_image, generate_from_text
+from app.agents.print3d.meshy import generate_from_image, generate_from_multi_image, generate_from_text
 from app.agents.print3d.quoter import calculate_quote
 from app.agents.print3d.slicer import slice_3mf
 from app.repositories.print3d_jobs import get_job, update_job
@@ -75,16 +75,20 @@ async def run_pipeline(job_id: str) -> None:
                 texture_prompt=style_prompt or texture_prompt,
             )
         else:
-            # No customer photo — always search for a reference image
-            prompt, style_prompt, ref_image_url = await asyncio.gather(
+            # No customer photo — always search for reference images
+            prompt, style_prompt, ref_image_urls = await asyncio.gather(
                 asyncio.to_thread(_build_generation_prompt, brief),
                 build_visual_research(brief),
-                find_reference_image(brief.get("object", ""), brief.get("notes", "")),
+                find_reference_images(brief.get("object", ""), brief.get("notes", "")),
             )
-            if ref_image_url:
-                logger.info("Using reference image for '%s': %s", brief.get("object", ""), ref_image_url[:80])
-                model = await generate_from_image(
-                    image_url=ref_image_url,
+            if ref_image_urls:
+                logger.info(
+                    "Using %d reference image(s) for '%s': %s",
+                    len(ref_image_urls), brief.get("object", ""),
+                    " | ".join(u[:60] for u in ref_image_urls),
+                )
+                model = await generate_from_multi_image(
+                    image_urls=ref_image_urls,
                     api_key=MESHY_API_KEY,
                     texture_prompt=style_prompt,
                 )

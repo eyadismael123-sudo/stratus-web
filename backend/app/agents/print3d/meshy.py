@@ -71,6 +71,38 @@ async def generate_from_text(prompt: str, api_key: str, style_prompt: str = "") 
     return await _poll_until_done(refine_task_id, "v2/text-to-3d", api_key)
 
 
+async def generate_from_multi_image(image_urls: list[str], api_key: str, texture_prompt: str = "") -> dict:
+    """Submit a multi-image-to-3D job (up to 4 angles) and block until complete.
+
+    Uses /v1/multi-image-to-3d which reconstructs geometry from all provided
+    views simultaneously — no guessing of unseen sides.
+    """
+    if not image_urls:
+        raise ValueError("At least one image URL required")
+
+    payload: dict = {
+        "image_urls": image_urls[:4],
+        "enable_pbr": True,
+        "topology": "quad",
+        "target_polycount": 30000,
+    }
+    if texture_prompt.strip():
+        payload["texture_prompt"] = texture_prompt.strip()[:600]
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{MESHY_BASE}/openapi/v1/multi-image-to-3d",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json=payload,
+            timeout=30.0,
+        )
+        resp.raise_for_status()
+        task_id = resp.json()["result"]
+
+    logger.info("Meshy multi_image_to_3d submitted — %d images, task_id=%s", len(image_urls[:4]), task_id)
+    return await _poll_until_done(task_id, "v1/multi-image-to-3d", api_key)
+
+
 async def generate_from_image(image_url: str, api_key: str, texture_prompt: str = "") -> dict:
     """Submit an image-to-3D job and block until complete.
 
