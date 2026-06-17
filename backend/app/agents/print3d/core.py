@@ -382,6 +382,7 @@ solid oval base [W]cm × [D]cm, flat bottom, self-supporting
 • Height = total figure height including base; base adds ~1cm to total
 • Never mention walls, material, FDM, overhangs, or printing constraints
 • Never use "elegant", "high quality", "beautiful", "intricate", "detailed"
+• NEVER invent jersey numbers — only include a number if explicitly stated in the brief
 • Under 130 words total
 
 BRIEF:
