@@ -651,6 +651,34 @@ async def _fetch_thumbnail(url: str) -> bytes | None:
     return None
 
 
+_BODY_STYLE_EXCLUSIONS: dict[str, tuple[str, ...]] = {
+    # key = requested style keyword → values = URL substrings to reject
+    "coupe":       ("cabriolet", "cabrio", "convertible", "roadster", "spyder", "spider", "gran_coupe", "gran-coupe", "grancoupe", "4-door", "4door"),
+    "coupé":       ("cabriolet", "cabrio", "convertible", "roadster", "spyder", "spider", "gran_coupe", "gran-coupe", "grancoupe", "4-door", "4door"),
+    "convertible": ("_coupe", "-coupe", "gran_coupe", "sedan", "4-door"),
+    "cabriolet":   ("_coupe", "-coupe", "gran_coupe", "sedan", "4-door"),
+    "sedan":       ("cabriolet", "cabrio", "convertible", "coupe", "roadster"),
+    "suv":         ("cabriolet", "cabrio", "convertible", "coupe", "sedan"),
+}
+
+
+def _body_style_filter(candidates: list[str], subject: str, notes: str) -> list[str]:
+    """Remove URLs whose filenames indicate a wrong body style."""
+    combined = f"{subject} {notes}".lower()
+    for style, exclusions in _BODY_STYLE_EXCLUSIONS.items():
+        if style in combined:
+            filtered = []
+            for url in candidates:
+                url_lower = url.lower()
+                rejected = next((e for e in exclusions if e in url_lower), None)
+                if rejected:
+                    logger.info("Body-style pre-filter: excluded '%s' (matched '%s')", url[url.rfind("/")+1:url.rfind("/")+80], rejected)
+                else:
+                    filtered.append(url)
+            candidates = filtered
+    return candidates
+
+
 async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> list[str]:
     """Ask Claude Haiku vision to pick up to 4 diverse-angle images for multi-image-to-3D.
 
@@ -659,6 +687,12 @@ async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> 
     """
     if not candidates:
         return []
+
+    # Pre-filter by URL filename before spending vision tokens
+    candidates = _body_style_filter(candidates, subject, notes)
+    if not candidates:
+        return []
+
     if len(candidates) == 1:
         return [candidates[0]]
 
@@ -692,17 +726,26 @@ async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> 
 Subject: {subject}
 Notes: {notes}
 
-Pick UP TO 4 images that together show the most diverse angles of this subject.
-Ideal combination: front, 3/4 front, side/rear, 3/4 rear.
+━━━ HARD REJECTION RULES (eliminate before anything else) ━━━
+1. BODY STYLE — if the subject or notes specify a body style, reject ANY image showing a different body style:
+   - "coupe" or "coupé" requested → reject convertibles, cabriolets, sedans, gran coupés, SUVs
+   - "sedan" requested → reject coupes, convertibles, SUVs
+   - "convertible" or "cabriolet" requested → reject hardtop coupes, sedans
+   A convertible with the roof up STILL has a different roofline, door count, and C-pillar — reject it.
+2. COLOUR — if notes specify a colour (e.g. "glacier silver"), reject any image that is clearly a DIFFERENT colour:
+   - Wrong colour = reject even if the body style is correct
+   - Same colour family is ok (silver ≈ glacier silver, space grey = too dark = reject)
+   - If genuinely unsure of colour, keep it
+3. WRONG VARIANT — wrong generation code, wrong trim level (e.g. M3 ≠ M4, Gran Coupé ≠ Coupé)
+4. UNUSABLE SHOTS — interior, engine bay, logo-only, blurry, SVG/illustration
 
-Priority rules:
-- Correct colour match when specified in Notes — wrong colour = discard immediately
-- Correct model/variant — wrong body style or generation = discard
-- Full exterior visible, clean background
-- Each selected image must show a DIFFERENT angle — no duplicates
-- Reject: interior shots, engine bays, logo-only shots, wrong model/variant, SVG icons
+━━━ AFTER REJECTION — RANK SURVIVORS ━━━
+From the surviving images, pick UP TO 4 that together cover the most diverse angles:
+Ideal: front 3/4, side, rear 3/4, rear or front straight-on.
+Each pick must show a DIFFERENT angle — no near-duplicates.
 
-Reply with ONLY the image numbers separated by commas (e.g. "2, 5, 8"). Nothing else.""",
+Reply with ONLY the image numbers separated by commas (e.g. "2, 5, 8"). Nothing else.
+If NO images survive the rejection rules, reply with "none".""",
     })
 
     resp = await asyncio.to_thread(
@@ -712,6 +755,10 @@ Reply with ONLY the image numbers separated by commas (e.g. "2, 5, 8"). Nothing 
         messages=[{"role": "user", "content": content}],
     )
     raw = resp.content[0].text.strip()
+    if raw.lower().startswith("none"):
+        logger.info("Claude rejected all candidates for '%s' — no valid images", subject[:40])
+        return []
+
     chosen: list[str] = []
     for token in raw.replace(",", " ").split():
         try:
