@@ -4,7 +4,7 @@ Vendored from OssMansour/glb_to_3mf_package (private repo).
 Adaptations for our codebase:
   - convert(glb_path, output_path) public API (jobs.py entry point)
   - source_name threaded through build_model_settings / write_bambu_project
-  - TEMPLATE_BAMBU_PROJECT defaults to empty string (falls back to {})
+  - TEMPLATE_BAMBU_PROJECT defaults to None when BAMBU_TEMPLATE_3MF unset (falls back to {})
   - LOKY_MAX_CPU_COUNT / joblib warning suppression preserved
   - module-level logger for convert() entry/exit; internal print/tqdm unchanged
 """
@@ -43,8 +43,10 @@ logger = logging.getLogger(__name__)
 
 INPUT_FILE = os.environ.get("GLB_INPUT_FILE", "input.glb")
 OUTPUT_FILE = os.environ.get("THREEMF_OUTPUT_FILE", "output.3mf")
-# Empty string → Path("") → .exists() == False → empty-dict fallback in template_project_settings
-TEMPLATE_BAMBU_PROJECT = Path(os.environ.get("BAMBU_TEMPLATE_3MF", ""))
+# None when env var is unset — template_project_settings checks `is not None` before .exists()
+# (Path("") resolves to Path(".") in pathlib, so .exists() would return True = wrong)
+_template_env = os.environ.get("BAMBU_TEMPLATE_3MF", "")
+TEMPLATE_BAMBU_PROJECT: Path | None = Path(_template_env) if _template_env else None
 
 NUM_COLORS = 4
 BUILD_SCALE = 100.0
@@ -1612,7 +1614,7 @@ def build_3dmodel_xml(mesh, face_color_idx):
 
 
 def template_project_settings(palette):
-    if TEMPLATE_BAMBU_PROJECT.exists():
+    if TEMPLATE_BAMBU_PROJECT is not None and TEMPLATE_BAMBU_PROJECT.exists():
         with zipfile.ZipFile(TEMPLATE_BAMBU_PROJECT) as template:
             settings = json.loads(
                 template.read("Metadata/project_settings.config").decode("utf-8", "replace")

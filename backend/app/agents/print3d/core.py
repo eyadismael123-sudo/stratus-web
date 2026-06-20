@@ -470,7 +470,7 @@ async def _web_search_visual_context(subject: str, notes: str) -> str:
     search_query += " appearance colors kit"
 
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
 
         def _ddg_search() -> list[dict]:
             return list(DDGS().text(search_query, max_results=5))
@@ -528,7 +528,24 @@ async def _collect_candidate_images(subject: str, notes: str) -> list[str]:
 
     # ── Wikimedia Commons ─────────────────────────────────────────────────────
     if len(candidates) < 5:
+        # Build ordered queries: most specific first (with color), then progressively broader
         commons_queries = [clean_subject]
+        # Include color from notes if present (e.g. "Glacier Silver") for better matches
+        import re as _re
+        color_match = _re.search(
+            r'\b(glacier silver|space grey|space gray|alpine white|black sapphire|'
+            r'mineral white|carbon black|estoril blue|long beach blue|san marino blue|'
+            r'austin yellow|indianapolis red|lime rock grey)\b',
+            notes.lower(),
+        )
+        if color_match:
+            commons_queries.insert(0, f"{clean_subject} {color_match.group(0)}")
+        # Extract BMW/Mercedes generation codes from notes for targeted search (e.g. F32, G80, W176)
+        gen_code_match = _re.search(r'\b([FGWCEX][0-9]{2,3}[A-Z]?)\b', notes)
+        if gen_code_match:
+            make = clean_subject.split()[0]  # e.g. "BMW"
+            gen_code = gen_code_match.group(1)  # e.g. "F32"
+            commons_queries.append(f"{make} {gen_code}")
         # Fallback: first 3 words when full subject is too specific
         short = " ".join(clean_subject.split()[:3])
         if short and short != clean_subject:
@@ -604,20 +621,26 @@ async def _collect_candidate_images(subject: str, notes: str) -> list[str]:
             except Exception as exc:
                 logger.debug("Wikipedia search failed: %s", exc)
 
-    # ── DuckDuckGo (last resort) ──────────────────────────────────────────────
-    if len(candidates) < 3:
-        try:
-            from duckduckgo_search import DDGS
+    # ── DuckDuckGo — always run to supplement Wikipedia ──────────────────────
+    # Wikipedia Commons has limited coverage of specific trims/colors.
+    # DDG finds press shots, enthusiast sites, and review articles with better specificity.
+    try:
+        from ddgs import DDGS
 
-            def _ddg() -> list[dict]:
-                return list(DDGS().images(query, max_results=5))
+        def _ddg() -> list[dict]:
+            return list(DDGS().images(query, max_results=10))
 
-            for img in await asyncio.to_thread(_ddg):
-                url = img.get("image", "")
-                if url and re.search(r'\.(jpg|jpeg|png|webp)', url, re.IGNORECASE):
-                    candidates.append(url)
-        except Exception as exc:
-            logger.warning("DDG image search failed: %s", exc)
+        ddg_results = await asyncio.to_thread(_ddg)
+        ddg_added = 0
+        for img in ddg_results:
+            url = img.get("image", "")
+            if url and re.search(r'\.(jpg|jpeg|png|webp)', url, re.IGNORECASE) and url not in candidates:
+                candidates.append(url)
+                ddg_added += 1
+        if ddg_added:
+            logger.info("DDG image search: added %d results", ddg_added)
+    except Exception as exc:
+        logger.warning("DDG image search failed: %s", exc)
 
     return candidates
 
@@ -661,10 +684,50 @@ _BODY_STYLE_EXCLUSIONS: dict[str, tuple[str, ...]] = {
     "suv":         ("cabriolet", "cabrio", "convertible", "coupe", "sedan"),
 }
 
+# URL color-name substrings that indicate a specific paint color.
+# Key = color family; values = URL substrings that imply that color.
+_COLOR_INDICATORS: dict[str, tuple[str, ...]] = {
+    "blue":   ("_blue", "-blue", "blau", "estoril", "san_marino", "long_beach", "avus", "le_mans", "monte_carlo", "interlagos"),
+    "red":    ("_red", "-red", "rot", "imola", "melbourne", "indianapolis", "jalapeno", "mugello"),
+    "green":  ("_green", "-green", "gruen", "british_racing"),
+    "yellow": ("_yellow", "-yellow", "gelb", "austin", "dakar"),
+    "orange": ("_orange", "-orange", "fire", "phoenix"),
+    "black":  ("_black", "-black", "schwarz", "carbon_black", "jet_black"),
+    "white":  ("_white", "-white", "weiss", "alpine_white", "mineral_white"),
+}
 
-def _body_style_filter(candidates: list[str], subject: str, notes: str) -> list[str]:
-    """Remove URLs whose filenames indicate a wrong body style."""
+_SILVER_TERMS = frozenset({
+    "silver", "glacier", "titan", "arktis", "arctic", "sterling",
+    "cashmere", "moonstone", "quartz",
+})
+
+_WARM_COLORS = frozenset({"blue", "red", "green", "yellow", "orange"})
+
+
+def _color_from_text(text: str) -> str | None:
+    """Return a broad color family if text explicitly names one."""
+    t = text.lower()
+    if any(w in t for w in _SILVER_TERMS):
+        return "silver"
+    for color in _WARM_COLORS | {"black", "white"}:
+        if color in t:
+            return color
+    return None
+
+
+def _body_style_filter(
+    candidates: list[str], subject: str, notes: str
+) -> tuple[list[str], bool]:
+    """Remove URLs whose filenames indicate a wrong body style, trim, or color.
+
+    Returns ``(filtered_candidates, trim_relaxed)`` — ``trim_relaxed=True`` means
+    the trim filter had to fall back to M Sport images for geometry coverage.
+    Callers should suppress downstream trim-rejection rules in that case.
+    """
     combined = f"{subject} {notes}".lower()
+    trim_relaxed = False
+
+    # ── Body style ────────────────────────────────────────────────────────────
     for style, exclusions in _BODY_STYLE_EXCLUSIONS.items():
         if style in combined:
             filtered = []
@@ -676,7 +739,57 @@ def _body_style_filter(candidates: list[str], subject: str, notes: str) -> list[
                 else:
                     filtered.append(url)
             candidates = filtered
-    return candidates
+
+    # ── Trim level — reject M Sport URLs when M Performance is requested ──────
+    # Soft filter: only apply if enough candidates survive (M Sport = same body geometry,
+    # just different aero kit — acceptable reference when nothing better exists).
+    if "m performance" in combined:
+        filtered = []
+        msport_rejected: list[str] = []
+        for url in candidates:
+            ul = url.lower()
+            has_perf = "m_performance" in ul or "mperformance" in ul or "m-performance" in ul
+            has_sport = (
+                "_m-sport" in ul or "_m_sport" in ul or
+                "-m-sport" in ul or "-m_sport" in ul or
+                "msport" in ul
+            )
+            if has_sport and not has_perf:
+                logger.info("Trim pre-filter: excluded M Sport URL '%s'", url[url.rfind("/")+1:url.rfind("/")+80])
+                msport_rejected.append(url)
+            else:
+                filtered.append(url)
+        if len(filtered) < 2 and msport_rejected:
+            logger.warning(
+                "Trim filter left only %d image(s) — reintroducing %d M Sport image(s) "
+                "as geometry reference (same body; texture_prompt handles trim differences)",
+                len(filtered), len(msport_rejected),
+            )
+            candidates = filtered + msport_rejected
+            trim_relaxed = True
+        else:
+            candidates = filtered
+
+    # ── Color — reject obvious wrong-color URLs ───────────────────────────────
+    requested_color = _color_from_text(combined)
+    if requested_color:
+        wrong_colors = {c: v for c, v in _COLOR_INDICATORS.items() if c != requested_color}
+        if requested_color == "silver":
+            wrong_colors = _COLOR_INDICATORS
+        filtered = []
+        for url in candidates:
+            ul = url.lower()
+            reject_color = next(
+                (c for c, subs in wrong_colors.items() if any(s in ul for s in subs)),
+                None,
+            )
+            if reject_color:
+                logger.info("Color pre-filter: excluded '%s' (looks %s, want %s)", url[url.rfind("/")+1:url.rfind("/")+80], reject_color, requested_color)
+            else:
+                filtered.append(url)
+        candidates = filtered
+
+    return candidates, trim_relaxed
 
 
 async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> list[str]:
@@ -689,7 +802,7 @@ async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> 
         return []
 
     # Pre-filter by URL filename before spending vision tokens
-    candidates = _body_style_filter(candidates, subject, notes)
+    candidates, trim_relaxed = _body_style_filter(candidates, subject, notes)
     if not candidates:
         return []
 
@@ -719,6 +832,17 @@ async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> 
         logger.warning("No thumbnails downloaded — falling back to first candidate")
         return [candidates[0]]
 
+    # M Sport vs M Performance share the same chassis/roofline/doors — only the aero kit
+    # differs, which is handled by texture_prompt. Accept M Sport as geometry reference.
+    # Only flag truly wrong generations (F80 ≠ F32, etc.).
+    _ = trim_relaxed  # acknowledged; rule is now always geometry-friendly
+    _trim_rule3 = (
+        "Prefer M Performance images if available, but ACCEPT M Sport — "
+        "body geometry is essentially identical (same doors, roofline, wheelbase). "
+        "texture_prompt handles aero kit differences. "
+        "REJECT wrong generation code (e.g. F80 M3 is NOT F32 435i)"
+    )
+
     content.append({
         "type": "text",
         "text": f"""You are selecting reference photos for multi-angle 3D model reconstruction.
@@ -726,18 +850,32 @@ async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> 
 Subject: {subject}
 Notes: {notes}
 
-━━━ HARD REJECTION RULES (eliminate before anything else) ━━━
-1. BODY STYLE — if the subject or notes specify a body style, reject ANY image showing a different body style:
-   - "coupe" or "coupé" requested → reject convertibles, cabriolets, sedans, gran coupés, SUVs
-   - "sedan" requested → reject coupes, convertibles, SUVs
-   - "convertible" or "cabriolet" requested → reject hardtop coupes, sedans
-   A convertible with the roof up STILL has a different roofline, door count, and C-pillar — reject it.
-2. COLOUR — if notes specify a colour (e.g. "glacier silver"), reject any image that is clearly a DIFFERENT colour:
-   - Wrong colour = reject even if the body style is correct
-   - Same colour family is ok (silver ≈ glacier silver, space grey = too dark = reject)
-   - If genuinely unsure of colour, keep it
-3. WRONG VARIANT — wrong generation code, wrong trim level (e.g. M3 ≠ M4, Gran Coupé ≠ Coupé)
-4. UNUSABLE SHOTS — interior, engine bay, logo-only, blurry, SVG/illustration
+━━━ HARD REJECTION RULES — apply IN ORDER, eliminate before scoring ━━━
+
+RULE 1 — BODY STYLE (hardest rule):
+If subject/notes specify a body style, reject ANY image with a different body style.
+- "coupe" → reject: convertible, cabriolet, sedan, gran coupé (4-door fastback), SUV
+- "sedan" → reject: coupe, convertible, SUV
+- "convertible" / "cabriolet" → reject: hardtop coupe, sedan
+A convertible with roof UP still has wrong roofline + C-pillar — STILL REJECT.
+
+RULE 2 — COLOUR (strict — apply when a colour is named in notes):
+The specified colour overrides everything. Reject ANY image where the car is a DIFFERENT colour.
+Examples:
+  "Glacier Silver" or "silver" → ONLY keep: silver, pearl silver, light grey-silver metallic
+                                  REJECT: blue, dark blue, navy, black, white, red, green, grey (if noticeably dark), yellow
+  "Space Grey" → ONLY keep: dark grey, gunmetal grey — REJECT: silver, blue, black, white
+  "Estoril Blue" → ONLY keep: bright metallic blue — REJECT: silver, grey, dark navy, black
+When you see a car that is VISUALLY a different color from what was requested — REJECT IT.
+Do not keep wrong-color images "just in case" — they harm the 3D reconstruction.
+
+RULE 3 — TRIM / VARIANT:
+- {_trim_rule3}
+- Wrong generation code → reject (e.g. F80 M3 ≠ F82 M4, G22 ≠ F32)
+- Gran Coupé (4-door) ≠ Coupé (2-door) — treat as body style violation (Rule 1)
+
+RULE 4 — UNUSABLE SHOTS:
+Reject: interior shots, engine bay, badge/logo closeup only, blurry, illustration/SVG, CGI render
 
 ━━━ AFTER REJECTION — RANK SURVIVORS ━━━
 From the surviving images, pick UP TO 4 that together cover the most diverse angles:
@@ -748,10 +886,14 @@ Reply with ONLY the image numbers separated by commas (e.g. "2, 5, 8"). Nothing 
 If NO images survive the rejection rules, reply with "none".""",
     })
 
+    logger.info(
+        "Sending %d images to Claude vision for '%s' (trim_relaxed=%s)",
+        len(valid_indices), subject[:40], trim_relaxed,
+    )
     resp = await asyncio.to_thread(
         _anthropic.messages.create,
         model="claude-haiku-4-5-20251001",
-        max_tokens=20,
+        max_tokens=30,
         messages=[{"role": "user", "content": content}],
     )
     raw = resp.content[0].text.strip()
