@@ -843,6 +843,53 @@ async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> 
         "REJECT wrong generation code (e.g. F80 M3 is NOT F32 435i)"
     )
 
+    # Build subject-aware rejection rules
+    _is_vehicle = any(w in (subject + " " + notes).lower() for w in (
+        "car", "coupe", "sedan", "suv", "convertible", "cabriolet",
+        "bmw", "mercedes", "audi", "porsche", "ferrari", "lamborghini",
+        "ford", "toyota", "honda", "tesla", "maserati", "bentley",
+    ))
+
+    if _is_vehicle:
+        _rule1 = (
+            "RULE 1 — BODY STYLE (hardest rule):\n"
+            "Reject ANY image with a different body style from what is requested.\n"
+            '- "coupe" → reject: convertible, cabriolet, sedan, gran coupé (4-door fastback), SUV\n'
+            '- "sedan" → reject: coupe, convertible, SUV\n'
+            '- "convertible" / "cabriolet" → reject: hardtop coupe, sedan\n'
+            "A convertible with roof UP still has wrong roofline + C-pillar — STILL REJECT."
+        )
+        _rule2 = (
+            "RULE 2 — COLOUR (only when a colour is named in notes):\n"
+            "Reject ANY image where the car is a DIFFERENT colour from what was requested.\n"
+            '  "Glacier Silver" / "silver" → keep: silver, pearl silver, light grey-silver metallic\n'
+            '  "Space Grey" → keep: dark grey, gunmetal — reject: silver, blue, black, white\n'
+            "When the car is VISUALLY a different color — REJECT IT."
+        )
+        _rule3 = (
+            f"RULE 3 — TRIM / VARIANT:\n"
+            f"- {_trim_rule3}\n"
+            "- Wrong generation code → reject (e.g. F80 M3 ≠ F82 M4, G22 ≠ F32)\n"
+            "- Gran Coupé (4-door) ≠ Coupé (2-door) — treat as body style violation"
+        )
+    else:
+        _rule1 = (
+            "RULE 1 — WRONG SUBJECT:\n"
+            "Reject any image that clearly shows a different person, character, object, or subject "
+            "from what is requested. Accept variations in pose, angle, or kit/costume if the core "
+            "subject is identifiably correct."
+        )
+        _rule2 = (
+            "RULE 2 — COLOUR / KIT (only when a specific colour or kit is named in notes):\n"
+            "Reject images where the colour or kit is visually incompatible with the request "
+            "(e.g. wrong national team kit, wrong jersey colour)."
+        )
+        _rule3 = (
+            "RULE 3 — VARIANT / VERSION:\n"
+            "Prefer the exact variant if available. Accept close variants that share the same "
+            "underlying geometry or silhouette when better options aren't available."
+        )
+
     content.append({
         "type": "text",
         "text": f"""You are selecting reference photos for multi-angle 3D model reconstruction.
@@ -850,40 +897,23 @@ async def _pick_best_images(subject: str, notes: str, candidates: list[str]) -> 
 Subject: {subject}
 Notes: {notes}
 
-━━━ HARD REJECTION RULES — apply IN ORDER, eliminate before scoring ━━━
+━━━ REJECTION RULES — apply IN ORDER ━━━
 
-RULE 1 — BODY STYLE (hardest rule):
-If subject/notes specify a body style, reject ANY image with a different body style.
-- "coupe" → reject: convertible, cabriolet, sedan, gran coupé (4-door fastback), SUV
-- "sedan" → reject: coupe, convertible, SUV
-- "convertible" / "cabriolet" → reject: hardtop coupe, sedan
-A convertible with roof UP still has wrong roofline + C-pillar — STILL REJECT.
+{_rule1}
 
-RULE 2 — COLOUR (strict — apply when a colour is named in notes):
-The specified colour overrides everything. Reject ANY image where the car is a DIFFERENT colour.
-Examples:
-  "Glacier Silver" or "silver" → ONLY keep: silver, pearl silver, light grey-silver metallic
-                                  REJECT: blue, dark blue, navy, black, white, red, green, grey (if noticeably dark), yellow
-  "Space Grey" → ONLY keep: dark grey, gunmetal grey — REJECT: silver, blue, black, white
-  "Estoril Blue" → ONLY keep: bright metallic blue — REJECT: silver, grey, dark navy, black
-When you see a car that is VISUALLY a different color from what was requested — REJECT IT.
-Do not keep wrong-color images "just in case" — they harm the 3D reconstruction.
+{_rule2}
 
-RULE 3 — TRIM / VARIANT:
-- {_trim_rule3}
-- Wrong generation code → reject (e.g. F80 M3 ≠ F82 M4, G22 ≠ F32)
-- Gran Coupé (4-door) ≠ Coupé (2-door) — treat as body style violation (Rule 1)
+{_rule3}
 
 RULE 4 — UNUSABLE SHOTS:
-Reject: interior shots, engine bay, badge/logo closeup only, blurry, illustration/SVG, CGI render
+Reject: extreme closeups of a single detail, blurry images, illustrations/SVG/CGI renders, "wrong angle" duplicates
 
 ━━━ AFTER REJECTION — RANK SURVIVORS ━━━
-From the surviving images, pick UP TO 4 that together cover the most diverse angles:
-Ideal: front 3/4, side, rear 3/4, rear or front straight-on.
+Pick UP TO 4 images that together cover the most diverse viewpoints.
 Each pick must show a DIFFERENT angle — no near-duplicates.
 
 Reply with ONLY the image numbers separated by commas (e.g. "2, 5, 8"). Nothing else.
-If NO images survive the rejection rules, reply with "none".""",
+If NO images survive, reply with "none".""",
     })
 
     logger.info(
@@ -893,7 +923,8 @@ If NO images survive the rejection rules, reply with "none".""",
     resp = await asyncio.to_thread(
         _anthropic.messages.create,
         model="claude-haiku-4-5-20251001",
-        max_tokens=30,
+        system="Output ONLY what is explicitly requested — no preamble, no analysis, no explanation.",
+        max_tokens=40,
         messages=[{"role": "user", "content": content}],
     )
     raw = resp.content[0].text.strip()
