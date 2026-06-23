@@ -27,7 +27,7 @@ const FLOATING_PILLS = [
 
 export default function AboutHero() {
   return (
-    <section className="min-h-[716px] flex items-center justify-center px-8 text-center bg-[#FAF9F6] relative overflow-hidden">
+    <section className="min-h-[716px] flex items-center justify-center px-8 text-center bg-[#CCDAD1] relative overflow-hidden">
       {/* Dot-grid background */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"
@@ -35,13 +35,13 @@ export default function AboutHero() {
       >
         <defs>
           <pattern id="hero-dots" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
-            <circle cx="1" cy="1" r="1" fill="#1b4332" opacity="0.12" />
+            <circle cx="1" cy="1" r="1" fill="#eb0043" opacity="0.12" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#hero-dots)" />
         <radialGradient id="dot-fade" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#FAF9F6" stopOpacity="1" />
-          <stop offset="60%" stopColor="#FAF9F6" stopOpacity="0" />
+          <stop offset="0%" stopColor="#CCDAD1" stopOpacity="1" />
+          <stop offset="60%" stopColor="#CCDAD1" stopOpacity="0" />
         </radialGradient>
         <rect width="100%" height="100%" fill="url(#dot-fade)" />
       </svg>
@@ -54,9 +54,9 @@ export default function AboutHero() {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <path d="M0 400 C0 400 150 0 450 0 C750 0 900 400 900 400" stroke="#012d1d" strokeWidth="3" fill="none"/>
-        <path d="M60 400 C60 400 200 60 450 60 C700 60 840 400 840 400" stroke="#012d1d" strokeWidth="2" fill="none"/>
-        <path d="M120 400 C120 400 250 120 450 120 C650 120 780 400 780 400" stroke="#012d1d" strokeWidth="1.5" fill="none"/>
+        <path d="M0 400 C0 400 150 0 450 0 C750 0 900 400 900 400" stroke="#4E0110" strokeWidth="3" fill="none"/>
+        <path d="M60 400 C60 400 200 60 450 60 C700 60 840 400 840 400" stroke="#4E0110" strokeWidth="2" fill="none"/>
+        <path d="M120 400 C120 400 250 120 450 120 C650 120 780 400 780 400" stroke="#4E0110" strokeWidth="1.5" fill="none"/>
       </svg>
 
       {/* Floating agent pills — desktop only */}
@@ -67,7 +67,7 @@ export default function AboutHero() {
           style={{
             ...pill.style,
             background: "rgba(255,255,255,0.9)",
-            border: "1px solid #E8E6E1",
+            border: "1px solid #B5C9C0",
             boxShadow: "0 8px 24px rgba(27,67,50,0.08)",
             backdropFilter: "blur(12px)",
             animation: `${pill.floatAnimation} 5s ease-in-out ${pill.style.animationDelay} infinite`,
@@ -75,7 +75,7 @@ export default function AboutHero() {
         >
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 text-white"
-            style={{ background: "#1B4332" }}
+            style={{ background: "#EB0043" }}
           >
             {pill.initials}
           </div>
@@ -106,7 +106,7 @@ export default function AboutHero() {
       ))}
 
       <div className="relative z-10 max-w-5xl">
-        <p className="uppercase tracking-widest text-[#1b4332]/60 font-bold text-sm mb-8">
+        <p className="uppercase tracking-widest text-[#eb0043]/60 font-bold text-sm mb-8">
           Our Heritage
         </p>
         <h1 className="text-5xl md:text-8xl font-black font-display text-[#1a1c1a] tracking-tighter leading-none mb-12">
@@ -122,10 +122,10 @@ export default function AboutHero() {
             { value: "$50", label: "Per agent / mo" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="text-2xl md:text-3xl font-black font-display" style={{ color: "#012d1d" }}>
+              <p className="text-2xl md:text-3xl font-black font-display" style={{ color: "#4E0110" }}>
                 {stat.value}
               </p>
-              <p className="text-[11px] uppercase tracking-widest font-bold mt-1" style={{ color: "#1b4332", opacity: 0.45 }}>
+              <p className="text-[11px] uppercase tracking-widest font-bold mt-1" style={{ color: "#eb0043", opacity: 0.45 }}>
                 {stat.label}
               </p>
             </div>
@@ -134,9 +134,9 @@ export default function AboutHero() {
 
         {/* Scroll indicator */}
         <div className="flex flex-col items-center gap-2 opacity-30">
-          <div className="w-px h-12 bg-[#012d1d] relative overflow-hidden rounded-full">
+          <div className="w-px h-12 bg-[#4E0110] relative overflow-hidden rounded-full">
             <div
-              className="absolute top-0 left-0 w-full bg-[#1b4332] rounded-full"
+              className="absolute top-0 left-0 w-full bg-[#eb0043] rounded-full"
               style={{ height: "40%", animation: "hero-scroll-line 1.8s ease-in-out infinite" }}
             />
           </div>

@@ -62,10 +62,10 @@ function WaitlistModal({
               style={{ background: "#D9EEE5" }}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M4 10l4 4 8-8" stroke="#012d1d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4 10l4 4 8-8" stroke="#4E0110" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <h3 className="font-display font-black text-[22px] mb-2" style={{ color: "#012d1d" }}>
+            <h3 className="font-display font-black text-[22px] mb-2" style={{ color: "#4E0110" }}>
               You&apos;re on the list.
             </h3>
             <p className="text-[14px]" style={{ color: "#717973" }}>
@@ -77,7 +77,7 @@ function WaitlistModal({
             <p className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(1,45,29,0.4)" }}>
               Coming soon
             </p>
-            <h3 className="font-display font-black text-[24px] mb-1" style={{ color: "#012d1d" }}>
+            <h3 className="font-display font-black text-[24px] mb-1" style={{ color: "#4E0110" }}>
               Join the waitlist for {agent.name}
             </h3>
             <p className="text-[14px] mb-6" style={{ color: "#717973" }}>
@@ -94,8 +94,8 @@ function WaitlistModal({
                 className="w-full px-4 py-3 rounded-xl text-[15px] outline-none disabled:opacity-60"
                 style={{
                   background: "#F5F4F1",
-                  color: "#1A1A1A",
-                  border: "1px solid #E8E6E1",
+                  color: "#2E4057",
+                  border: "1px solid #B5C9C0",
                   fontFamily: "inherit",
                 }}
               />
@@ -103,7 +103,7 @@ function WaitlistModal({
                 type="submit"
                 disabled={loading}
                 className="w-full py-3 rounded-xl text-[15px] font-bold transition-all hover:opacity-90 disabled:opacity-60"
-                style={{ background: "#012d1d", color: "#FAF9F6", fontFamily: "inherit" }}
+                style={{ background: "#4E0110", color: "#CCDAD1", fontFamily: "inherit" }}
               >
                 {loading ? "Joining..." : "Notify me →"}
               </button>
@@ -151,7 +151,7 @@ const COMING_SOON = [
     category: "Business",
     price: "$99",
     initials: "Fo",
-    accent: "#012d1d",
+    accent: "#4E0110",
     accentBg: "#D9EEE5",
     description:
       "Dubai real estate at 8am. Off-plan updates, RERA data, secondary market shifts — one brief.",
@@ -184,7 +184,7 @@ export default function MarketplacePage() {
   const [waitlistAgent, setWaitlistAgent] = useState<{ name: string; role: string } | null>(null);
 
   return (
-    <main style={{ background: "#FAF9F6", minHeight: "100vh" }}>
+    <main style={{ background: "#CCDAD1", minHeight: "100vh" }}>
       {waitlistAgent && (
         <WaitlistModal agent={waitlistAgent} onClose={() => setWaitlistAgent(null)} />
       )}
@@ -200,7 +200,7 @@ export default function MarketplacePage() {
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <h1
             className="font-display font-black leading-[0.92] tracking-[-0.04em]"
-            style={{ fontSize: "clamp(48px, 7vw, 84px)", color: "#012d1d" }}
+            style={{ fontSize: "clamp(48px, 7vw, 84px)", color: "#4E0110" }}
           >
             Pick your<br />first hire.
           </h1>
@@ -219,7 +219,7 @@ export default function MarketplacePage() {
       <section className="px-6 md:px-12 pb-16 max-w-7xl mx-auto">
         <div
           className="rounded-2xl overflow-hidden"
-          style={{ background: "#012d1d" }}
+          style={{ background: "#4E0110" }}
         >
           <div className="flex flex-col md:flex-row md:items-stretch">
 
@@ -230,8 +230,8 @@ export default function MarketplacePage() {
                 <span
                   className="w-2 h-2 rounded-full"
                   style={{
-                    background: "#AEEECB",
-                    boxShadow: "0 0 6px #AEEECB",
+                    background: "#FF99A8",
+                    boxShadow: "0 0 6px #FF99A8",
                     animation: "pulse-dot 2s ease-in-out infinite",
                   }}
                 />
@@ -247,14 +247,14 @@ export default function MarketplacePage() {
               <div className="flex items-center gap-5 mb-6">
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center text-[16px] font-black flex-shrink-0"
-                  style={{ background: "#AEEECB", color: "#012d1d" }}
+                  style={{ background: "#FF99A8", color: "#4E0110" }}
                 >
                   {LIVE_AGENT.initials}
                 </div>
                 <div>
                   <h2
                     className="font-display font-black text-[28px] leading-none tracking-tight"
-                    style={{ color: "#FAF9F6" }}
+                    style={{ color: "#CCDAD1" }}
                   >
                     {LIVE_AGENT.name}
                   </h2>
@@ -307,7 +307,7 @@ export default function MarketplacePage() {
                 </p>
                 <p
                   className="font-display font-black leading-none"
-                  style={{ fontSize: "52px", color: "#FAF9F6", letterSpacing: "-0.03em" }}
+                  style={{ fontSize: "52px", color: "#CCDAD1", letterSpacing: "-0.03em" }}
                 >
                   {LIVE_AGENT.price}
                 </p>
@@ -322,7 +322,7 @@ export default function MarketplacePage() {
               <Link
                 href={`/agents/${LIVE_AGENT.slug}`}
                 className="block w-full md:w-auto text-center font-bold text-[15px] px-8 py-4 rounded-xl no-underline transition-all hover:opacity-90"
-                style={{ background: "#AEEECB", color: "#012d1d" }}
+                style={{ background: "#FF99A8", color: "#4E0110" }}
               >
                 Hire {LIVE_AGENT.name} →
               </Link>
@@ -372,7 +372,7 @@ export default function MarketplacePage() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3
                       className="font-display font-black text-[18px] tracking-tight"
-                      style={{ color: "#1A1A1A" }}
+                      style={{ color: "#2E4057" }}
                     >
                       {agent.name}
                     </h3>
@@ -404,7 +404,7 @@ export default function MarketplacePage() {
                 <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-3 flex-shrink-0">
                   <p
                     className="font-display font-black text-[20px]"
-                    style={{ color: "#1A1A1A" }}
+                    style={{ color: "#2E4057" }}
                   >
                     {agent.price}
                     <span
@@ -440,7 +440,7 @@ export default function MarketplacePage() {
         <div>
           <h2
             className="font-display font-black text-[28px] md:text-[36px] tracking-tight mb-2"
-            style={{ color: "#012d1d" }}
+            style={{ color: "#4E0110" }}
           >
             Your agents work better together.
           </h2>
@@ -450,8 +450,8 @@ export default function MarketplacePage() {
         </div>
         <Link
           href="/agents/linkedin-post-agent"
-          className="flex-shrink-0 font-bold text-[15px] text-white px-8 py-4 rounded-xl no-underline transition-all hover:bg-[#1b4332]"
-          style={{ background: "#012d1d" }}
+          className="flex-shrink-0 font-bold text-[15px] text-white px-8 py-4 rounded-xl no-underline transition-all hover:bg-[#eb0043]"
+          style={{ background: "#4E0110" }}
         >
           Start with Frame →
         </Link>

@@ -43,14 +43,14 @@ export default function PricingFAQ() {
     <>
       {/* FAQ */}
       <section className="max-w-4xl mx-auto px-8 py-32">
-        <h2 className="font-display text-4xl font-bold text-[#012d1d] mb-16 text-center">
+        <h2 className="font-display text-4xl font-bold text-[#4E0110] mb-16 text-center">
           Frequently Asked Questions
         </h2>
         <div className="space-y-4">
           {FAQ_ITEMS.map((item, i) => (
             <div
               key={item.question}
-              className="bg-white p-6 rounded-lg hover:border-b hover:border-[#c1c8c2]/20 transition-all"
+              className="bg-white p-6 rounded-lg hover:border-b hover:border-[#A8BDB6]/20 transition-all"
               style={{ boxShadow: "0 30px 60px -12px rgba(26,28,26,0.05)" }}
             >
               <button
@@ -61,7 +61,7 @@ export default function PricingFAQ() {
                 <h4 className="font-semibold text-lg text-[#1a1c1a]">
                   {item.question}
                 </h4>
-                <span className="text-[#012d1d] text-xl transition-transform duration-200 flex-shrink-0 ml-4">
+                <span className="text-[#4E0110] text-xl transition-transform duration-200 flex-shrink-0 ml-4">
                   {openIndex === i ? "−" : "+"}
                 </span>
               </button>
@@ -86,14 +86,14 @@ export default function PricingFAQ() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-[#1b4332] relative overflow-hidden py-24 mx-8 rounded-3xl mb-24">
+      <section className="bg-[#eb0043] relative overflow-hidden py-24 mx-8 rounded-3xl mb-24">
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h2 className="font-display text-4xl md:text-5xl font-extrabold text-white mb-10 px-4">
             Ready to hire your AI workforce?
           </h2>
           <Link
             href="/marketplace"
-            className="inline-block bg-[#FAF9F6] text-[#1b4332] px-10 py-4 rounded-lg font-bold text-lg hover:bg-white transition-all"
+            className="inline-block bg-[#CCDAD1] text-[#eb0043] px-10 py-4 rounded-lg font-bold text-lg hover:bg-white transition-all"
           >
             Start Now
           </Link>

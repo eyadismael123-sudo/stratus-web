@@ -51,9 +51,23 @@ export default function BlogGrid() {
       {/* Featured post */}
       <section className="max-w-7xl mx-auto px-8 mb-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7 bg-[#f4f3f1] rounded-xl overflow-hidden h-[500px]" />
+          {/* Laptop octopus — top-right sprite */}
+          <div className="lg:col-span-7 bg-[#CCDAD1] rounded-xl overflow-hidden h-[500px] flex items-center justify-center">
+            {/* Full-body octopus, front-facing */}
+            <div
+              className="w-64 h-64"
+              style={{
+                backgroundImage: "url('/mascot-peek.jpg')",
+                backgroundSize: "300% auto",
+                backgroundPosition: "50% center",
+                mixBlendMode: "multiply",
+            filter: "brightness(1.15)",
+              }}
+              aria-hidden="true"
+            />
+          </div>
           <div className="lg:col-span-5">
-            <span className="inline-block bg-[#1B43321A] text-[#1b4332] px-3 py-1 rounded text-sm font-bold mb-6">
+            <span className="inline-block bg-[#EB00431A] text-[#eb0043] px-3 py-1 rounded text-sm font-bold mb-6">
               {FEATURED_POST.category.toUpperCase()}
             </span>
             <h2 className="text-4xl font-display font-black leading-tight mb-4 text-[#1a1c1a]">
@@ -62,7 +76,7 @@ export default function BlogGrid() {
             <p className="text-[#414844] mb-8 text-lg">{FEATURED_POST.excerpt}</p>
             <div className="flex items-center gap-4 text-xs font-bold text-[#414844]/60">
               <span>{FEATURED_POST.date}</span>
-              <span className="w-1 h-1 bg-[#c1c8c2] rounded-full" />
+              <span className="w-1 h-1 bg-[#A8BDB6] rounded-full" />
               <span>{FEATURED_POST.read}</span>
             </div>
           </div>
@@ -75,10 +89,10 @@ export default function BlogGrid() {
           {POSTS.map((post) => (
             <article key={post.title} className="group">
               <div className="mb-6 bg-[#f4f3f1] rounded-lg overflow-hidden h-80" />
-              <span className="text-[#1b4332] text-xs font-black tracking-widest uppercase mb-4 block">
+              <span className="text-[#eb0043] text-xs font-black tracking-widest uppercase mb-4 block">
                 {post.category}
               </span>
-              <h3 className="text-2xl font-display font-bold mb-3 text-[#1a1c1a] group-hover:text-[#1b4332] transition-colors">
+              <h3 className="text-2xl font-display font-bold mb-3 text-[#1a1c1a] group-hover:text-[#eb0043] transition-colors">
                 {post.title}
               </h3>
               <p className="text-[#414844] line-clamp-1 mb-4">{post.excerpt}</p>
@@ -93,7 +107,7 @@ export default function BlogGrid() {
 
       {/* Newsletter */}
       <section className="max-w-7xl mx-auto px-8 mt-40 mb-24">
-        <div className="bg-[#1b4332] rounded-xl p-16 relative overflow-hidden">
+        <div className="bg-[#eb0043] rounded-xl p-16 relative overflow-hidden">
           <div className="relative z-10 max-w-xl">
             <h2 className="text-white text-5xl font-display font-black mb-6 leading-tight">
               Stay rooted in the future.
@@ -107,7 +121,7 @@ export default function BlogGrid() {
                 placeholder="Your email address"
                 className="flex-1 bg-white/10 border-none text-white placeholder-white/50 px-6 py-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/20"
               />
-              <button className="bg-[#FAF9F6] text-[#1b4332] font-black px-8 py-4 rounded-lg hover:bg-white transition-colors">
+              <button className="bg-[#CCDAD1] text-[#eb0043] font-black px-8 py-4 rounded-lg hover:bg-white transition-colors">
                 SUBSCRIBE
               </button>
             </div>

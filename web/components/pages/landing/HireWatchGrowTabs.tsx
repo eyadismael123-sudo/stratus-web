@@ -37,7 +37,7 @@ const ALL_AGENTS = [
 
 function AgentAvatar({ name, avatar }: { name: string; avatar: string }) {
   return (
-    <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-[#E8E6E1]">
+    <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-[#B5C9C0]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={avatar}
@@ -50,7 +50,7 @@ function AgentAvatar({ name, avatar }: { name: string; avatar: string }) {
             el.parentElement.style.display = "flex";
             el.parentElement.style.alignItems = "center";
             el.parentElement.style.justifyContent = "center";
-            el.parentElement.style.background = "#1B4332";
+            el.parentElement.style.background = "#EB0043";
             el.parentElement.style.color = "#fff";
             el.parentElement.style.fontSize = "12px";
             el.parentElement.style.fontWeight = "700";
@@ -94,7 +94,7 @@ function HireMockup() {
       className="rounded-[16px] p-6 min-h-[280px]"
       style={{
         background: "#FFFFFF",
-        border: "1px solid #E8E6E1",
+        border: "1px solid #B5C9C0",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
       }}
     >
@@ -125,15 +125,15 @@ function HireMockup() {
               }}
               className="flex items-center justify-between p-3.5 rounded-[12px]"
               style={{
-                background: member.hired ? "#FAF9F6" : "transparent",
-                border: member.hired ? "1px solid #AEEECB" : "1px solid #E8E6E1",
+                background: member.hired ? "#CCDAD1" : "transparent",
+                border: member.hired ? "1px solid #FF99A8" : "1px solid #B5C9C0",
                 opacity: member.status === "Soon" ? 0.55 : 1,
               }}
             >
               <div className="flex items-center gap-3">
                 <AgentAvatar name={member.name} avatar={member.avatar} />
                 <div>
-                  <p className="text-[13px] font-bold leading-none mb-0.5" style={{ color: member.hired ? "#1A1A1A" : "#8A8A8A" }}>
+                  <p className="text-[13px] font-bold leading-none mb-0.5" style={{ color: member.hired ? "#2E4057" : "#8A8A8A" }}>
                     {member.name}
                   </p>
                   <p className="text-[11px]" style={{ color: "#8A8A8A" }}>{member.role}</p>
@@ -148,7 +148,7 @@ function HireMockup() {
               ) : member.status === "Hire" ? (
                 <button
                   className="text-[11px] font-bold px-3 py-1.5 rounded-[6px]"
-                  style={{ background: "#1B4332", color: "#FFFFFF" }}
+                  style={{ background: "#EB0043", color: "#FFFFFF" }}
                 >
                   + Hire
                 </button>
@@ -177,13 +177,13 @@ function WatchMockup() {
       className="rounded-[16px] p-6 min-h-[280px]"
       style={{
         background: "#FFFFFF",
-        border: "1px solid #E8E6E1",
+        border: "1px solid #B5C9C0",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
       }}
     >
       <div className="flex items-center gap-2.5 mb-5">
         <span className="status-dot-online" style={{ width: "7px", height: "7px" }} />
-        <span className="text-[13px] font-bold" style={{ color: "#1A1A1A" }}>
+        <span className="text-[13px] font-bold" style={{ color: "#2E4057" }}>
           LinkedIn Post Agent
         </span>
         <span className="text-[11px] ml-auto" style={{ color: "#8A8A8A" }}>
@@ -194,17 +194,17 @@ function WatchMockup() {
       <div className="font-mono text-[11px] leading-[1.8]" style={{ color: "#8A8A8A" }}>
         {logs.map((l) => (
           <div key={l.time + l.text} className="flex gap-2.5">
-            <span className="flex-shrink-0" style={{ color: "#E8E6E1" }}>
+            <span className="flex-shrink-0" style={{ color: "#B5C9C0" }}>
               {l.time}
             </span>
-            <span style={{ color: l.ok ? "#1B4332" : "#8A8A8A" }}>{l.text}</span>
+            <span style={{ color: l.ok ? "#EB0043" : "#8A8A8A" }}>{l.text}</span>
           </div>
         ))}
       </div>
 
       <div
         className="mt-5 pt-4 text-[11px]"
-        style={{ borderTop: "1px solid #E8E6E1", color: "#8A8A8A" }}
+        style={{ borderTop: "1px solid #B5C9C0", color: "#8A8A8A" }}
       >
         Next run: Tomorrow 08:00 GST
       </div>
@@ -214,8 +214,8 @@ function WatchMockup() {
 
 function GrowMockup() {
   const contributions = [
-    { agent: "Frame", action: "Drafted 2 posts, 1 published to LinkedIn", stat: "847 views", statColor: "#1B4332" },
-    { agent: "Scout", action: "Scanned 47 listings, flagged 4 underpriced", stat: "4 leads", statColor: "#1B4332" },
+    { agent: "Frame", action: "Drafted 2 posts, 1 published to LinkedIn", stat: "847 views", statColor: "#EB0043" },
+    { agent: "Scout", action: "Scanned 47 listings, flagged 4 underpriced", stat: "4 leads", statColor: "#EB0043" },
   ];
 
   return (
@@ -223,7 +223,7 @@ function GrowMockup() {
       className="rounded-[16px] p-6 min-h-[280px]"
       style={{
         background: "#FFFFFF",
-        border: "1px solid #E8E6E1",
+        border: "1px solid #B5C9C0",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
       }}
     >
@@ -243,11 +243,11 @@ function GrowMockup() {
           <div
             key={c.agent}
             className="flex items-center gap-3 p-3 rounded-[10px]"
-            style={{ background: "#FAF9F6", border: "1px solid #E8E6E1" }}
+            style={{ background: "#CCDAD1", border: "1px solid #B5C9C0" }}
           >
             <AgentAvatar name={c.agent} avatar={ALL_AGENTS.find(a => a.name === c.agent)?.avatar ?? ""} />
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-semibold leading-none mb-0.5" style={{ color: "#1A1A1A" }}>{c.agent}</p>
+              <p className="text-[12px] font-semibold leading-none mb-0.5" style={{ color: "#2E4057" }}>{c.agent}</p>
               <p className="text-[11px]" style={{ color: "#8A8A8A" }}>{c.action}</p>
             </div>
             <span className="text-[11px] font-bold flex-shrink-0" style={{ color: c.statColor }}>{c.stat}</span>
@@ -255,7 +255,7 @@ function GrowMockup() {
         ))}
       </div>
 
-      <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid #E8E6E1" }}>
+      <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid #B5C9C0" }}>
         <p className="text-[12px]" style={{ color: "#8A8A8A" }}>847 impressions · ~2h saved</p>
         <p className="text-[11px]" style={{ color: "#8A8A8A" }}>Tomorrow: 2 posts at 9am</p>
       </div>
@@ -372,7 +372,7 @@ export function HireWatchGrowTabs() {
         <div ref={headerRef} className="text-center mb-16">
           <h2
             className="font-display font-bold tracking-[-0.04em] leading-tight mb-4"
-            style={{ fontSize: "clamp(32px, 4vw, 48px)", color: "#1B4332" }}
+            style={{ fontSize: "clamp(32px, 4vw, 48px)", color: "#EB0043" }}
           >
             The AI Workforce Platform
           </h2>
@@ -385,7 +385,7 @@ export function HireWatchGrowTabs() {
         <div className="flex justify-center mb-16">
           <div
             className="inline-flex p-1 rounded-[10px]"
-            style={{ background: "#EFEEEB" }}
+            style={{ background: "#B5C9C0" }}
           >
             {TABS.map((tab, i) => (
               <button
@@ -394,7 +394,7 @@ export function HireWatchGrowTabs() {
                 className="px-8 py-3 rounded-[8px] text-[14px] font-bold transition-all duration-200"
                 style={
                   active === i
-                    ? { background: "#FFFFFF", color: "#1B4332", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
+                    ? { background: "#FFFFFF", color: "#EB0043", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
                     : { background: "transparent", color: "#8A8A8A" }
                 }
               >
@@ -420,7 +420,7 @@ export function HireWatchGrowTabs() {
                 className="font-display font-bold tracking-[-0.02em] leading-[1.1] mb-8 whitespace-pre-line"
                 style={{
                   fontSize: "clamp(28px, 3vw, 40px)",
-                  color: "#1A1A1A",
+                  color: "#2E4057",
                 }}
               >
                 {TABS[active].headline}
@@ -430,14 +430,14 @@ export function HireWatchGrowTabs() {
                   <li key={f.title} className="flex gap-4 items-start">
                     <span
                       className="flex-shrink-0 mt-0.5"
-                      style={{ color: "#1B4332" }}
+                      style={{ color: "#EB0043" }}
                     >
                       {f.icon}
                     </span>
                     <div>
                       <div
                         className="text-[15px] font-bold mb-1"
-                        style={{ color: "#1A1A1A" }}
+                        style={{ color: "#2E4057" }}
                       >
                         {f.title}
                       </div>

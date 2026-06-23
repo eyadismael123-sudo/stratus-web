@@ -39,7 +39,7 @@ export default function AgentPricingTable() {
   return (
     <section className="bg-[#f4f3f1] py-24">
       <div className="max-w-7xl mx-auto px-8">
-        <h2 className="font-display text-3xl font-bold text-[#012d1d] mb-12">
+        <h2 className="font-display text-3xl font-bold text-[#4E0110] mb-12">
           Available Agents
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -48,8 +48,8 @@ export default function AgentPricingTable() {
               key={agent.slug}
               className={`bg-white p-8 rounded-lg border flex flex-col justify-between h-64 ${
                 agent.live
-                  ? "border-[#1b4332]/10"
-                  : "border-[#c1c8c2]/30 opacity-70 grayscale hover:grayscale-0 transition-all"
+                  ? "border-[#eb0043]/10"
+                  : "border-[#A8BDB6]/30 opacity-70 grayscale hover:grayscale-0 transition-all"
               }`}
             >
               <div>
@@ -58,7 +58,7 @@ export default function AgentPricingTable() {
                   <span
                     className={`text-[10px] font-bold uppercase tracking-tighter px-2 py-1 rounded ${
                       agent.live
-                        ? "bg-[#1b4332]/10 text-[#1b4332]"
+                        ? "bg-[#eb0043]/10 text-[#eb0043]"
                         : "bg-[#e9e8e5] text-[#414844]"
                     }`}
                   >
@@ -73,7 +73,7 @@ export default function AgentPricingTable() {
                 </p>
                 <p className="text-sm text-[#414844]">{agent.description}</p>
               </div>
-              <div className="text-[#012d1d] font-bold">{agent.price}</div>
+              <div className="text-[#4E0110] font-bold">{agent.price}</div>
             </div>
           ))}
         </div>

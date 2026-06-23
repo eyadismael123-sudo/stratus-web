@@ -81,7 +81,7 @@ export function HeroSection() {
                 background: "rgba(250,249,246,0.85)",
                 backdropFilter: "blur(20px) saturate(180%)",
                 WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                borderBottom: "1px solid #E8E6E1",
+                borderBottom: "1px solid #B5C9C0",
               }
             : { background: "transparent" }
         }
@@ -97,7 +97,7 @@ export function HeroSection() {
             height={28}
             className="rounded-[6px]"
           />
-          <span className="font-display text-[18px] font-bold tracking-[-0.03em]" style={{ color: "#1A1A1A" }}>
+          <span className="font-display text-[18px] font-bold tracking-[-0.03em]" style={{ color: "#2E4057" }}>
             Stratus
           </span>
         </Link>
@@ -108,7 +108,7 @@ export function HeroSection() {
             <li key={l.href}>
               <Link
                 href={l.href}
-                className="text-[14px] font-medium no-underline hover:text-[#1B4332] transition-colors"
+                className="text-[14px] font-medium no-underline hover:text-[#EB0043] transition-colors"
                 style={{ color: "#4A4A4A" }}
               >
                 {l.label}
@@ -121,9 +121,9 @@ export function HeroSection() {
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/agents/linkedin-post-agent"
-            className="text-[14px] font-bold text-white rounded-[8px] px-[18px] py-2 no-underline hover:bg-[#2D6A4F] hover:-translate-y-px transition-all"
+            className="text-[14px] font-bold text-white rounded-[8px] px-[18px] py-2 no-underline hover:bg-[#4E0110] hover:-translate-y-px transition-all"
             style={{
-              background: "#1B4332",
+              background: "#EB0043",
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
@@ -134,7 +134,7 @@ export function HeroSection() {
         {/* Mobile hamburger */}
         <button
           className="md:hidden p-2"
-          style={{ color: "#1A1A1A" }}
+          style={{ color: "#2E4057" }}
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle menu"
         >
@@ -161,7 +161,7 @@ export function HeroSection() {
             style={{
               background: "rgba(250,249,246,0.97)",
               backdropFilter: "blur(20px)",
-              borderBottom: "1px solid #E8E6E1",
+              borderBottom: "1px solid #B5C9C0",
             }}
           >
             {NAV_LINKS.map((l) => (
@@ -178,7 +178,7 @@ export function HeroSection() {
             <Link
               href="/marketplace"
               className="text-[15px] font-bold text-white rounded-[8px] px-5 py-3 no-underline text-center"
-              style={{ background: "#1B4332" }}
+              style={{ background: "#EB0043" }}
               onClick={() => setMenuOpen(false)}
             >
               Hire an agent
@@ -191,9 +191,25 @@ export function HeroSection() {
       <section
         ref={heroRef}
         className="relative overflow-hidden pt-[60px]"
-        style={{ background: "#FAF9F6" }}
+        style={{ background: "#CCDAD1" }}
       >
-        <div className="max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-24">
+        {/* Mascot — octopus peeking up from bottom-right corner */}
+        <div
+          className="absolute bottom-0 right-0 md:right-20 pointer-events-none select-none hidden md:block"
+          style={{
+            width: "340px",
+            height: "340px",
+            transform: "translateY(38%)",
+            backgroundImage: "url('/mascot-peek.jpg')",
+            backgroundSize: "300% auto",
+            backgroundPosition: "0% center",
+            mixBlendMode: "multiply",
+            filter: "brightness(1.15)",
+            zIndex: 0,
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
 
             {/* Left — headline + CTAs */}
@@ -205,7 +221,7 @@ export function HeroSection() {
                 style={{
                   color: "#4A4A4A",
                   background: "#FFFFFF",
-                  border: "1px solid #E8E6E1",
+                  border: "1px solid #B5C9C0",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 }}
               >
@@ -217,7 +233,7 @@ export function HeroSection() {
               <h1
                 ref={headlineRef}
                 className="font-display font-bold leading-[0.92] tracking-[-0.04em] mb-8 opacity-0"
-                style={{ fontSize: "clamp(48px, 7vw, 88px)", color: "#1B4332" }}
+                style={{ fontSize: "clamp(48px, 7vw, 88px)", color: "#EB0043" }}
               >
                 Your AI workforce.<br />Built for MENA.
               </h1>
@@ -235,9 +251,9 @@ export function HeroSection() {
               <div ref={ctaRef} className="flex flex-wrap gap-4 opacity-0">
                 <Link
                   href="/agents/linkedin-post-agent"
-                  className="inline-flex items-center gap-2 text-[16px] font-bold text-white rounded-[10px] px-8 py-4 no-underline hover:bg-[#2D6A4F] hover:-translate-y-0.5 transition-all"
+                  className="inline-flex items-center gap-2 text-[16px] font-bold text-white rounded-[10px] px-8 py-4 no-underline hover:bg-[#4E0110] hover:-translate-y-0.5 transition-all"
                   style={{
-                    background: "#1B4332",
+                    background: "#EB0043",
                     boxShadow: "0 4px 20px rgba(27,67,50,0.18)",
                   }}
                 >
@@ -245,8 +261,8 @@ export function HeroSection() {
                 </Link>
                 <Link
                   href="#how-it-works"
-                  className="inline-flex items-center gap-2 text-[16px] font-semibold rounded-[10px] px-8 py-4 no-underline hover:bg-[#E8E6E1] transition-all"
-                  style={{ color: "#1B4332", background: "#FFFFFF", border: "1px solid #E8E6E1" }}
+                  className="inline-flex items-center gap-2 text-[16px] font-semibold rounded-[10px] px-8 py-4 no-underline hover:bg-[#B5C9C0] transition-all"
+                  style={{ color: "#EB0043", background: "#FFFFFF", border: "1px solid #B5C9C0" }}
                 >
                   See how it works
                 </Link>
@@ -262,7 +278,7 @@ export function HeroSection() {
                 className="rounded-[20px] p-6"
                 style={{
                   background: "#FFFFFF",
-                  border: "1px solid #E8E6E1",
+                  border: "1px solid #B5C9C0",
                   boxShadow: "0 12px 32px rgba(27,67,50,0.06)",
                 }}
               >
@@ -284,17 +300,17 @@ export function HeroSection() {
                   {/* Frame — LinkedIn Post Agent */}
                   <div
                     className="flex items-center justify-between p-4 rounded-[12px]"
-                    style={{ background: "#FAF9F6", border: "1px solid #AEEECB" }}
+                    style={{ background: "#CCDAD1", border: "1px solid #FF99A8" }}
                   >
                     <div className="flex items-center gap-4">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
-                        style={{ background: "#1B4332", color: "#FFFFFF" }}
+                        style={{ background: "#EB0043", color: "#FFFFFF" }}
                       >
                         Fr
                       </div>
                       <div>
-                        <p className="text-[14px] font-bold" style={{ color: "#1A1A1A" }}>Frame</p>
+                        <p className="text-[14px] font-bold" style={{ color: "#2E4057" }}>Frame</p>
                         <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Drafting today&apos;s LinkedIn post</p>
                       </div>
                     </div>
@@ -310,17 +326,17 @@ export function HeroSection() {
                   {/* Scout — Car Reseller Intel */}
                   <div
                     className="flex items-center justify-between p-4 rounded-[12px]"
-                    style={{ background: "#FAF9F6" }}
+                    style={{ background: "#CCDAD1" }}
                   >
                     <div className="flex items-center gap-4">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
-                        style={{ background: "#E8F5EF", color: "#1B4332" }}
+                        style={{ background: "#FFD5DC", color: "#EB0043" }}
                       >
                         Sc
                       </div>
                       <div>
-                        <p className="text-[14px] font-bold" style={{ color: "#1A1A1A" }}>Scout</p>
+                        <p className="text-[14px] font-bold" style={{ color: "#2E4057" }}>Scout</p>
                         <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Found 4 underpriced listings</p>
                       </div>
                     </div>
@@ -336,17 +352,17 @@ export function HeroSection() {
                   {/* Brief — Doctor Morning Briefing */}
                   <div
                     className="flex items-center justify-between p-4 rounded-[12px]"
-                    style={{ background: "#FAF9F6" }}
+                    style={{ background: "#CCDAD1" }}
                   >
                     <div className="flex items-center gap-4">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
-                        style={{ background: "#E8F5EF", color: "#1B4332" }}
+                        style={{ background: "#FFD5DC", color: "#EB0043" }}
                       >
                         Br
                       </div>
                       <div>
-                        <p className="text-[14px] font-bold" style={{ color: "#1A1A1A" }}>Brief</p>
+                        <p className="text-[14px] font-bold" style={{ color: "#2E4057" }}>Brief</p>
                         <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Prepping tomorrow&apos;s patient brief</p>
                       </div>
                     </div>
@@ -363,10 +379,10 @@ export function HeroSection() {
                 {/* Bottom stat */}
                 <div
                   className="mt-6 pt-5 flex justify-between items-end"
-                  style={{ borderTop: "1px solid #E8E6E1" }}
+                  style={{ borderTop: "1px solid #B5C9C0" }}
                 >
                   <div>
-                    <p className="text-[32px] font-black leading-none" style={{ color: "#1B4332" }}>1.2k</p>
+                    <p className="text-[32px] font-black leading-none" style={{ color: "#EB0043" }}>1.2k</p>
                     <p className="text-[11px] font-bold uppercase tracking-tight mt-1" style={{ color: "#8A8A8A" }}>
                       Tasks completed today
                     </p>

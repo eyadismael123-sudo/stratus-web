@@ -2,7 +2,7 @@ import AboutVisual from "./AboutVisual";
 
 export default function FounderSection() {
   return (
-    <section className="py-32 px-8 overflow-hidden bg-[#FAF9F6]">
+    <section className="py-32 px-8 overflow-hidden bg-[#CCDAD1]">
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-12 gap-0 items-center">
           <div className="md:col-span-7 z-10">

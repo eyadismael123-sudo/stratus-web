@@ -6,13 +6,13 @@ const STATS = [
 
 export default function MissionSection() {
   return (
-    <section className="px-8 py-32 bg-[#EFEEEB]">
+    <section className="px-8 py-32 bg-[#B5C9C0]">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-24 items-start">
         <div className="relative">
-          <span className="text-9xl font-display text-[#1b4332] opacity-5 absolute -top-16 -left-8 select-none pointer-events-none">
+          <span className="text-9xl font-display text-[#eb0043] opacity-5 absolute -top-16 -left-8 select-none pointer-events-none">
             &ldquo;
           </span>
-          <h2 className="text-4xl md:text-5xl font-black font-display leading-tight text-[#012d1d]">
+          <h2 className="text-4xl md:text-5xl font-black font-display leading-tight text-[#4E0110]">
             Every serious business in this region deserves a team that never sleeps.
           </h2>
 
@@ -22,11 +22,11 @@ export default function MissionSection() {
               <div key={s.label}>
                 <p
                   className="text-4xl font-black font-display leading-none"
-                  style={{ color: "#012d1d" }}
+                  style={{ color: "#4E0110" }}
                 >
                   {s.value}
                 </p>
-                <p className="text-[12px] font-bold uppercase tracking-wider mt-2" style={{ color: "#012d1d", opacity: 0.5 }}>
+                <p className="text-[12px] font-bold uppercase tracking-wider mt-2" style={{ color: "#4E0110", opacity: 0.5 }}>
                   {s.label}
                 </p>
                 <p className="text-[11px] mt-0.5" style={{ color: "#414844", opacity: 0.6 }}>
@@ -54,7 +54,7 @@ export default function MissionSection() {
           <div
             className="rounded-xl p-6 mt-4"
             style={{
-              background: "#012d1d",
+              background: "#4E0110",
               color: "#c1ecd4",
             }}
           >

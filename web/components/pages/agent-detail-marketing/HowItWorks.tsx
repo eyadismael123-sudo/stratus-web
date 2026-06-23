@@ -34,13 +34,13 @@ export default function HowItWorks() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
         {/* Ideal For */}
         <div>
-          <h2 className="text-sm font-body uppercase tracking-[0.3em] text-[#414844] mb-12 border-b border-[#c1c8c2]/20 pb-4">
+          <h2 className="text-sm font-body uppercase tracking-[0.3em] text-[#414844] mb-12 border-b border-[#A8BDB6]/20 pb-4">
             Ideal For
           </h2>
           <ul className="space-y-6">
             {IDEAL_FOR.map((item, i) => (
               <li key={item} className="flex items-center gap-6 group">
-                <span className="text-4xl font-display font-extrabold text-[#012d1d]/10 group-hover:text-[#012d1d] transition-colors tabular-nums">
+                <span className="text-4xl font-display font-extrabold text-[#4E0110]/10 group-hover:text-[#4E0110] transition-colors tabular-nums">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="text-xl font-medium text-[#1a1c1a]">{item}</span>
@@ -51,22 +51,22 @@ export default function HowItWorks() {
 
         {/* Onboarding Flow */}
         <div>
-          <h2 className="text-sm font-body uppercase tracking-[0.3em] text-[#414844] mb-12 border-b border-[#c1c8c2]/20 pb-4">
+          <h2 className="text-sm font-body uppercase tracking-[0.3em] text-[#414844] mb-12 border-b border-[#A8BDB6]/20 pb-4">
             Onboarding Flow
           </h2>
           <div className="space-y-12">
             {STEPS.map((step, i) => (
               <div key={step.n} className="flex gap-6">
                 <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-full border border-[#012d1d] flex items-center justify-center text-xs font-bold text-[#012d1d] flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full border border-[#4E0110] flex items-center justify-center text-xs font-bold text-[#4E0110] flex-shrink-0">
                     {step.n}
                   </div>
                   {i < STEPS.length - 1 && (
-                    <div className="flex-grow w-px bg-[#c1c8c2]/30 mt-2" />
+                    <div className="flex-grow w-px bg-[#A8BDB6]/30 mt-2" />
                   )}
                 </div>
                 <div>
-                  <h4 className="font-display font-bold text-[#012d1d] mb-2">{step.title}</h4>
+                  <h4 className="font-display font-bold text-[#4E0110] mb-2">{step.title}</h4>
                   <p className="text-[#414844] text-sm">{step.description}</p>
                 </div>
               </div>

@@ -50,7 +50,7 @@ export default function FoundersSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="py-32 px-8 bg-[#FAF9F6] relative overflow-hidden">
+    <section ref={sectionRef} className="py-32 px-8 bg-[#CCDAD1] relative overflow-hidden">
       {/* Faint background text */}
       <span
         className="absolute bottom-0 right-0 font-display font-black select-none pointer-events-none leading-none"
@@ -68,10 +68,10 @@ export default function FoundersSection() {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <div className="mb-20">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: "#1b4332", opacity: 0.5 }}>
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: "#eb0043", opacity: 0.5 }}>
             The team behind Stratus
           </p>
-          <h2 className="text-4xl md:text-6xl font-black font-display tracking-tighter" style={{ color: "#012d1d" }}>
+          <h2 className="text-4xl md:text-6xl font-black font-display tracking-tighter" style={{ color: "#4E0110" }}>
             Two med students.<br />One mission.
           </h2>
         </div>
@@ -84,7 +84,7 @@ export default function FoundersSection() {
               className="group rounded-2xl p-8 md:p-10 flex flex-col gap-6 transition-all duration-300"
               style={{
                 background: "#FFFFFF",
-                border: "1px solid #E8E6E1",
+                border: "1px solid #B5C9C0",
                 boxShadow: "0 4px 20px rgba(27,67,50,0.04)",
               }}
             >
@@ -92,7 +92,7 @@ export default function FoundersSection() {
               <div className="flex items-start justify-between">
                 <div
                   className="w-16 h-16 rounded-2xl flex items-center justify-center text-[17px] font-black flex-shrink-0"
-                  style={{ background: "#012d1d", color: "#c1ecd4" }}
+                  style={{ background: "#4E0110", color: "#c1ecd4" }}
                 >
                   {founder.initials}
                 </div>
@@ -102,7 +102,7 @@ export default function FoundersSection() {
               <div>
                 <h3
                   className="text-3xl md:text-4xl font-black font-display tracking-tight leading-none"
-                  style={{ color: "#012d1d" }}
+                  style={{ color: "#4E0110" }}
                 >
                   {founder.name}
                 </h3>
@@ -116,20 +116,20 @@ export default function FoundersSection() {
               {/* Metadata */}
               <div
                 className="flex flex-col gap-2 pt-5 mt-auto"
-                style={{ borderTop: "1px solid #E8E6E1" }}
+                style={{ borderTop: "1px solid #B5C9C0" }}
               >
                 <div className="flex items-center gap-2">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="1" y="2" width="12" height="10" rx="1.5" stroke="#1b4332" strokeWidth="1.2" strokeOpacity="0.5" fill="none"/>
-                    <path d="M1 5h12" stroke="#1b4332" strokeWidth="1.2" strokeOpacity="0.5"/>
-                    <path d="M5 2V1M9 2V1" stroke="#1b4332" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.5"/>
+                    <rect x="1" y="2" width="12" height="10" rx="1.5" stroke="#eb0043" strokeWidth="1.2" strokeOpacity="0.5" fill="none"/>
+                    <path d="M1 5h12" stroke="#eb0043" strokeWidth="1.2" strokeOpacity="0.5"/>
+                    <path d="M5 2V1M9 2V1" stroke="#eb0043" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.5"/>
                   </svg>
                   <span className="text-[12px] font-medium" style={{ color: "#414844", opacity: 0.7 }}>
                     {founder.university}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span style={{ color: "#1b4332", opacity: 0.5 }}>{founder.locationIcon}</span>
+                  <span style={{ color: "#eb0043", opacity: 0.5 }}>{founder.locationIcon}</span>
                   <span className="text-[12px] font-medium" style={{ color: "#414844", opacity: 0.7 }}>
                     {founder.location}
                   </span>
@@ -146,7 +146,7 @@ export default function FoundersSection() {
               <div
                 key={i}
                 className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-black"
-                style={{ background: "#012d1d", color: "#c1ecd4" }}
+                style={{ background: "#4E0110", color: "#c1ecd4" }}
               >
                 {i}
               </div>

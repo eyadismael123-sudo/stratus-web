@@ -29,12 +29,12 @@ const FOOTER_COLS = [
 
 export function Footer() {
   return (
-    <footer style={{ background: "#EFEEEB" }}>
+    <footer style={{ background: "#B5C9C0" }}>
       <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-16">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-16">
           {/* Brand column — spans 2 on desktop */}
           <div className="col-span-2 flex flex-col gap-4">
-            <span className="text-[18px] font-black tracking-tight font-display" style={{ color: "#1B4332" }}>
+            <span className="text-[18px] font-black tracking-tight font-display" style={{ color: "#EB0043" }}>
               Stratus
             </span>
             <p className="text-[14px] leading-relaxed max-w-[220px]" style={{ color: "#8A8A8A" }}>
@@ -48,7 +48,7 @@ export function Footer() {
           {/* Link columns */}
           {FOOTER_COLS.map(({ heading, links }) => (
             <div key={heading} className="flex flex-col gap-4">
-              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#1A1A1A" }}>
+              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#2E4057" }}>
                 {heading}
               </p>
               <ul className="flex flex-col gap-3 list-none">
@@ -71,7 +71,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div
           className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-3"
-          style={{ borderTop: "1px solid #c1c8c2" }}
+          style={{ borderTop: "1px solid #A8BDB6" }}
         >
           <p className="text-[12px]" style={{ color: "#8A8A8A" }}>
             &copy; {new Date().getFullYear()} Stratus. All rights reserved.

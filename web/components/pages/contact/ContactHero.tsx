@@ -13,7 +13,7 @@ export default function ContactHero() {
         </div>
         <div className="relative">
           <div
-            className="w-full aspect-[4/5] rounded-xl overflow-hidden bg-[#EFEEEB]"
+            className="w-full aspect-[4/5] rounded-xl overflow-hidden bg-[#B5C9C0]"
             style={{ boxShadow: "0 8px 32px -4px rgba(1,45,29,0.04)" }}
           />
         </div>

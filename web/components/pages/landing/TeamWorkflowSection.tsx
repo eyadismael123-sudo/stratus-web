@@ -9,7 +9,7 @@ const AGENTS = [
     name: "Frame",
     role: "LinkedIn Post Agent",
     action: "Writes thought leadership in your voice. Delivered every morning.",
-    avatarBg: "#1B4332",
+    avatarBg: "#EB0043",
     avatarColor: "#FFFFFF",
   },
   {
@@ -17,8 +17,8 @@ const AGENTS = [
     name: "Scout",
     role: "Car Reseller Intel",
     action: "Surfaces underpriced cars before your competitors are even awake.",
-    avatarBg: "#E8F5EF",
-    avatarColor: "#1B4332",
+    avatarBg: "#FFD5DC",
+    avatarColor: "#EB0043",
     comingSoon: true,
   },
   {
@@ -26,8 +26,8 @@ const AGENTS = [
     name: "Brief",
     role: "Doctor Morning Briefing",
     action: "Clinical news + patient context ready before your first appointment.",
-    avatarBg: "#E8F5EF",
-    avatarColor: "#1B4332",
+    avatarBg: "#FFD5DC",
+    avatarColor: "#EB0043",
     comingSoon: true,
   },
 ];
@@ -41,7 +41,7 @@ export function TeamWorkflowSection() {
     <section
       ref={ref}
       className="py-[120px] px-6 md:px-10"
-      style={{ background: "#FAF9F6" }}
+      style={{ background: "#CCDAD1" }}
     >
       <div className="max-w-[1100px] mx-auto">
         {/* Header */}
@@ -54,9 +54,9 @@ export function TeamWorkflowSection() {
           <div
             className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full text-[12px] font-semibold"
             style={{
-              color: "#1B4332",
+              color: "#EB0043",
               background: "#FFFFFF",
-              border: "1px solid #AEEECB",
+              border: "1px solid #FF99A8",
             }}
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
@@ -64,7 +64,7 @@ export function TeamWorkflowSection() {
           </div>
           <h2
             className="font-display font-bold tracking-[-0.04em] leading-tight mb-4"
-            style={{ fontSize: "clamp(28px, 3.5vw, 44px)", color: "#1B4332" }}
+            style={{ fontSize: "clamp(28px, 3.5vw, 44px)", color: "#EB0043" }}
           >
             One for every part<br />of your business.
           </h2>
@@ -87,7 +87,7 @@ export function TeamWorkflowSection() {
               className="relative rounded-[16px] p-5 flex flex-col gap-3"
               style={{
                 background: "#FFFFFF",
-                border: agent.comingSoon ? "1px dashed #D8D5CF" : "1px solid #E8E6E1",
+                border: agent.comingSoon ? "1px dashed #D8D5CF" : "1px solid #B5C9C0",
                 boxShadow: agent.comingSoon ? "none" : "0 4px 16px rgba(27,67,50,0.06)",
                 opacity: agent.comingSoon ? 0.6 : 1,
               }}
@@ -107,10 +107,10 @@ export function TeamWorkflowSection() {
                 {agent.initials}
               </div>
               <div>
-                <p className="text-[14px] font-bold leading-none mb-1" style={{ color: "#1A1A1A" }}>
+                <p className="text-[14px] font-bold leading-none mb-1" style={{ color: "#2E4057" }}>
                   {agent.name}
                 </p>
-                <p className="text-[11px] font-semibold mb-2" style={{ color: "#1B4332" }}>
+                <p className="text-[11px] font-semibold mb-2" style={{ color: "#EB0043" }}>
                   {agent.role}
                 </p>
                 <p className="text-[12px] leading-relaxed" style={{ color: "#8A8A8A" }}>
@@ -118,7 +118,7 @@ export function TeamWorkflowSection() {
                 </p>
               </div>
               {!agent.comingSoon && (
-                <div className="flex items-center gap-1.5 mt-auto pt-2" style={{ borderTop: "1px solid #E8E6E1" }}>
+                <div className="flex items-center gap-1.5 mt-auto pt-2" style={{ borderTop: "1px solid #B5C9C0" }}>
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#10b981" }} />
                   <span className="text-[11px] font-bold" style={{ color: "#10b981" }}>Active now</span>
                 </div>

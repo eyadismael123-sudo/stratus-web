@@ -37,7 +37,7 @@ export function BentoGrid() {
     <section
       ref={sectionRef}
       className="py-24 px-6 md:px-12"
-      style={{ background: "#FAF9F6" }}
+      style={{ background: "#CCDAD1" }}
     >
       <div className="max-w-[1440px] mx-auto">
         {/* Header */}
@@ -45,13 +45,13 @@ export function BentoGrid() {
           <div>
             <span
               className="text-[12px] font-bold tracking-widest uppercase mb-4 block"
-              style={{ color: "#1B4332" }}
+              style={{ color: "#EB0043" }}
             >
               Our Roster
             </span>
             <h2
               className="font-display font-bold tracking-[-0.04em] leading-tight"
-              style={{ fontSize: "clamp(36px, 5vw, 60px)", color: "#1B4332" }}
+              style={{ fontSize: "clamp(36px, 5vw, 60px)", color: "#EB0043" }}
             >
               Meet your team.
             </h2>
@@ -59,7 +59,7 @@ export function BentoGrid() {
           <Link
             href="/marketplace"
             className="text-[14px] font-bold no-underline hover:underline underline-offset-8"
-            style={{ color: "#1B4332" }}
+            style={{ color: "#EB0043" }}
           >
             Explore all agents →
           </Link>
@@ -72,10 +72,10 @@ export function BentoGrid() {
             className="md:col-span-2 rounded-[16px] p-8 flex flex-col justify-between group hover:shadow-xl transition-all"
             style={{
               background: "#FFFFFF",
-              borderTop: "4px solid #1B4332",
-              border: "1px solid #E8E6E1",
+              borderTop: "4px solid #EB0043",
+              border: "1px solid #B5C9C0",
               borderTopWidth: "4px",
-              borderTopColor: "#1B4332",
+              borderTopColor: "#EB0043",
             }}
           >
             <div>
@@ -89,7 +89,7 @@ export function BentoGrid() {
               </div>
               <h3
                 className="font-display font-bold tracking-[-0.03em] mb-3"
-                style={{ fontSize: "28px", color: "#1A1A1A" }}
+                style={{ fontSize: "28px", color: "#2E4057" }}
               >
                 LinkedIn Post Agent
               </h3>
@@ -104,8 +104,8 @@ export function BentoGrid() {
               </div>
               <Link
                 href="/agents/linkedin-post-agent"
-                className="text-[14px] font-bold text-white px-6 py-2 rounded-[8px] no-underline transition-all hover:bg-[#2D6A4F]"
-                style={{ background: "#1B4332" }}
+                className="text-[14px] font-bold text-white px-6 py-2 rounded-[8px] no-underline transition-all hover:bg-[#4E0110]"
+                style={{ background: "#EB0043" }}
               >
                 Add to Team
               </Link>
@@ -115,20 +115,20 @@ export function BentoGrid() {
           {/* Coming Soon — Flash */}
           <div
             className="rounded-[16px] p-8 flex flex-col justify-between opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
-            style={{ background: "#FFFFFF", border: "1px solid #E8E6E1" }}
+            style={{ background: "#FFFFFF", border: "1px solid #B5C9C0" }}
           >
             <div>
               <div className="flex items-center justify-between mb-8">
                 <span
                   className="text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full"
-                  style={{ background: "#EFEEEB", color: "#8A8A8A" }}
+                  style={{ background: "#B5C9C0", color: "#8A8A8A" }}
                 >
                   Coming Soon
                 </span>
               </div>
               <h3
                 className="font-display font-bold tracking-[-0.03em] mb-3"
-                style={{ fontSize: "22px", color: "#1A1A1A" }}
+                style={{ fontSize: "22px", color: "#2E4057" }}
               >
                 Car Reseller Intel
               </h3>
@@ -139,7 +139,7 @@ export function BentoGrid() {
             <div className="mt-12">
               <button
                 className="w-full text-[13px] font-bold py-2 rounded-[8px] cursor-not-allowed"
-                style={{ border: "1px solid #E8E6E1", color: "#8A8A8A" }}
+                style={{ border: "1px solid #B5C9C0", color: "#8A8A8A" }}
               >
                 Join Waitlist
               </button>
@@ -149,20 +149,20 @@ export function BentoGrid() {
           {/* Coming Soon — Focus */}
           <div
             className="rounded-[16px] p-8 flex flex-col justify-between opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
-            style={{ background: "#FFFFFF", border: "1px solid #E8E6E1" }}
+            style={{ background: "#FFFFFF", border: "1px solid #B5C9C0" }}
           >
             <div>
               <div className="flex items-center justify-between mb-8">
                 <span
                   className="text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full"
-                  style={{ background: "#EFEEEB", color: "#8A8A8A" }}
+                  style={{ background: "#B5C9C0", color: "#8A8A8A" }}
                 >
                   Coming Soon
                 </span>
               </div>
               <h3
                 className="font-display font-bold tracking-[-0.03em] mb-3"
-                style={{ fontSize: "22px", color: "#1A1A1A" }}
+                style={{ fontSize: "22px", color: "#2E4057" }}
               >
                 Doctor Briefing
               </h3>
@@ -173,7 +173,7 @@ export function BentoGrid() {
             <div className="mt-12">
               <button
                 className="w-full text-[13px] font-bold py-2 rounded-[8px] cursor-not-allowed"
-                style={{ border: "1px solid #E8E6E1", color: "#8A8A8A" }}
+                style={{ border: "1px solid #B5C9C0", color: "#8A8A8A" }}
               >
                 Join Waitlist
               </button>
@@ -183,12 +183,12 @@ export function BentoGrid() {
           {/* Custom Request */}
           <div
             className="md:col-span-2 rounded-[16px] p-8 flex items-center justify-between"
-            style={{ background: "#1B4332" }}
+            style={{ background: "#EB0043" }}
           >
             <div>
               <h3
                 className="font-display font-bold tracking-[-0.03em] mb-2"
-                style={{ fontSize: "22px", color: "#FAF9F6" }}
+                style={{ fontSize: "22px", color: "#CCDAD1" }}
               >
                 Custom Request?
               </h3>
@@ -198,8 +198,8 @@ export function BentoGrid() {
             </div>
             <Link
               href="/contact"
-              className="text-[14px] font-bold rounded-[10px] px-8 py-3 no-underline transition-all hover:bg-[#FAF9F6]"
-              style={{ background: "#FAF9F6", color: "#1B4332" }}
+              className="text-[14px] font-bold rounded-[10px] px-8 py-3 no-underline transition-all hover:bg-[#CCDAD1]"
+              style={{ background: "#CCDAD1", color: "#EB0043" }}
             >
               Contact Labs
             </Link>

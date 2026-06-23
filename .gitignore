@@ -30,6 +30,10 @@ build/
 *.png
 *.jpg
 generated_imgs/
+
+# Allow public web assets
+!web/public/*.png
+!web/public/*.jpg
 .playwright-mcp/
 
 # Claude local settings

@@ -4,7 +4,7 @@ export default function BlogHeader() {
       <div className="md:w-3/4">
         <h1 className="text-6xl md:text-8xl font-display font-black text-[#1a1c1a] tracking-tighter leading-tight mb-8">
           Insights for{" "}
-          <span className="text-[#1b4332]">MENA businesses</span>
+          <span className="text-[#eb0043]">MENA businesses</span>
         </h1>
         <p className="text-xl md:text-2xl text-[#414844] max-w-2xl leading-relaxed">
           Exploring the intersection of regional growth and AI precision. Learn

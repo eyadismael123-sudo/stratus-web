@@ -34,7 +34,7 @@ export function EditorialBreak() {
     <section
       ref={sectionRef}
       className="py-32 text-center px-6"
-      style={{ background: "#1B4332" }}
+      style={{ background: "#EB0043" }}
     >
       <div ref={contentRef} className="max-w-4xl mx-auto opacity-0">
         <p
@@ -45,7 +45,7 @@ export function EditorialBreak() {
         </p>
         <h2
           className="font-display font-bold tracking-[-0.04em] leading-tight mb-10"
-          style={{ fontSize: "clamp(40px, 6vw, 72px)", color: "#FAF9F6" }}
+          style={{ fontSize: "clamp(40px, 6vw, 72px)", color: "#CCDAD1" }}
         >
           Your team never sleeps.
         </h2>
@@ -57,7 +57,7 @@ export function EditorialBreak() {
         </p>
         <div className="mt-12 flex flex-col items-center">
           <div className="w-12 mb-6" style={{ height: "1px", background: "rgba(161,210,185,0.3)" }} />
-          <p className="text-[14px] font-bold" style={{ color: "#FAF9F6" }}>— A Stratus client</p>
+          <p className="text-[14px] font-bold" style={{ color: "#CCDAD1" }}>— A Stratus client</p>
         </div>
       </div>
     </section>

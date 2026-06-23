@@ -14,7 +14,7 @@ export function TickerSection() {
     <div
       className="overflow-hidden py-3"
       style={{
-        background: "#1B4332",
+        background: "#EB0043",
         borderTop: "1px solid rgba(255,255,255,0.08)",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
       }}

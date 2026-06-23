@@ -31,7 +31,7 @@ export function Header({
   const [userDropOpen, setUserDropOpen] = React.useState(false);
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-[#FAF9F6]/80 backdrop-blur-md shadow-sm">
+    <header className="fixed top-0 w-full z-50 bg-[#CCDAD1]/80 backdrop-blur-md shadow-sm">
       <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
         {/* Logo */}
         <Link
@@ -45,7 +45,7 @@ export function Header({
             height={28}
             className="rounded-[6px]"
           />
-          <span className="text-2xl font-display font-bold tracking-tighter text-[#012d1d]">
+          <span className="text-2xl font-display font-bold tracking-tighter text-[#4E0110]">
             Stratus
           </span>
         </Link>
@@ -60,7 +60,7 @@ export function Header({
                 className={cn(
                   "font-body text-sm transition-colors duration-300",
                   pathname === href
-                    ? "text-[#012d1d] border-b-2 border-[#012d1d] pb-0.5"
+                    ? "text-[#4E0110] border-b-2 border-[#4E0110] pb-0.5"
                     : "text-[#57534e] font-medium hover:text-[#065f46]"
                 )}
               >
@@ -75,13 +75,13 @@ export function Header({
           {variant === "marketing" ? (
             <>
               <Link href="/marketplace">
-                <button className="bg-[#1b4332] text-white px-5 py-2.5 rounded font-body text-sm hover:opacity-90 active:scale-[0.99] transition-all">
+                <button className="bg-[#eb0043] text-white px-5 py-2.5 rounded font-body text-sm hover:opacity-90 active:scale-[0.99] transition-all">
                   Hire an Agent
                 </button>
               </Link>
               {/* Mobile hamburger */}
               <button
-                className="md:hidden p-2 text-[#57534e] hover:text-[#012d1d] transition-colors"
+                className="md:hidden p-2 text-[#57534e] hover:text-[#4E0110] transition-colors"
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="Toggle menu"
               >
@@ -109,10 +109,10 @@ export function Header({
             <div className="relative">
               <button
                 onClick={() => setUserDropOpen((v) => !v)}
-                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-[#EFEEEB] transition-colors"
+                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-[#B5C9C0] transition-colors"
                 aria-label="User menu"
               >
-                <div className="w-7 h-7 rounded-full bg-[#1b4332] flex items-center justify-center overflow-hidden">
+                <div className="w-7 h-7 rounded-full bg-[#eb0043] flex items-center justify-center overflow-hidden">
                   {userAvatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={userAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
@@ -130,16 +130,16 @@ export function Header({
               {userDropOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setUserDropOpen(false)} aria-hidden />
-                  <div className="absolute right-0 top-full mt-2 z-20 w-52 bg-white rounded-xl border border-[#c1c8c2]/30 shadow-xl py-1 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 z-20 w-52 bg-white rounded-xl border border-[#A8BDB6]/30 shadow-xl py-1 overflow-hidden">
                     {userEmail && (
-                      <div className="px-4 py-2.5 border-b border-[#EFEEEB]">
+                      <div className="px-4 py-2.5 border-b border-[#B5C9C0]">
                         <p className="text-xs text-[#414844]">Signed in as</p>
                         <p className="text-sm font-medium text-[#1a1c1a] truncate">{userEmail}</p>
                       </div>
                     )}
                     <Link
                       href="/dashboard/settings"
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1a1c1a] hover:bg-[#EFEEEB] transition-colors"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1a1c1a] hover:bg-[#B5C9C0] transition-colors"
                       onClick={() => setUserDropOpen(false)}
                     >
                       Settings
@@ -160,7 +160,7 @@ export function Header({
 
       {/* Mobile menu */}
       {variant === "marketing" && menuOpen && (
-        <div className="md:hidden bg-[#FAF9F6] border-t border-[#c1c8c2]/20">
+        <div className="md:hidden bg-[#CCDAD1] border-t border-[#A8BDB6]/20">
           <nav className="flex flex-col px-8 py-4 gap-1">
             {NAV_LINKS.map(({ label, href }) => (
               <Link
@@ -169,15 +169,15 @@ export function Header({
                 onClick={() => setMenuOpen(false)}
                 className={cn(
                   "px-3 py-2.5 font-body text-sm font-medium transition-colors",
-                  pathname === href ? "text-[#012d1d]" : "text-[#57534e] hover:text-[#012d1d]"
+                  pathname === href ? "text-[#4E0110]" : "text-[#57534e] hover:text-[#4E0110]"
                 )}
               >
                 {label}
               </Link>
             ))}
-            <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-[#c1c8c2]/20">
+            <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-[#A8BDB6]/20">
               <Link href="/marketplace" onClick={() => setMenuOpen(false)}>
-                <button className="w-full bg-[#1b4332] text-white py-2.5 rounded font-body text-sm hover:opacity-90 transition-all">
+                <button className="w-full bg-[#eb0043] text-white py-2.5 rounded font-body text-sm hover:opacity-90 transition-all">
                   Hire an Agent
                 </button>
               </Link>

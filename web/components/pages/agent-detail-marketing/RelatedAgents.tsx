@@ -35,7 +35,7 @@ export default function RelatedAgents({ currentSlug }: RelatedAgentsProps) {
 
   return (
     <section className="px-8 max-w-7xl mx-auto mb-32">
-      <h2 className="text-sm font-body uppercase tracking-[0.3em] text-[#414844] mb-12 border-b border-[#c1c8c2]/20 pb-4">
+      <h2 className="text-sm font-body uppercase tracking-[0.3em] text-[#414844] mb-12 border-b border-[#A8BDB6]/20 pb-4">
         More Agents
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -43,11 +43,11 @@ export default function RelatedAgents({ currentSlug }: RelatedAgentsProps) {
           <Link
             key={agent.slug}
             href={`/agents/${agent.slug}`}
-            className="group block bg-white p-8 rounded-lg border border-[#c1c8c2]/20 hover:-translate-y-1 transition-transform"
+            className="group block bg-white p-8 rounded-lg border border-[#A8BDB6]/20 hover:-translate-y-1 transition-transform"
             style={{ boxShadow: "0 8px 32px -4px rgba(1,45,29,0.04)" }}
           >
             <div className="w-10 h-10 bg-[#f4f3f1] rounded-lg flex items-center justify-center mb-4">
-              <span className="text-[#012d1d] text-sm font-display font-bold">
+              <span className="text-[#4E0110] text-sm font-display font-bold">
                 {agent.name.charAt(0)}
               </span>
             </div>

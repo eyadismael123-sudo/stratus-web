@@ -16,16 +16,16 @@ const AGENTS = [
       "Morning industry briefings",
       "One-click LinkedIn pre-fill",
     ],
-    color: "#1B4332",
-    bg: "#E8F5EF",
+    color: "#EB0043",
+    bg: "#FFD5DC",
     icon: (
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-        <rect width="48" height="48" rx="12" fill="#1B4332" />
+        <rect width="48" height="48" rx="12" fill="#EB0043" />
         <rect x="10" y="14" width="28" height="4" rx="2" fill="white" opacity="0.9" />
         <rect x="10" y="22" width="20" height="3" rx="1.5" fill="white" opacity="0.5" />
         <rect x="10" y="29" width="24" height="3" rx="1.5" fill="white" opacity="0.5" />
-        <circle cx="38" cy="36" r="6" fill="#AEEECB" />
-        <path d="M35.5 36l1.5 1.5 3-3" stroke="#1B4332" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="38" cy="36" r="6" fill="#FF99A8" />
+        <path d="M35.5 36l1.5 1.5 3-3" stroke="#EB0043" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -63,14 +63,14 @@ const AGENTS = [
       "Price movement alerts by area",
       "Competitive listing analysis",
     ],
-    color: "#012d1d",
+    color: "#4E0110",
     bg: "#E6F4EF",
     icon: (
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-        <rect width="48" height="48" rx="12" fill="#012d1d" />
+        <rect width="48" height="48" rx="12" fill="#4E0110" />
         <rect x="12" y="20" width="10" height="14" rx="2" fill="white" opacity="0.4" />
         <rect x="25" y="14" width="10" height="20" rx="2" fill="white" opacity="0.7" />
-        <rect x="19" y="26" width="5" height="8" rx="1" fill="#AEEECB" />
+        <rect x="19" y="26" width="5" height="8" rx="1" fill="#FF99A8" />
         <path d="M10 34 L38 34" stroke="white" strokeWidth="1.5" opacity="0.3" />
       </svg>
     ),
@@ -154,7 +154,7 @@ export default function PricingCards() {
           aria-hidden="true"
         >
           {[120, 220, 320, 420, 520, 620].map((r) => (
-            <circle key={r} cx="240" cy="700" r={r} fill="none" stroke="#012d1d" strokeOpacity="0.07" strokeWidth="1" />
+            <circle key={r} cx="240" cy="700" r={r} fill="none" stroke="#4E0110" strokeOpacity="0.07" strokeWidth="1" />
           ))}
         </svg>
 
@@ -183,13 +183,13 @@ export default function PricingCards() {
                 exit={{ opacity: 0, y: -24 }}
                 transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
               >
-                <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#1b4332", opacity: 0.45 }}>
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#eb0043", opacity: 0.45 }}>
                   {agent.name} · {agent.role}
                 </p>
                 <div className="flex items-baseline justify-center gap-2">
                   <span
                     className="font-display font-black leading-none"
-                    style={{ fontSize: "80px", color: "#012d1d", letterSpacing: "-0.04em" }}
+                    style={{ fontSize: "80px", color: "#4E0110", letterSpacing: "-0.04em" }}
                   >
                     {agent.price}
                   </span>
@@ -211,7 +211,7 @@ export default function PricingCards() {
                 style={{
                   width: i === index ? "20px" : "6px",
                   height: "6px",
-                  background: i === index ? "#012d1d" : "#D4D2CE",
+                  background: i === index ? "#4E0110" : "#D4D2CE",
                 }}
               />
             ))}

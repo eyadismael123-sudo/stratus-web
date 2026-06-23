@@ -46,9 +46,9 @@ function StatItem({ stat, index }: { stat: Stat; index: number }) {
     <div
       ref={itemRef}
       className="py-10 px-8 text-center md:text-left opacity-0"
-      style={{ background: "#FAF9F6" }}
+      style={{ background: "#CCDAD1" }}
     >
-      <p className="text-[36px] font-black leading-none mb-2" style={{ color: "#1B4332" }}>
+      <p className="text-[36px] font-black leading-none mb-2" style={{ color: "#EB0043" }}>
         {stat.value}
       </p>
       <p className="text-[13px] font-bold uppercase tracking-tight" style={{ color: "#8A8A8A" }}>
@@ -60,7 +60,7 @@ function StatItem({ stat, index }: { stat: Stat; index: number }) {
 
 export function StatsStrip() {
   return (
-    <section style={{ background: "#EFEEEB" }}>
+    <section style={{ background: "#B5C9C0" }}>
       <div className="max-w-[1440px] mx-auto px-6 md:px-12">
         <div
           className="grid grid-cols-2 md:grid-cols-4"

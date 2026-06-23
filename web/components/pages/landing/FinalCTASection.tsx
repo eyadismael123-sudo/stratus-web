@@ -34,13 +34,28 @@ export function FinalCTASection() {
   return (
     <section
       ref={sectionRef}
-      className="py-32 px-6 text-center"
-      style={{ background: "#EFEEEB", borderTop: "1px solid #E8E6E1" }}
+      className="relative overflow-hidden py-32 px-6 text-center"
+      style={{ background: "#B5C9C0", borderTop: "1px solid #B5C9C0" }}
     >
+      {/* Mascot — front-facing octopus peeking from bottom-right corner */}
+      <div
+        className="absolute bottom-0 right-0 pointer-events-none select-none hidden md:block"
+        style={{
+          width: "220px",
+          height: "220px",
+          transform: "translate(30%, 42%)",
+          backgroundImage: "url('/mascot-peek.jpg')",
+          backgroundSize: "300% auto",
+          backgroundPosition: "50% center",
+          mixBlendMode: "multiply",
+            filter: "brightness(1.15)",
+        }}
+        aria-hidden="true"
+      />
       <div ref={contentRef} className="max-w-3xl mx-auto opacity-0">
         <h2
           className="font-display font-bold tracking-[-0.04em] leading-tight mb-8"
-          style={{ fontSize: "clamp(36px, 5vw, 60px)", color: "#1B4332" }}
+          style={{ fontSize: "clamp(36px, 5vw, 60px)", color: "#EB0043" }}
         >
           Ready to hire your first
           <br />
@@ -55,9 +70,9 @@ export function FinalCTASection() {
         <div className="flex flex-col md:flex-row items-center justify-center gap-4">
           <Link
             href="/agents/linkedin-post-agent"
-            className="inline-flex items-center text-[18px] font-black text-white rounded-[12px] px-10 py-5 no-underline hover:bg-[#2D6A4F] transition-all"
+            className="inline-flex items-center text-[18px] font-black text-white rounded-[12px] px-10 py-5 no-underline hover:bg-[#4E0110] transition-all"
             style={{
-              background: "#1B4332",
+              background: "#EB0043",
               boxShadow: "0 8px 32px rgba(27,67,50,0.15)",
             }}
           >
@@ -68,8 +83,8 @@ export function FinalCTASection() {
             className="inline-flex items-center text-[18px] font-black rounded-[12px] px-10 py-5 no-underline hover:bg-white transition-all"
             style={{
               background: "#FFFFFF",
-              color: "#1B4332",
-              border: "1px solid #E8E6E1",
+              color: "#EB0043",
+              border: "1px solid #B5C9C0",
             }}
           >
             Talk to Support

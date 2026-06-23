@@ -32,7 +32,7 @@ export function WaitlistSection() {
   return (
     <section
       className="py-20 px-6 text-center"
-      style={{ background: "#1B4332" }}
+      style={{ background: "#EB0043" }}
     >
       <div className="max-w-[560px] mx-auto">
         <div
@@ -44,7 +44,7 @@ export function WaitlistSection() {
 
         <h2
           className="font-display font-bold tracking-[-0.03em] leading-[1.1] mb-4"
-          style={{ fontSize: "clamp(32px, 4vw, 48px)", color: "#FAF9F6" }}
+          style={{ fontSize: "clamp(32px, 4vw, 48px)", color: "#CCDAD1" }}
         >
           Be first in line.
         </h2>
@@ -54,7 +54,7 @@ export function WaitlistSection() {
         </p>
 
         {submitted ? (
-          <p className="text-[18px] font-semibold" style={{ color: "#FAF9F6" }}>
+          <p className="text-[18px] font-semibold" style={{ color: "#CCDAD1" }}>
             You&apos;re on the list. We&apos;ll be in touch.
           </p>
         ) : (
@@ -71,8 +71,8 @@ export function WaitlistSection() {
                 disabled={loading}
                 className="flex-1 min-w-[220px] px-[18px] py-[14px] rounded-[10px] text-[15px] outline-none disabled:opacity-60"
                 style={{
-                  background: "#FAF9F6",
-                  color: "#1A1A1A",
+                  background: "#CCDAD1",
+                  color: "#2E4057",
                   border: "none",
                   fontFamily: "inherit",
                 }}
@@ -80,10 +80,10 @@ export function WaitlistSection() {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-[14px] rounded-[10px] text-[15px] font-bold whitespace-nowrap transition-all hover:bg-[#E8E6E1] disabled:opacity-60"
+                className="px-6 py-[14px] rounded-[10px] text-[15px] font-bold whitespace-nowrap transition-all hover:bg-[#B5C9C0] disabled:opacity-60"
                 style={{
-                  background: "#FAF9F6",
-                  color: "#1B4332",
+                  background: "#CCDAD1",
+                  color: "#EB0043",
                   border: "none",
                   fontFamily: "inherit",
                   cursor: loading ? "not-allowed" : "pointer",

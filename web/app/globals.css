@@ -4,7 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── Stratus Brand System (Forest/Cream — locked 2026-03-27) ────── */
+/* ─── Stratus Brand System (Crimson/Mint/Navy — 2026-06-23) ────── */
 
 @theme inline {
   /* Fonts */
@@ -13,23 +13,30 @@
   --font-mono: "SF Mono", "Fira Code", "Fira Mono", monospace;
 
   /* Brand palette */
-  --color-cream:        #FAF9F6;
-  --color-charcoal:     #1A1A1A;
-  --color-forest:       #1B4332;
-  --color-forest-hover: #2D6A4F;
-  --color-warm-grey:    #E8E6E1;
+  --color-mint:         #CCDAD1;
+  --color-navy:         #2E4057;
+  --color-crimson:      #EB0043;
+  --color-burgundy:     #4E0110;
+  --color-muted-mint:   #B5C9C0;
   --color-white:        #FFFFFF;
 
+  /* Legacy aliases so old utility classes don't break */
+  --color-cream:        #CCDAD1;
+  --color-charcoal:     #2E4057;
+  --color-forest:       #EB0043;
+  --color-forest-hover: #4E0110;
+  --color-warm-grey:    #B5C9C0;
+
   /* Grey scale */
-  --color-grey-900: #1A1A1A;
-  --color-grey-700: #4A4A4A;
+  --color-grey-900: #2E4057;
+  --color-grey-700: #4A5568;
   --color-grey-500: #8A8A8A;
-  --color-grey-300: #E8E6E1;
-  --color-grey-100: #FAF9F6;
+  --color-grey-300: #B5C9C0;
+  --color-grey-100: #CCDAD1;
 
   /* Semantic / status */
-  --color-success: #1B4332;
-  --color-error:   #C0392B;
+  --color-success: #22C55E;
+  --color-error:   #EB0043;
   --color-warning: #D97706;
   --color-info:    #2563EB;
 
@@ -64,35 +71,35 @@
 
 :root {
   /* Stratus semantic design tokens */
-  --background:         #FAF9F6;
-  --foreground:         #1A1A1A;
+  --background:         #CCDAD1;
+  --foreground:         #2E4057;
   --card:               #FFFFFF;
-  --card-foreground:    #1A1A1A;
+  --card-foreground:    #2E4057;
   --popover:            #FFFFFF;
-  --popover-foreground: #1A1A1A;
-  --primary:            #1B4332;
+  --popover-foreground: #2E4057;
+  --primary:            #EB0043;
   --primary-foreground: #FFFFFF;
-  --secondary:          #FAF9F6;
-  --secondary-foreground: #1A1A1A;
-  --muted:              #FAF9F6;
-  --muted-foreground:   #4A4A4A;
-  --accent:             #1B4332;
+  --secondary:          #CCDAD1;
+  --secondary-foreground: #2E4057;
+  --muted:              #CCDAD1;
+  --muted-foreground:   #4A5568;
+  --accent:             #EB0043;
   --accent-foreground:  #FFFFFF;
-  --destructive:        #C0392B;
-  --border:             #E8E6E1;
-  --input:              #E8E6E1;
-  --ring:               #1B4332;
+  --destructive:        #EB0043;
+  --border:             #B5C9C0;
+  --input:              #B5C9C0;
+  --ring:               #EB0043;
   --radius:             0.5rem;
 
   /* Sidebar */
   --sidebar:                  #FFFFFF;
-  --sidebar-foreground:       #1A1A1A;
-  --sidebar-primary:          #1B4332;
+  --sidebar-foreground:       #2E4057;
+  --sidebar-primary:          #EB0043;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent:           #FAF9F6;
-  --sidebar-accent-foreground: #1A1A1A;
-  --sidebar-border:           #E8E6E1;
-  --sidebar-ring:             #1B4332;
+  --sidebar-accent:           #CCDAD1;
+  --sidebar-accent-foreground: #2E4057;
+  --sidebar-border:           #B5C9C0;
+  --sidebar-ring:             #EB0043;
 }
 
 /* ─── Base styles ───────────────────────────────────────────────────── */
@@ -147,11 +154,11 @@
 /* ─── Animation utilities ───────────────────────────────────────────── */
 
 @layer utilities {
-  /* Forest status dot pulse */
+  /* Crimson status dot pulse */
   .status-dot-online {
     width: 8px;
     height: 8px;
-    background: #1B4332;
+    background: #22C55E;
     border-radius: 9999px;
     animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
@@ -159,14 +166,14 @@
   .status-dot-offline {
     width: 8px;
     height: 8px;
-    background: #4A4A4A;
+    background: #8A8A8A;
     border-radius: 9999px;
   }
 
   .status-dot-error {
     width: 8px;
     height: 8px;
-    background: #C0392B;
+    background: #EB0043;
     border-radius: 9999px;
   }
 
@@ -196,9 +203,9 @@
   .skeleton {
     background: linear-gradient(
       90deg,
-      #FAF9F6 25%,
-      #E8E6E1 50%,
-      #FAF9F6 75%
+      #CCDAD1 25%,
+      #B5C9C0 50%,
+      #CCDAD1 75%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;

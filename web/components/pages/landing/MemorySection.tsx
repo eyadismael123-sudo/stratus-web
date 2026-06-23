@@ -45,7 +45,7 @@ export function MemorySection() {
     <section
       ref={ref}
       className="py-[120px] px-6 md:px-10"
-      style={{ background: "#1B4332" }}
+      style={{ background: "#EB0043" }}
     >
       <div className="max-w-[1100px] mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
@@ -59,12 +59,12 @@ export function MemorySection() {
             <div
               className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full text-[12px] font-semibold"
               style={{
-                color: "#AEEECB",
+                color: "#FF99A8",
                 background: "rgba(174,238,203,0.12)",
                 border: "1px solid rgba(174,238,203,0.25)",
               }}
             >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#AEEECB" }} />
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#FF99A8" }} />
               Built-in memory
             </div>
 
@@ -108,7 +108,7 @@ export function MemorySection() {
                   >
                     <span
                       className="text-[11px] font-bold w-14 flex-shrink-0 pt-px"
-                      style={{ color: "#AEEECB" }}
+                      style={{ color: "#FF99A8" }}
                     >
                       {line.label}
                     </span>
@@ -137,16 +137,16 @@ export function MemorySection() {
               {/* Telegram header */}
               <div
                 className="flex items-center gap-3 px-4 py-3"
-                style={{ background: "#F5F5F5", borderBottom: "1px solid #E8E6E1" }}
+                style={{ background: "#CCDAD1", borderBottom: "1px solid #B5C9C0" }}
               >
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold"
-                  style={{ background: "#1B4332", color: "#FFFFFF" }}
+                  style={{ background: "#EB0043", color: "#FFFFFF" }}
                 >
                   St
                 </div>
                 <div>
-                  <p className="text-[13px] font-bold leading-none" style={{ color: "#1A1A1A" }}>Stratus</p>
+                  <p className="text-[13px] font-bold leading-none" style={{ color: "#2E4057" }}>Stratus</p>
                   <p className="text-[10px]" style={{ color: "#8A8A8A" }}>bot · online</p>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export function MemorySection() {
                     >
                       <p
                         className="text-[12px] leading-[1.5]"
-                        style={{ color: msg.isBot ? "#1A1A1A" : "#FFFFFF" }}
+                        style={{ color: msg.isBot ? "#2E4057" : "#FFFFFF" }}
                       >
                         {msg.text}
                       </p>

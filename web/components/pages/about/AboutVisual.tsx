@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 
 const TOASTS = [
-  { emoji: "✓", text: "Frame posted to LinkedIn", color: "#4ade80" },
+  { emoji: "✓", text: "Frame posted to LinkedIn", color: "#FF8FAB" },
   { emoji: "↗", text: "Scout found 4 new listings", color: "#60a5fa" },
-  { emoji: "✓", text: "Brief sent patient summary", color: "#4ade80" },
+  { emoji: "✓", text: "Brief sent patient summary", color: "#FF8FAB" },
 ];
 
 export default function AboutVisual() {
@@ -28,7 +28,7 @@ export default function AboutVisual() {
   return (
     <div
       className="w-full h-full rounded-xl overflow-hidden relative"
-      style={{ background: "#012d1d", minHeight: "420px" }}
+      style={{ background: "#4E0110", minHeight: "420px" }}
     >
       {/* Cycling toast notification */}
       <div
@@ -43,7 +43,7 @@ export default function AboutVisual() {
       >
         <span
           className="text-[11px] font-bold w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: toast.color, color: "#012d1d", fontSize: "9px" }}
+          style={{ background: toast.color, color: "#4E0110", fontSize: "9px" }}
         >
           {toast.emoji}
         </span>
@@ -59,7 +59,7 @@ export default function AboutVisual() {
       >
         <defs>
           <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#AEEECB" strokeWidth="0.5" />
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#FF99A8" strokeWidth="0.5" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
@@ -93,12 +93,12 @@ export default function AboutVisual() {
             <span
               className="w-1.5 h-1.5 rounded-full"
               style={{
-                background: "#4ade80",
-                boxShadow: "0 0 6px #4ade80",
+                background: "#FF8FAB",
+                boxShadow: "0 0 6px #FF8FAB",
                 animation: "about-pulse 2s ease-in-out infinite",
               }}
             />
-            <span className="text-[10px] font-semibold" style={{ color: "#4ade80" }}>
+            <span className="text-[10px] font-semibold" style={{ color: "#FF8FAB" }}>
               3 running
             </span>
           </div>
@@ -222,7 +222,7 @@ function AgentRow({
             {initials}
           </div>
           <div>
-            <p className="text-[12px] font-bold leading-none" style={{ color: "#FAF9F6" }}>
+            <p className="text-[12px] font-bold leading-none" style={{ color: "#CCDAD1" }}>
               {name}
             </p>
             <p className="text-[10px] mt-0.5 leading-none" style={{ color: "rgba(174,238,203,0.5)" }}>
@@ -234,13 +234,13 @@ function AgentRow({
           <span
             className="w-1.5 h-1.5 rounded-full"
             style={{
-              background: isActive ? "#4ade80" : "#86efac",
+              background: isActive ? "#FF8FAB" : "#86efac",
               animation: isActive ? `about-pulse 2s ease-in-out ${delay} infinite` : "none",
             }}
           />
           <span
             className="text-[9px] font-bold uppercase tracking-wide"
-            style={{ color: isActive ? "#4ade80" : "rgba(174,238,203,0.5)" }}
+            style={{ color: isActive ? "#FF8FAB" : "rgba(174,238,203,0.5)" }}
           >
             {isActive ? "Active" : "Done"}
           </span>
@@ -257,7 +257,7 @@ function AgentRow({
           style={{
             width: `${progress}%`,
             background: isActive
-              ? "linear-gradient(90deg, #1B4332, #4ade80)"
+              ? "linear-gradient(90deg, #EB0043, #FF8FAB)"
               : "rgba(174,238,203,0.3)",
             animation: `about-progress 1s ease-out ${delay} both`,
           }}

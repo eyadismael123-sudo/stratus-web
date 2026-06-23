@@ -36,15 +36,31 @@ export function PricingSection() {
     <section
       ref={sectionRef}
       id="pricing"
-      className="py-24 px-6 md:px-12"
-      style={{ background: "#FAF9F6" }}
+      className="relative overflow-hidden py-24 px-6 md:px-12"
+      style={{ background: "#CCDAD1" }}
     >
-      <div className="max-w-[1440px] mx-auto">
+      {/* Mascot — full-body octopus peeking from left edge */}
+      <div
+        className="absolute left-0 top-1/2 pointer-events-none select-none hidden md:block"
+        style={{
+          width: "200px",
+          height: "200px",
+          transform: "translate(-46%, -50%)",
+          backgroundImage: "url('/mascot-peek.jpg')",
+          backgroundSize: "300% auto",
+          backgroundPosition: "100% center",
+          mixBlendMode: "multiply",
+            filter: "brightness(1.15)",
+          zIndex: 0,
+        }}
+        aria-hidden="true"
+      />
+      <div className="relative z-10 max-w-[1440px] mx-auto">
         {/* Header */}
         <div className="text-center mb-20">
           <h2
             className="font-display font-bold tracking-[-0.04em] leading-tight mb-4"
-            style={{ fontSize: "clamp(32px, 4vw, 48px)", color: "#1B4332" }}
+            style={{ fontSize: "clamp(32px, 4vw, 48px)", color: "#EB0043" }}
           >
             Simple, predictable hiring.
           </h2>
@@ -58,11 +74,11 @@ export function PricingSection() {
           {/* Entry */}
           <div
             className="rounded-[16px] p-8 flex flex-col"
-            style={{ background: "#F4F3F1", border: "1px solid #E8E6E1" }}
+            style={{ background: "#C8D8D0", border: "1px solid #B5C9C0" }}
           >
             <div className="mb-8">
-              <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "#1B4332" }}>Entry</p>
-              <p className="text-[40px] font-black leading-none" style={{ color: "#1A1A1A" }}>
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "#EB0043" }}>Entry</p>
+              <p className="text-[40px] font-black leading-none" style={{ color: "#2E4057" }}>
                 $50<span className="text-[14px] font-bold" style={{ color: "#8A8A8A" }}>/mo</span>
               </p>
               <p className="text-[12px] mt-2" style={{ color: "#8A8A8A" }}>1 AI Agent</p>
@@ -70,15 +86,15 @@ export function PricingSection() {
             <ul className="flex flex-col gap-4 mb-10 flex-grow list-none">
               {["Daily briefings", "Basic integrations", "500 tasks / month"].map((f) => (
                 <li key={f} className="flex items-center gap-3 text-[14px] font-medium">
-                  <Check size={16} style={{ color: "#1B4332", flexShrink: 0 }} />
+                  <Check size={16} style={{ color: "#EB0043", flexShrink: 0 }} />
                   {f}
                 </li>
               ))}
             </ul>
             <Link
               href="/agents/linkedin-post-agent"
-              className="block w-full text-center rounded-[10px] py-3 text-[14px] font-bold no-underline transition-all hover:bg-[#E8E6E1]"
-              style={{ border: "1px solid #1B4332", color: "#1B4332" }}
+              className="block w-full text-center rounded-[10px] py-3 text-[14px] font-bold no-underline transition-all hover:bg-[#B5C9C0]"
+              style={{ border: "1px solid #EB0043", color: "#EB0043" }}
             >
               Get Started
             </Link>
@@ -89,19 +105,19 @@ export function PricingSection() {
             className="rounded-[16px] p-8 flex flex-col relative md:-translate-y-4"
             style={{
               background: "#FFFFFF",
-              border: "2px solid #1B4332",
+              border: "2px solid #EB0043",
               boxShadow: "0 20px 60px rgba(27,67,50,0.12)",
             }}
           >
             <div
               className="absolute -top-4 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full text-white whitespace-nowrap"
-              style={{ background: "#1B4332" }}
+              style={{ background: "#EB0043" }}
             >
               Most Popular
             </div>
             <div className="mb-8">
-              <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "#1B4332" }}>Professional</p>
-              <p className="text-[40px] font-black leading-none" style={{ color: "#1A1A1A" }}>
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "#EB0043" }}>Professional</p>
+              <p className="text-[40px] font-black leading-none" style={{ color: "#2E4057" }}>
                 $150<span className="text-[14px] font-bold" style={{ color: "#8A8A8A" }}>/mo</span>
               </p>
               <p className="text-[12px] mt-2" style={{ color: "#8A8A8A" }}>3 AI Agents</p>
@@ -113,17 +129,17 @@ export function PricingSection() {
                 "Unlimited tasks",
                 "Multi-dialect support",
               ].map((f, i) => (
-                <li key={f} className={`flex items-center gap-3 text-[14px] ${i === 0 ? "font-bold" : "font-medium"}`} style={{ color: i === 0 ? "#1B4332" : "#1A1A1A" }}>
-                  <Check size={16} style={{ color: "#1B4332", flexShrink: 0 }} />
+                <li key={f} className={`flex items-center gap-3 text-[14px] ${i === 0 ? "font-bold" : "font-medium"}`} style={{ color: i === 0 ? "#EB0043" : "#2E4057" }}>
+                  <Check size={16} style={{ color: "#EB0043", flexShrink: 0 }} />
                   {f}
                 </li>
               ))}
             </ul>
             <Link
               href="/agents/linkedin-post-agent"
-              className="block w-full text-center rounded-[10px] py-4 text-[14px] font-bold text-white no-underline transition-all hover:bg-[#2D6A4F]"
+              className="block w-full text-center rounded-[10px] py-4 text-[14px] font-bold text-white no-underline transition-all hover:bg-[#4E0110]"
               style={{
-                background: "#1B4332",
+                background: "#EB0043",
                 boxShadow: "0 4px 16px rgba(27,67,50,0.2)",
               }}
             >
@@ -134,25 +150,25 @@ export function PricingSection() {
           {/* Enterprise */}
           <div
             className="rounded-[16px] p-8 flex flex-col"
-            style={{ background: "#F4F3F1", border: "1px solid #E8E6E1" }}
+            style={{ background: "#C8D8D0", border: "1px solid #B5C9C0" }}
           >
             <div className="mb-8">
-              <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "#1B4332" }}>Enterprise</p>
-              <p className="text-[40px] font-black leading-none" style={{ color: "#1A1A1A" }}>Custom</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "#EB0043" }}>Enterprise</p>
+              <p className="text-[40px] font-black leading-none" style={{ color: "#2E4057" }}>Custom</p>
               <p className="text-[12px] mt-2" style={{ color: "#8A8A8A" }}>Unlimited Agents</p>
             </div>
             <ul className="flex flex-col gap-4 mb-10 flex-grow list-none">
               {["On-prem deployment", "Custom agent training", "Dedicated manager"].map((f) => (
                 <li key={f} className="flex items-center gap-3 text-[14px] font-medium">
-                  <Check size={16} style={{ color: "#1B4332", flexShrink: 0 }} />
+                  <Check size={16} style={{ color: "#EB0043", flexShrink: 0 }} />
                   {f}
                 </li>
               ))}
             </ul>
             <Link
               href="/contact"
-              className="block w-full text-center rounded-[10px] py-3 text-[14px] font-bold no-underline transition-all hover:bg-[#E8E6E1]"
-              style={{ border: "1px solid #E8E6E1", color: "#8A8A8A" }}
+              className="block w-full text-center rounded-[10px] py-3 text-[14px] font-bold no-underline transition-all hover:bg-[#B5C9C0]"
+              style={{ border: "1px solid #B5C9C0", color: "#8A8A8A" }}
             >
               Contact Sales
             </Link>

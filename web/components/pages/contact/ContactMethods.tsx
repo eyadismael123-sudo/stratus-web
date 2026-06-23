@@ -7,7 +7,7 @@ const METHODS = [
       "Instant response. Best for quick inquiries and immediate support from our MENA team.",
     cta: "Start Chat",
     ctaStyle:
-      "bg-[#012d1d] text-white hover:bg-[#1b4332]",
+      "bg-[#4E0110] text-white hover:bg-[#eb0043]",
     href: "https://wa.me/97337646913",
     external: true,
   },
@@ -18,7 +18,7 @@ const METHODS = [
     description:
       "Prefer formal communication? Send us a detailed brief of your requirements.",
     cta: "hello@stratus.ai",
-    ctaStyle: "text-[#012d1d] font-bold text-xl hover:underline",
+    ctaStyle: "text-[#4E0110] font-bold text-xl hover:underline",
     href: "mailto:hello@stratus.ai",
     external: false,
     isLink: true,
@@ -31,7 +31,7 @@ const METHODS = [
       "Schedule a 20-min intro call with our team to discuss your roadmap.",
     cta: "View Calendar",
     ctaStyle:
-      "bg-[#e9e8e5] text-[#012d1d] hover:bg-[#c1ecd4]",
+      "bg-[#e9e8e5] text-[#4E0110] hover:bg-[#c1ecd4]",
     href: "#",
     external: false,
   },
@@ -86,7 +86,7 @@ export default function ContactMethods() {
       {/* Contact Form */}
       <section className="py-32 px-8 max-w-7xl mx-auto">
         <div className="bg-[#f4f3f1] rounded-xl overflow-hidden grid grid-cols-1 lg:grid-cols-2">
-          <div className="relative h-64 lg:h-auto min-h-[400px] bg-[#1b4332] flex flex-col justify-end p-12">
+          <div className="relative h-64 lg:h-auto min-h-[400px] bg-[#eb0043] flex flex-col justify-end p-12">
             <h2 className="text-4xl font-display font-bold text-white mb-4">
               Direct Message
             </h2>
@@ -105,7 +105,7 @@ export default function ContactMethods() {
                   <input
                     type="text"
                     placeholder="Your full name"
-                    className="w-full bg-transparent border-0 border-b-2 border-[#c1c8c2] focus:border-[#012d1d] focus:outline-none transition-all py-3 px-0 text-[#1a1c1a] placeholder:text-[#c1c8c2]"
+                    className="w-full bg-transparent border-0 border-b-2 border-[#A8BDB6] focus:border-[#4E0110] focus:outline-none transition-all py-3 px-0 text-[#1a1c1a] placeholder:text-[#A8BDB6]"
                   />
                 </div>
                 <div>
@@ -115,7 +115,7 @@ export default function ContactMethods() {
                   <input
                     type="text"
                     placeholder="Company name"
-                    className="w-full bg-transparent border-0 border-b-2 border-[#c1c8c2] focus:border-[#012d1d] focus:outline-none transition-all py-3 px-0 text-[#1a1c1a] placeholder:text-[#c1c8c2]"
+                    className="w-full bg-transparent border-0 border-b-2 border-[#A8BDB6] focus:border-[#4E0110] focus:outline-none transition-all py-3 px-0 text-[#1a1c1a] placeholder:text-[#A8BDB6]"
                   />
                 </div>
               </div>
@@ -126,7 +126,7 @@ export default function ContactMethods() {
                 <input
                   type="email"
                   placeholder="email@company.com"
-                  className="w-full bg-transparent border-0 border-b-2 border-[#c1c8c2] focus:border-[#012d1d] focus:outline-none transition-all py-3 px-0 text-[#1a1c1a] placeholder:text-[#c1c8c2]"
+                  className="w-full bg-transparent border-0 border-b-2 border-[#A8BDB6] focus:border-[#4E0110] focus:outline-none transition-all py-3 px-0 text-[#1a1c1a] placeholder:text-[#A8BDB6]"
                 />
               </div>
               <div>
@@ -136,12 +136,12 @@ export default function ContactMethods() {
                 <textarea
                   placeholder="How can we help?"
                   rows={4}
-                  className="w-full bg-transparent border-0 border-b-2 border-[#c1c8c2] focus:border-[#012d1d] focus:outline-none transition-all py-3 px-0 text-[#1a1c1a] placeholder:text-[#c1c8c2] resize-none"
+                  className="w-full bg-transparent border-0 border-b-2 border-[#A8BDB6] focus:border-[#4E0110] focus:outline-none transition-all py-3 px-0 text-[#1a1c1a] placeholder:text-[#A8BDB6] resize-none"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-[#012d1d] text-white px-12 py-4 rounded-xl font-bold text-lg hover:bg-[#1b4332] transition-all w-full md:w-auto"
+                className="bg-[#4E0110] text-white px-12 py-4 rounded-xl font-bold text-lg hover:bg-[#eb0043] transition-all w-full md:w-auto"
               >
                 Send Message
               </button>
