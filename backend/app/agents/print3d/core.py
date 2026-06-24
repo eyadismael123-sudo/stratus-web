@@ -10,6 +10,7 @@ import base64
 import json
 import logging
 import os
+import re
 import time
 from dataclasses import dataclass, field
 
@@ -953,15 +954,31 @@ If NO images survive, reply with "none".""",
     return [limited[valid_indices[0]]]
 
 
+_FIGURINE_NOISE = re.compile(
+    r"\b(figurine|figure|statue|miniature|model|toy|doll|sculpture|3d print(?:ed)?)\b",
+    re.IGNORECASE,
+)
+
+
 async def find_reference_images(subject: str, notes: str = "") -> list[str]:
     """Find up to 4 reference photo URLs covering different angles of the subject.
 
-    Collects candidates from Google, Wikipedia, and DDG, then asks Claude Haiku
-    vision to pick the best diverse set for multi-image 3D reconstruction.
+    For figurines/characters, strips toy-related words from the search so we get
+    real photos of the actual person/character — not someone else's 3D toy.
 
     Returns a list of 1–4 public HTTPS URLs Meshy can fetch, or [] if nothing found.
     """
-    candidates = await _collect_candidate_images(subject, notes)
+    search_subject = subject
+    if any(kw in subject.lower() for kw in _FIGURINE_KEYWORDS):
+        stripped = _FIGURINE_NOISE.sub("", subject).strip(" ,")
+        if stripped:
+            search_subject = stripped
+            logger.info(
+                "Figurine detected — searching for real subject: '%s' (was '%s')",
+                search_subject, subject,
+            )
+
+    candidates = await _collect_candidate_images(search_subject, notes)
     if not candidates:
         return []
 
