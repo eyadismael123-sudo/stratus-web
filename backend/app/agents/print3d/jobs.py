@@ -64,36 +64,13 @@ async def run_pipeline(job_id: str) -> None:
         # 1. Generate 3D model
         is_figurine = _is_figurine(brief)
         if image_url:
-            # Customer uploaded a photo.
-            # Vision already extracted accurate colors from the image — use it as primary.
-            # Run web reference search + web style research in parallel as supplements.
-            ref_image_urls, web_style = await asyncio.gather(
-                find_reference_images(brief.get("object", ""), brief.get("notes", "")),
-                build_visual_research(brief),
+            # Customer uploaded a photo — vision already extracted accurate colors.
+            # Pass both directly to Meshy; no web search needed.
+            model = await generate_from_image(
+                image_url=image_url,
+                api_key=MESHY_API_KEY,
+                texture_prompt=texture_prompt,
             )
-            # Vision-extracted texture_prompt always preferred over web-searched description —
-            # vision actually saw the uploaded image; web search infers from text only.
-            final_texture = texture_prompt or web_style
-
-            # Lead with the uploaded photo; web refs provide geometry cues for unseen sides
-            all_images = [image_url] + list(ref_image_urls)
-
-            if len(all_images) > 1:
-                logger.info(
-                    "Uploaded image + %d web reference(s) for '%s'",
-                    len(all_images) - 1, brief.get("object", ""),
-                )
-                model = await generate_from_multi_image(
-                    image_urls=all_images[:4],
-                    api_key=MESHY_API_KEY,
-                    texture_prompt=final_texture,
-                )
-            else:
-                model = await generate_from_image(
-                    image_url=image_url,
-                    api_key=MESHY_API_KEY,
-                    texture_prompt=final_texture,
-                )
         else:
             # No customer photo — always search for reference images
             prompt, style_prompt, ref_image_urls = await asyncio.gather(
