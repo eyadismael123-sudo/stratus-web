@@ -28,6 +28,7 @@ SUPABASE_KEY       = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 GROK_API_KEY       = os.getenv("GROK_API_KEY", "")
 GOOGLE_API_KEY     = os.getenv("GOOGLE_API_KEY", "")
 GOOGLE_CSE_ID      = os.getenv("GOOGLE_CSE_ID", "")
+GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY", "")
 
 _anthropic = Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -984,6 +985,134 @@ async def find_reference_images(subject: str, notes: str = "") -> list[str]:
 
     logger.info("Found %d candidate images for '%s'", len(candidates), subject[:50])
     return await _pick_best_images(subject, notes, candidates)
+
+
+_STORAGE_BUCKET = "print3d-refs"
+_storage_bucket_created = False
+
+
+async def _ensure_storage_bucket() -> None:
+    """Create the Supabase storage bucket if it doesn't exist yet."""
+    global _storage_bucket_created
+    if _storage_bucket_created:
+        return
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{SUPABASE_URL}/storage/v1/bucket",
+            headers={"Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json"},
+            json={"id": _STORAGE_BUCKET, "name": _STORAGE_BUCKET, "public": True},
+            timeout=10.0,
+        )
+        # 200 = created, 400 with "already exists" = fine
+        if resp.status_code == 200 or "already exists" in resp.text:
+            _storage_bucket_created = True
+        else:
+            logger.warning("Storage bucket creation returned %d: %s", resp.status_code, resp.text[:120])
+            _storage_bucket_created = True  # attempt once regardless
+
+
+async def _upload_image_to_supabase(image_bytes: bytes, filename: str) -> str:
+    """Upload raw image bytes to Supabase Storage and return the public URL."""
+    await _ensure_storage_bucket()
+    async with httpx.AsyncClient() as client:
+        resp = await client.put(
+            f"{SUPABASE_URL}/storage/v1/object/{_STORAGE_BUCKET}/{filename}",
+            content=image_bytes,
+            headers={
+                "Authorization": f"Bearer {SUPABASE_KEY}",
+                "Content-Type": "image/png",
+                "x-upsert": "true",
+            },
+            timeout=30.0,
+        )
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(f"Supabase upload failed {resp.status_code}: {resp.text[:120]}")
+    return f"{SUPABASE_URL}/storage/v1/object/public/{_STORAGE_BUCKET}/{filename}"
+
+
+def _build_gemini_image_prompt(subject: str, notes: str) -> str:
+    """Build a natural-language prompt for Gemini Flash image generation.
+
+    Figurines use "plastic collectible figurine of" framing to avoid celebrity
+    content blocks. Other objects use a simple product-photo instruction.
+    """
+    is_fig = any(kw in subject.lower() for kw in _FIGURINE_KEYWORDS)
+    if is_fig:
+        base = f"A plastic collectible figurine of {subject}"
+        if notes:
+            base += f", {notes}"
+        return (
+            f"{base}. White background, studio product photo, "
+            "full body visible, slightly elevated three-quarter angle."
+        )
+
+    base = f"Studio product photo of {subject}"
+    if notes:
+        base += f", {notes}"
+    return (
+        f"{base}. Clean white background, neutral lighting, "
+        "sharp focus, full object visible, front-facing three-quarter view."
+    )
+
+
+async def generate_reference_image(subject: str, notes: str = "") -> str:
+    """Generate a reference photo via Gemini Flash and return its public URL.
+
+    Uses gemini-2.5-flash-image generateContent (same model as Gemini chat UI)
+    which handles figurines and named subjects much better than Imagen predict.
+    Returns "" on any failure so callers can fall back gracefully.
+    """
+    if not GEMINI_API_KEY:
+        logger.warning("GEMINI_API_KEY not set — skipping AI reference image")
+        return ""
+
+    prompt = _build_gemini_image_prompt(subject, notes)
+    logger.info("Gemini Flash image: generating reference for '%s'", subject[:60])
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent",
+                params={"key": GEMINI_API_KEY},
+                json={
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]},
+                },
+                timeout=90.0,
+            )
+        if resp.status_code != 200:
+            logger.warning("Gemini Flash image error %d: %s", resp.status_code, resp.text[:200])
+            return ""
+
+        candidates = resp.json().get("candidates", [])
+        if not candidates:
+            logger.warning("Gemini Flash image: no candidates returned for '%s'", subject[:50])
+            return ""
+
+        b64 = ""
+        mime = "image/png"
+        for part in candidates[0].get("content", {}).get("parts", []):
+            inline = part.get("inlineData", {})
+            if inline.get("data"):
+                b64   = inline["data"]
+                mime  = inline.get("mimeType", "image/png")
+                break
+
+        if not b64:
+            logger.warning("Gemini Flash image: no inlineData in response for '%s'", subject[:50])
+            return ""
+
+        ext        = mime.split("/")[-1].split(";")[0]  # "png", "jpeg", etc.
+        image_bytes = base64.standard_b64decode(b64)
+        safe_name  = re.sub(r"[^a-z0-9_]", "", subject[:40].lower().replace(" ", "_"))
+        filename   = f"{safe_name}_{int(time.time())}.{ext}"
+        url = await _upload_image_to_supabase(image_bytes, filename)
+        logger.info("Reference image ready: %s", url)
+        return url
+
+    except Exception as exc:
+        logger.warning("generate_reference_image failed for '%s': %s", subject[:50], exc)
+        return ""
 
 
 async def build_visual_research(brief: dict) -> str:

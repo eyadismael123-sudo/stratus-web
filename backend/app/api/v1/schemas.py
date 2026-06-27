@@ -91,10 +91,12 @@ class DownloadResponse(BaseModel):
 # ── /v1/webhooks/order-paid ───────────────────────────────────────────────────
 
 class OrderPaidWebhook(BaseModel):
-    job_id:      str = Field(alias="jobId")
-    customer_id: str = Field(alias="customerId")
-    order_id:    str = Field(alias="orderId")
-    order_type:  str | None = Field(None, alias="orderType")   # "print" | "download"
-    amount_paid: float | None = Field(None, alias="amountPaid")
+    job_id:         str = Field(alias="jobId")
+    customer_id:    str = Field(alias="customerId")
+    order_id:       str = Field(alias="orderId")
+    order_type:     str | None = Field(None, alias="orderType")    # "print" | "download"
+    amount_paid:    float | None = Field(None, alias="amountPaid")
+    customer_email: str | None = Field(None, alias="customerEmail")
+    merchant_email: str | None = Field(None, alias="merchantEmail")
 
     model_config = {"populate_by_name": True, "extra": "ignore"}

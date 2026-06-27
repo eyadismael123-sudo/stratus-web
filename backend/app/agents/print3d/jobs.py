@@ -11,10 +11,10 @@ import os
 import tempfile
 from pathlib import Path
 
-from app.agents.print3d.core import _build_generation_prompt, _download, _is_figurine, build_visual_research, find_reference_images
+from app.agents.print3d.core import _build_generation_prompt, _download, _is_figurine, build_visual_research, generate_reference_image
 from app.agents.print3d.email import send_order_email
 from app.agents.print3d.glb_to_3mf import convert as glb_to_3mf_convert
-from app.agents.print3d.meshy import generate_from_image, generate_from_multi_image, generate_from_text
+from app.agents.print3d.meshy import generate_from_image, generate_from_text
 from app.agents.print3d.quoter import calculate_quote
 from app.agents.print3d.slicer import slice_3mf
 from app.repositories.print3d_jobs import get_job, update_job
@@ -72,32 +72,25 @@ async def run_pipeline(job_id: str) -> None:
                 texture_prompt=texture_prompt,
             )
         else:
-            # No customer photo — always search for reference images
-            prompt, style_prompt, ref_image_urls = await asyncio.gather(
+            # No customer photo — generate an AI reference image via Gemini Imagen 3
+            prompt, style_prompt, ref_image_url = await asyncio.gather(
                 asyncio.to_thread(_build_generation_prompt, brief),
                 build_visual_research(brief),
-                find_reference_images(brief.get("object", ""), brief.get("notes", "")),
+                generate_reference_image(brief.get("object", ""), brief.get("notes", "")),
             )
-            if ref_image_urls:
-                logger.info(
-                    "Using %d reference image(s) for '%s': %s",
-                    len(ref_image_urls), brief.get("object", ""),
-                    " | ".join(u[:60] for u in ref_image_urls),
-                )
-                model = await generate_from_multi_image(
-                    image_urls=ref_image_urls,
+            if ref_image_url:
+                logger.info("Using Gemini reference image for '%s': %s", brief.get("object", ""), ref_image_url)
+                model = await generate_from_image(
+                    image_url=ref_image_url,
                     api_key=MESHY_API_KEY,
                     texture_prompt=style_prompt,
                 )
             elif is_figurine:
-                # Figurines must NEVER use text-to-3D — face/pose accuracy requires a real photo.
-                # Raise so the job surfaces as failed rather than producing a useless generic model.
                 raise RuntimeError(
-                    "No reference image found for figurine. Cannot generate accurate face/pose "
-                    "via text-to-3D. Please upload a photo or try a different search term."
+                    "Could not generate reference image for figurine. Please upload a photo."
                 )
             else:
-                logger.info("No reference image found — using text-to-3D")
+                logger.info("Gemini image unavailable — falling back to text-to-3D")
                 model = await generate_from_text(prompt, MESHY_API_KEY, style_prompt=style_prompt)
 
         _patch(job_id, {"meshy_task_id": model.get("task_id", ""), "progress": 40})
@@ -153,7 +146,7 @@ async def run_pipeline(job_id: str) -> None:
                 quote.total_egp,
                 str(glb),
                 str(tmf),
-                model.get("model_urls", {}).get("glb", ""),
+                glb_url,
             )
         except Exception:
             logger.exception("Order email failed for job %s (job still complete)", job_id)

@@ -93,7 +93,7 @@ async def _finalize_order(payload: OrderPaidWebhook, job: dict) -> None:
         else:
             logger.warning("GLB missing for job %s — emailing brief only", job_id)
 
-        # Email the cousin
+        # Email based on order type
         try:
             await asyncio.to_thread(
                 send_order_email,
@@ -103,6 +103,9 @@ async def _finalize_order(payload: OrderPaidWebhook, job: dict) -> None:
                 str(glb) if glb.exists() else "",
                 tmf_str or "",
                 "",
+                payload.order_type,
+                payload.customer_email,
+                payload.merchant_email,
             )
         except Exception:
             logger.exception("Email failed for order %s", payload.order_id)
