@@ -189,6 +189,11 @@
     50%       { opacity: 0.6; transform: scale(0.85); }
   }
 
+  @keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
   /* Fade in */
   .fade-in {
     animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;

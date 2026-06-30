@@ -15,20 +15,72 @@ const NAV_LINKS = [
   { label: "About", href: "/about" },
 ];
 
+const BAR_HEIGHTS = [40, 60, 90, 75, 100];
+const TYPEWRITER_TEXT = "Drafting today's LinkedIn post";
+
 export function HeroSection() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [typedText, setTypedText] = useState("");
   const heroRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const subtextRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const pillsRef = useRef<HTMLDivElement>(null);
   const eyebrowRef = useRef<HTMLDivElement>(null);
+  const statRef = useRef<HTMLSpanElement>(null);
+  const barsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Mouse parallax — widget floats with cursor
+  useEffect(() => {
+    const hero = heroRef.current;
+    const widget = pillsRef.current;
+    if (!hero || !widget) return;
+
+    let rafId: number;
+    const onMove = (e: MouseEvent) => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const rect = hero.getBoundingClientRect();
+        const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+        const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+        gsap.to(widget, { x: x * 16, y: y * 10, duration: 0.9, ease: "power2.out", overwrite: "auto" });
+      });
+    };
+    const onLeave = () => {
+      gsap.to(widget, { x: 0, y: 0, duration: 1, ease: "power3.out" });
+    };
+
+    hero.addEventListener("mousemove", onMove);
+    hero.addEventListener("mouseleave", onLeave);
+    return () => {
+      cancelAnimationFrame(rafId);
+      hero.removeEventListener("mousemove", onMove);
+      hero.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
+  // Typewriter effect — starts after entrance animation
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    const timeoutId = setTimeout(() => {
+      let i = 0;
+      intervalId = setInterval(() => {
+        i++;
+        setTypedText(TYPEWRITER_TEXT.slice(0, i));
+        if (i >= TYPEWRITER_TEXT.length) clearInterval(intervalId);
+      }, 52);
+    }, 1600);
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
   }, []);
 
   // GSAP entrance animations
@@ -64,6 +116,36 @@ export function HeroSection() {
         { opacity: 1, y: 0, duration: 0.5 },
         "-=0.2"
       );
+
+    // Bar chart bars grow up from baseline
+    if (barsRef.current) {
+      const bars = barsRef.current.querySelectorAll(".hero-bar");
+      tl.fromTo(
+        bars,
+        { scaleY: 0, transformOrigin: "bottom" },
+        { scaleY: 1, duration: 0.5, stagger: 0.08, ease: "back.out(1.6)" },
+        "-=0.15"
+      );
+    }
+
+    // Count-up: 0 → 1.2k
+    if (statRef.current) {
+      const counter = { val: 0 };
+      tl.to(
+        counter,
+        {
+          val: 1200,
+          duration: 1.8,
+          ease: "power2.out",
+          onUpdate() {
+            if (!statRef.current) return;
+            const v = Math.round(counter.val);
+            statRef.current.textContent = v >= 1000 ? (v / 1000).toFixed(1) + "k" : String(v);
+          },
+        },
+        "-=0.4"
+      );
+    }
 
   }, { scope: heroRef });
 
@@ -195,11 +277,11 @@ export function HeroSection() {
       >
         {/* Mascot — octopus sitting at bottom-right corner */}
         <img
-          src="/mascot-front.png"
+          src="/mascot-happy.png"
           alt=""
           aria-hidden="true"
           className="absolute bottom-0 right-10 pointer-events-none select-none hidden md:block"
-          style={{ width: "180px", transform: "translateY(20%)", zIndex: 0 }}
+          style={{ width: "150px", transform: "translateY(6%)", zIndex: 0 }}
         />
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -265,6 +347,7 @@ export function HeroSection() {
             <div
               ref={pillsRef}
               className="relative opacity-0"
+              style={{ willChange: "transform" }}
             >
               <div
                 className="rounded-[20px] p-6"
@@ -303,7 +386,19 @@ export function HeroSection() {
                       </div>
                       <div>
                         <p className="text-[14px] font-bold" style={{ color: "#2E4057" }}>Frame</p>
-                        <p className="text-[12px]" style={{ color: "#8A8A8A" }}>Drafting today&apos;s LinkedIn post</p>
+                        <p className="text-[12px] font-mono" style={{ color: "#8A8A8A", minHeight: "16px" }}>
+                          {typedText || " "}
+                          <span
+                            className="inline-block w-[2px] h-[12px] ml-[1px] align-middle"
+                            style={{
+                              background: "#8A8A8A",
+                              animation: typedText.length >= TYPEWRITER_TEXT.length
+                                ? "blink-cursor 1s step-end infinite"
+                                : "none",
+                              opacity: typedText.length < TYPEWRITER_TEXT.length ? 1 : undefined,
+                            }}
+                          />
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -374,20 +469,23 @@ export function HeroSection() {
                   style={{ borderTop: "1px solid #B5C9C0" }}
                 >
                   <div>
-                    <p className="text-[32px] font-black leading-none" style={{ color: "#EB0043" }}>1.2k</p>
+                    <p className="text-[32px] font-black leading-none" style={{ color: "#EB0043" }}>
+                      <span ref={statRef}>0</span>
+                    </p>
                     <p className="text-[11px] font-bold uppercase tracking-tight mt-1" style={{ color: "#8A8A8A" }}>
                       Tasks completed today
                     </p>
                   </div>
-                  {/* Mini bar chart */}
+                  {/* Mini bar chart — animated */}
                   <div
+                    ref={barsRef}
                     className="flex items-end gap-1 p-2 rounded-[8px]"
                     style={{ background: "rgba(174,238,203,0.3)", height: "48px", width: "80px" }}
                   >
-                    {[40, 60, 90, 75, 100].map((h, i) => (
+                    {BAR_HEIGHTS.map((h, i) => (
                       <div
                         key={i}
-                        className="flex-1 rounded-sm"
+                        className="hero-bar flex-1 rounded-sm"
                         style={{ height: `${h}%`, background: "#2C694E" }}
                       />
                     ))}

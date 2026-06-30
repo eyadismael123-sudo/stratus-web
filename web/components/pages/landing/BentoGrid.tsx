@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -12,6 +12,36 @@ export function BentoGrid() {
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const featuredRef = useRef<HTMLDivElement>(null);
+
+  const onCardMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const card = featuredRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+    const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+    gsap.to(card, {
+      rotateY: x * 5,
+      rotateX: -y * 4,
+      scale: 1.01,
+      duration: 0.4,
+      ease: "power2.out",
+      transformPerspective: 800,
+      overwrite: "auto",
+    });
+  }, []);
+
+  const onCardLeave = useCallback(() => {
+    const card = featuredRef.current;
+    if (!card) return;
+    gsap.to(card, {
+      rotateY: 0,
+      rotateX: 0,
+      scale: 1,
+      duration: 0.6,
+      ease: "power3.out",
+    });
+  }, []);
 
   useGSAP(() => {
     if (!headerRef.current || !gridRef.current) return;
@@ -69,13 +99,17 @@ export function BentoGrid() {
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 opacity-0">
           {/* Featured — LinkedIn Post Agent */}
           <div
-            className="md:col-span-2 rounded-[16px] p-8 flex flex-col justify-between group hover:shadow-xl transition-all"
+            ref={featuredRef}
+            onMouseMove={onCardMove}
+            onMouseLeave={onCardLeave}
+            className="md:col-span-2 rounded-[16px] p-8 flex flex-col justify-between group hover:shadow-xl transition-shadow cursor-default"
             style={{
               background: "#FFFFFF",
               borderTop: "4px solid #EB0043",
               border: "1px solid #B5C9C0",
               borderTopWidth: "4px",
               borderTopColor: "#EB0043",
+              willChange: "transform",
             }}
           >
             <div>
