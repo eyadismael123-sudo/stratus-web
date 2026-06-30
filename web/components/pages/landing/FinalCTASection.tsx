@@ -38,17 +38,12 @@ export function FinalCTASection() {
       style={{ background: "#B5C9C0", borderTop: "1px solid #B5C9C0" }}
     >
       {/* Mascot — front-facing octopus peeking from bottom-right corner */}
-      <div
-        className="absolute bottom-0 right-0 pointer-events-none select-none hidden md:block"
-        style={{
-          width: "220px",
-          height: "220px",
-          transform: "translate(30%, 42%)",
-          backgroundImage: "url('/mascot-peek.png')",
-          backgroundSize: "300% auto",
-          backgroundPosition: "50% center",
-        }}
+      <img
+        src="/mascot-front.png"
+        alt=""
         aria-hidden="true"
+        className="absolute bottom-0 right-0 pointer-events-none select-none hidden md:block"
+        style={{ width: "200px", transform: "translate(30%, 42%)" }}
       />
       <div ref={contentRef} className="max-w-3xl mx-auto opacity-0">
         <h2

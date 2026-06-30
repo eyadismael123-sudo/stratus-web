@@ -194,18 +194,12 @@ export function HeroSection() {
         style={{ background: "#CCDAD1" }}
       >
         {/* Mascot — octopus peeking up from bottom-right corner */}
-        <div
-          className="absolute bottom-0 right-0 md:right-20 pointer-events-none select-none hidden md:block"
-          style={{
-            width: "340px",
-            height: "340px",
-            transform: "translateY(38%)",
-            backgroundImage: "url('/mascot-peek.png')",
-            backgroundSize: "300% auto",
-            backgroundPosition: "0% center",
-            zIndex: 0,
-          }}
+        <img
+          src="/mascot-peeking.png"
+          alt=""
           aria-hidden="true"
+          className="absolute bottom-0 right-16 pointer-events-none select-none hidden md:block"
+          style={{ width: "220px", transform: "translateY(40%)", zIndex: 0 }}
         />
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">

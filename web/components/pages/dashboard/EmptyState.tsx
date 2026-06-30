@@ -3,17 +3,7 @@ import Link from "next/link";
 export function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-      {/* Happy octopus — bottom-left sprite */}
-      {/* Happy waving octopus */}
-      <div
-        className="w-32 h-32 mb-6"
-        style={{
-          backgroundImage: "url('/mascot-poses.png')",
-          backgroundSize: "200% auto",
-          backgroundPosition: "100% center",
-        }}
-        aria-hidden="true"
-      />
+      <img src="/mascot-happy.png" alt="" aria-hidden="true" className="w-32 h-auto mb-6" />
 
       <h3 className="text-[18px] font-black text-[#2E4057] tracking-[-0.02em] mb-2">
         Your team is empty

@@ -39,19 +39,13 @@ export function PricingSection() {
       className="relative overflow-hidden py-24 px-6 md:px-12"
       style={{ background: "#CCDAD1" }}
     >
-      {/* Mascot — full-body octopus peeking from left edge */}
-      <div
-        className="absolute left-0 top-1/2 pointer-events-none select-none hidden md:block"
-        style={{
-          width: "200px",
-          height: "200px",
-          transform: "translate(-46%, -50%)",
-          backgroundImage: "url('/mascot-peek.png')",
-          backgroundSize: "300% auto",
-          backgroundPosition: "100% center",
-          zIndex: 0,
-        }}
+      {/* Mascot — tilted octopus peeking from left edge */}
+      <img
+        src="/mascot-tilted.png"
+        alt=""
         aria-hidden="true"
+        className="absolute left-0 top-1/2 pointer-events-none select-none hidden md:block"
+        style={{ width: "160px", transform: "translate(-40%, -50%)", zIndex: 0 }}
       />
       <div className="relative z-10 max-w-[1440px] mx-auto">
         {/* Header */}

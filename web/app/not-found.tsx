@@ -3,16 +3,7 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-[#CCDAD1] flex flex-col items-center justify-center px-6 text-center">
-      {/* Confused octopus with ? */}
-      <div
-        className="w-44 h-44 mb-8"
-        style={{
-          backgroundImage: "url('/mascot-poses.png')",
-          backgroundSize: "200% auto",
-          backgroundPosition: "0% center",
-        }}
-        aria-hidden="true"
-      />
+      <img src="/mascot-confused.png" alt="" aria-hidden="true" className="w-44 h-auto mb-8" />
 
       <h1 className="font-display font-black text-[#2E4057] text-6xl mb-3 tracking-tight">
         404

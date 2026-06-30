@@ -51,18 +51,9 @@ export default function BlogGrid() {
       {/* Featured post */}
       <section className="max-w-7xl mx-auto px-8 mb-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Laptop octopus — top-right sprite */}
+          {/* Laptop octopus — front-facing */}
           <div className="lg:col-span-7 bg-[#CCDAD1] rounded-xl overflow-hidden h-[500px] flex items-center justify-center">
-            {/* Full-body octopus, front-facing */}
-            <div
-              className="w-64 h-64"
-              style={{
-                backgroundImage: "url('/mascot-peek.png')",
-                backgroundSize: "300% auto",
-                backgroundPosition: "50% center",
-              }}
-              aria-hidden="true"
-            />
+            <img src="/mascot-front.png" alt="" aria-hidden="true" className="w-56 h-auto" />
           </div>
           <div className="lg:col-span-5">
             <span className="inline-block bg-[#EB00431A] text-[#eb0043] px-3 py-1 rounded text-sm font-bold mb-6">
