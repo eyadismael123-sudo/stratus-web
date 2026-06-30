@@ -43,7 +43,7 @@ export function FinalCTASection() {
         alt=""
         aria-hidden="true"
         className="absolute bottom-0 right-0 pointer-events-none select-none hidden md:block"
-        style={{ width: "200px", transform: "translate(30%, 42%)" }}
+        style={{ width: "180px", transform: "translate(0%, 45%)" }}
       />
       <div ref={contentRef} className="max-w-3xl mx-auto opacity-0">
         <h2

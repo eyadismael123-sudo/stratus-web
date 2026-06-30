@@ -45,7 +45,7 @@ export function PricingSection() {
         alt=""
         aria-hidden="true"
         className="absolute left-0 top-1/2 pointer-events-none select-none hidden md:block"
-        style={{ width: "160px", transform: "translate(-40%, -50%)", zIndex: 0 }}
+        style={{ width: "110px", transform: "translate(-55%, -50%)", zIndex: 0 }}
       />
       <div className="relative z-10 max-w-[1440px] mx-auto">
         {/* Header */}
