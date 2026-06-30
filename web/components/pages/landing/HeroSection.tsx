@@ -200,11 +200,9 @@ export function HeroSection() {
             width: "340px",
             height: "340px",
             transform: "translateY(38%)",
-            backgroundImage: "url('/mascot-peek.jpg')",
+            backgroundImage: "url('/mascot-peek.png')",
             backgroundSize: "300% auto",
             backgroundPosition: "0% center",
-            mixBlendMode: "multiply",
-            filter: "brightness(1.15)",
             zIndex: 0,
           }}
           aria-hidden="true"

@@ -46,11 +46,9 @@ export function PricingSection() {
           width: "200px",
           height: "200px",
           transform: "translate(-46%, -50%)",
-          backgroundImage: "url('/mascot-peek.jpg')",
+          backgroundImage: "url('/mascot-peek.png')",
           backgroundSize: "300% auto",
           backgroundPosition: "100% center",
-          mixBlendMode: "multiply",
-            filter: "brightness(1.15)",
           zIndex: 0,
         }}
         aria-hidden="true"

@@ -7,11 +7,9 @@ export default function NotFound() {
       <div
         className="w-44 h-44 mb-8"
         style={{
-          backgroundImage: "url('/mascot-poses.jpg')",
+          backgroundImage: "url('/mascot-poses.png')",
           backgroundSize: "200% auto",
           backgroundPosition: "0% center",
-          mixBlendMode: "multiply",
-            filter: "brightness(1.15)",
         }}
         aria-hidden="true"
       />

@@ -8,11 +8,9 @@ export function EmptyState() {
       <div
         className="w-32 h-32 mb-6"
         style={{
-          backgroundImage: "url('/mascot-poses.jpg')",
+          backgroundImage: "url('/mascot-poses.png')",
           backgroundSize: "200% auto",
           backgroundPosition: "100% center",
-          mixBlendMode: "multiply",
-            filter: "brightness(1.15)",
         }}
         aria-hidden="true"
       />

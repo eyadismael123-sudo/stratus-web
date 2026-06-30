@@ -44,11 +44,9 @@ export function FinalCTASection() {
           width: "220px",
           height: "220px",
           transform: "translate(30%, 42%)",
-          backgroundImage: "url('/mascot-peek.jpg')",
+          backgroundImage: "url('/mascot-peek.png')",
           backgroundSize: "300% auto",
           backgroundPosition: "50% center",
-          mixBlendMode: "multiply",
-            filter: "brightness(1.15)",
         }}
         aria-hidden="true"
       />

@@ -57,11 +57,9 @@ export default function BlogGrid() {
             <div
               className="w-64 h-64"
               style={{
-                backgroundImage: "url('/mascot-peek.jpg')",
+                backgroundImage: "url('/mascot-peek.png')",
                 backgroundSize: "300% auto",
                 backgroundPosition: "50% center",
-                mixBlendMode: "multiply",
-            filter: "brightness(1.15)",
               }}
               aria-hidden="true"
             />
