@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { TiltCard } from "../../effects/TiltCard";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,36 +13,6 @@ export function BentoGrid() {
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
-  const featuredRef = useRef<HTMLDivElement>(null);
-
-  const onCardMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const card = featuredRef.current;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-    const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-    gsap.to(card, {
-      rotateY: x * 5,
-      rotateX: -y * 4,
-      scale: 1.01,
-      duration: 0.4,
-      ease: "power2.out",
-      transformPerspective: 800,
-      overwrite: "auto",
-    });
-  }, []);
-
-  const onCardLeave = useCallback(() => {
-    const card = featuredRef.current;
-    if (!card) return;
-    gsap.to(card, {
-      rotateY: 0,
-      rotateX: 0,
-      scale: 1,
-      duration: 0.6,
-      ease: "power3.out",
-    });
-  }, []);
 
   useGSAP(() => {
     if (!headerRef.current || !gridRef.current) return;
@@ -70,7 +41,6 @@ export function BentoGrid() {
       style={{ background: "#CCDAD1" }}
     >
       <div className="max-w-[1440px] mx-auto">
-        {/* Header */}
         <div ref={headerRef} className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4 opacity-0">
           <div>
             <span
@@ -95,30 +65,33 @@ export function BentoGrid() {
           </Link>
         </div>
 
-        {/* Grid */}
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 opacity-0">
           {/* Featured — LinkedIn Post Agent */}
-          <div
-            ref={featuredRef}
-            onMouseMove={onCardMove}
-            onMouseLeave={onCardLeave}
-            className="md:col-span-2 rounded-[16px] p-8 flex flex-col justify-between group hover:shadow-xl transition-shadow cursor-default"
+          <TiltCard
+            className="md:col-span-2 rounded-[16px] p-8 flex flex-col justify-between transition-shadow hover:shadow-2xl"
             style={{
               background: "#FFFFFF",
               borderTop: "4px solid #EB0043",
               border: "1px solid #B5C9C0",
               borderTopWidth: "4px",
               borderTopColor: "#EB0043",
-              willChange: "transform",
             }}
+            maxTilt={5}
           >
             <div>
               <div className="flex items-center justify-between mb-8">
                 <span
-                  className="text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full text-white"
+                  className="text-[10px] font-black tracking-widest uppercase px-3 py-1 rounded-full text-white relative overflow-hidden"
                   style={{ background: "#10b981" }}
                 >
-                  Live
+                  <span className="relative z-10">Live</span>
+                  <span
+                    className="absolute inset-0 -z-0"
+                    style={{
+                      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)",
+                      animation: "shimmer-sweep 2.4s linear infinite",
+                    }}
+                  />
                 </span>
               </div>
               <h3
@@ -144,12 +117,13 @@ export function BentoGrid() {
                 Add to Team
               </Link>
             </div>
-          </div>
+          </TiltCard>
 
-          {/* Coming Soon — Flash */}
-          <div
+          {/* Coming Soon — Scout */}
+          <TiltCard
             className="rounded-[16px] p-8 flex flex-col justify-between opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
             style={{ background: "#FFFFFF", border: "1px solid #B5C9C0" }}
+            maxTilt={4}
           >
             <div>
               <div className="flex items-center justify-between mb-8">
@@ -178,12 +152,13 @@ export function BentoGrid() {
                 Join Waitlist
               </button>
             </div>
-          </div>
+          </TiltCard>
 
-          {/* Coming Soon — Focus */}
-          <div
+          {/* Coming Soon — Brief */}
+          <TiltCard
             className="rounded-[16px] p-8 flex flex-col justify-between opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
             style={{ background: "#FFFFFF", border: "1px solid #B5C9C0" }}
+            maxTilt={4}
           >
             <div>
               <div className="flex items-center justify-between mb-8">
@@ -212,12 +187,13 @@ export function BentoGrid() {
                 Join Waitlist
               </button>
             </div>
-          </div>
+          </TiltCard>
 
           {/* Custom Request */}
-          <div
+          <TiltCard
             className="md:col-span-2 rounded-[16px] p-8 flex items-center justify-between"
             style={{ background: "#EB0043" }}
+            maxTilt={3}
           >
             <div>
               <h3
@@ -237,7 +213,7 @@ export function BentoGrid() {
             >
               Contact Labs
             </Link>
-          </div>
+          </TiltCard>
         </div>
       </div>
     </section>

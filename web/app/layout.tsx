@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { CustomCursor } from "../components/effects/CustomCursor";
+import { ScrollProgress } from "../components/effects/ScrollProgress";
 
 export const metadata: Metadata = {
   title: "Stratus — Hire your first AI employee",
@@ -23,18 +25,18 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        {/* Clash Display — display/headline font (Fontshare) */}
         <link
           href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600&display=swap"
           rel="stylesheet"
         />
-        {/* Satoshi — body/UI font (Fontshare) */}
         <link
           href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap"
           rel="stylesheet"
         />
       </head>
       <body className="min-h-full flex flex-col antialiased">
+        <ScrollProgress />
+        <CustomCursor />
         {children}
       </body>
     </html>

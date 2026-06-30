@@ -6,6 +6,10 @@ import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { AuroraMesh } from "../../effects/AuroraMesh";
+import { MagneticButton } from "../../effects/MagneticButton";
+import { FloatingPings } from "../../effects/FloatingPings";
+import { burstConfetti } from "../../effects/Confetti";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,12 +20,21 @@ const NAV_LINKS = [
 ];
 
 const BAR_HEIGHTS = [40, 60, 90, 75, 100];
-const TYPEWRITER_TEXT = "Drafting today's LinkedIn post";
+
+const FRAME_STATUSES = [
+  "Drafting today's LinkedIn post",
+  "Studying your top 3 performing posts",
+  "Adjusting tone — more direct",
+  "Scheduling for 8:42am Tue + Thu",
+  "Reviewing audience signals",
+];
 
 export function HeroSection() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [statusIndex, setStatusIndex] = useState(0);
   const [typedText, setTypedText] = useState("");
+  const [typingDone, setTypingDone] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const subtextRef = useRef<HTMLParagraphElement>(null);
@@ -30,6 +43,7 @@ export function HeroSection() {
   const eyebrowRef = useRef<HTMLDivElement>(null);
   const statRef = useRef<HTMLSpanElement>(null);
   const barsRef = useRef<HTMLDivElement>(null);
+  const primaryCtaRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -37,7 +51,7 @@ export function HeroSection() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Mouse parallax — widget floats with cursor
+  // Mouse parallax — widget drifts with cursor
   useEffect(() => {
     const hero = heroRef.current;
     const widget = pillsRef.current;
@@ -66,22 +80,44 @@ export function HeroSection() {
     };
   }, []);
 
-  // Typewriter effect — starts after entrance animation
+  // Looping typewriter — cycles through Frame statuses
   useEffect(() => {
-    let intervalId: ReturnType<typeof setInterval>;
-    const timeoutId = setTimeout(() => {
-      let i = 0;
-      intervalId = setInterval(() => {
+    const target = FRAME_STATUSES[statusIndex];
+    let i = 0;
+    let typingInterval: ReturnType<typeof setInterval>;
+    let holdTimer: ReturnType<typeof setTimeout>;
+    let eraseInterval: ReturnType<typeof setInterval>;
+
+    const startDelay = setTimeout(() => {
+      setTypingDone(false);
+      typingInterval = setInterval(() => {
         i++;
-        setTypedText(TYPEWRITER_TEXT.slice(0, i));
-        if (i >= TYPEWRITER_TEXT.length) clearInterval(intervalId);
-      }, 52);
-    }, 1600);
+        setTypedText(target.slice(0, i));
+        if (i >= target.length) {
+          clearInterval(typingInterval);
+          setTypingDone(true);
+          holdTimer = setTimeout(() => {
+            let j = target.length;
+            eraseInterval = setInterval(() => {
+              j--;
+              setTypedText(target.slice(0, j));
+              if (j <= 0) {
+                clearInterval(eraseInterval);
+                setStatusIndex((s) => (s + 1) % FRAME_STATUSES.length);
+              }
+            }, 22);
+          }, 1800);
+        }
+      }, 50);
+    }, statusIndex === 0 ? 1600 : 200);
+
     return () => {
-      clearTimeout(timeoutId);
-      clearInterval(intervalId);
+      clearTimeout(startDelay);
+      clearInterval(typingInterval);
+      clearTimeout(holdTimer);
+      clearInterval(eraseInterval);
     };
-  }, []);
+  }, [statusIndex]);
 
   // GSAP entrance animations
   useGSAP(() => {
@@ -117,7 +153,6 @@ export function HeroSection() {
         "-=0.2"
       );
 
-    // Bar chart bars grow up from baseline
     if (barsRef.current) {
       const bars = barsRef.current.querySelectorAll(".hero-bar");
       tl.fromTo(
@@ -128,7 +163,6 @@ export function HeroSection() {
       );
     }
 
-    // Count-up: 0 → 1.2k
     if (statRef.current) {
       const counter = { val: 0 };
       tl.to(
@@ -146,15 +180,25 @@ export function HeroSection() {
         "-=0.4"
       );
     }
-
   }, { scope: heroRef });
+
+  const onPrimaryCtaClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const rect = primaryCtaRef.current?.getBoundingClientRect();
+    if (rect) {
+      burstConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2, 42);
+    }
+    // Let navigation continue after a tick so confetti shows briefly
+    e.preventDefault();
+    const href = primaryCtaRef.current?.getAttribute("href") ?? "/agents/linkedin-post-agent";
+    setTimeout(() => {
+      window.location.href = href;
+    }, 350);
+  };
 
   return (
     <>
-      {/* Global grain texture overlay */}
       <div className="grain-overlay" />
 
-      {/* ── Nav ── */}
       <nav
         className="fixed top-0 left-0 right-0 z-[200] h-[60px] flex items-center justify-between px-6 md:px-10 transition-all duration-300"
         style={
@@ -168,23 +212,13 @@ export function HeroSection() {
             : { background: "transparent" }
         }
       >
-        <Link
-          href="/"
-          className="flex items-center gap-2 no-underline"
-        >
-          <Image
-            src="/logo.png"
-            alt="Stratus"
-            width={28}
-            height={28}
-            className="rounded-[6px]"
-          />
+        <Link href="/" className="flex items-center gap-2 no-underline">
+          <Image src="/logo.png" alt="Stratus" width={28} height={28} className="rounded-[6px]" />
           <span className="font-display text-[18px] font-bold tracking-[-0.03em]" style={{ color: "#2E4057" }}>
             Stratus
           </span>
         </Link>
 
-        {/* Desktop links */}
         <ul className="hidden md:flex items-center gap-8 list-none">
           {NAV_LINKS.map((l) => (
             <li key={l.href}>
@@ -199,21 +233,16 @@ export function HeroSection() {
           ))}
         </ul>
 
-        {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/agents/linkedin-post-agent"
             className="text-[14px] font-bold text-white rounded-[8px] px-[18px] py-2 no-underline hover:bg-[#4E0110] hover:-translate-y-px transition-all"
-            style={{
-              background: "#EB0043",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ background: "#EB0043", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
           >
             Get Started
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
         <button
           className="md:hidden p-2"
           style={{ color: "#2E4057" }}
@@ -236,7 +265,6 @@ export function HeroSection() {
           </svg>
         </button>
 
-        {/* Mobile menu */}
         {menuOpen && (
           <div
             className="absolute top-[60px] left-0 right-0 flex flex-col px-6 py-6 gap-4"
@@ -269,26 +297,27 @@ export function HeroSection() {
         )}
       </nav>
 
-      {/* ── Hero ── */}
       <section
         ref={heroRef}
         className="relative overflow-hidden pt-[60px]"
         style={{ background: "#CCDAD1" }}
       >
-        {/* Mascot — octopus sitting at bottom-right corner */}
+        {/* Aurora mesh background */}
+        <AuroraMesh />
+
+        {/* Mascot — happy octopus sitting at bottom-right corner */}
         <img
           src="/mascot-happy.png"
           alt=""
           aria-hidden="true"
           className="absolute bottom-0 right-10 pointer-events-none select-none hidden md:block"
-          style={{ width: "150px", transform: "translateY(6%)", zIndex: 0 }}
+          style={{ width: "150px", transform: "translateY(6%)", zIndex: 1 }}
         />
+
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-
             {/* Left — headline + CTAs */}
             <div className="z-10">
-              {/* Eyebrow */}
               <div
                 ref={eyebrowRef}
                 className="inline-flex items-center gap-2 mb-8 px-4 py-1.5 rounded-full text-[13px] font-semibold opacity-0"
@@ -303,16 +332,36 @@ export function HeroSection() {
                 Your AI employee is ready to hire
               </div>
 
-              {/* Headline */}
               <h1
                 ref={headlineRef}
                 className="font-display font-bold leading-[0.92] tracking-[-0.04em] mb-8 opacity-0"
                 style={{ fontSize: "clamp(48px, 7vw, 88px)", color: "#EB0043" }}
               >
-                Your AI workforce.<br />Built for MENA.
+                Your AI workforce.
+                <br />
+                Built for{" "}
+                <span className="relative inline-block">
+                  MENA
+                  <svg
+                    className="absolute left-0 -bottom-2 w-full pointer-events-none"
+                    height="14"
+                    viewBox="0 0 200 14"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M2 8 C 40 2, 80 12, 120 6 S 180 4, 198 8"
+                      stroke="#EB0043"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      fill="none"
+                      className="underline-draw"
+                    />
+                  </svg>
+                </span>
+                .
               </h1>
 
-              {/* Subtext */}
               <p
                 ref={subtextRef}
                 className="mb-10 max-w-md opacity-0"
@@ -321,25 +370,30 @@ export function HeroSection() {
                 Automate operations with culture-aware AI agents designed for the growth dynamics of the Middle East. Starting at $49/month.
               </p>
 
-              {/* CTAs */}
               <div ref={ctaRef} className="flex flex-wrap gap-4 opacity-0">
-                <Link
-                  href="/agents/linkedin-post-agent"
-                  className="inline-flex items-center gap-2 text-[16px] font-bold text-white rounded-[10px] px-8 py-4 no-underline hover:bg-[#4E0110] hover:-translate-y-0.5 transition-all"
-                  style={{
-                    background: "#EB0043",
-                    boxShadow: "0 4px 20px rgba(27,67,50,0.18)",
-                  }}
-                >
-                  Hire an Agent
-                </Link>
-                <Link
-                  href="#how-it-works"
-                  className="inline-flex items-center gap-2 text-[16px] font-semibold rounded-[10px] px-8 py-4 no-underline hover:bg-[#B5C9C0] transition-all"
-                  style={{ color: "#EB0043", background: "#FFFFFF", border: "1px solid #B5C9C0" }}
-                >
-                  See how it works
-                </Link>
+                <MagneticButton strength={0.35}>
+                  <a
+                    ref={primaryCtaRef}
+                    href="/agents/linkedin-post-agent"
+                    onClick={onPrimaryCtaClick}
+                    className="inline-flex items-center gap-2 text-[16px] font-bold text-white rounded-[10px] px-8 py-4 no-underline hover:bg-[#4E0110] transition-colors"
+                    style={{
+                      background: "#EB0043",
+                      boxShadow: "0 4px 20px rgba(27,67,50,0.18)",
+                    }}
+                  >
+                    Hire an Agent
+                  </a>
+                </MagneticButton>
+                <MagneticButton strength={0.25}>
+                  <Link
+                    href="#how-it-works"
+                    className="inline-flex items-center gap-2 text-[16px] font-semibold rounded-[10px] px-8 py-4 no-underline hover:bg-[#B5C9C0] transition-colors"
+                    style={{ color: "#EB0043", background: "#FFFFFF", border: "1px solid #B5C9C0" }}
+                  >
+                    See how it works
+                  </Link>
+                </MagneticButton>
               </div>
             </div>
 
@@ -349,6 +403,9 @@ export function HeroSection() {
               className="relative opacity-0"
               style={{ willChange: "transform" }}
             >
+              {/* Floating live notifications */}
+              <FloatingPings />
+
               <div
                 className="rounded-[20px] p-6"
                 style={{
@@ -372,7 +429,6 @@ export function HeroSection() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {/* Frame — LinkedIn Post Agent */}
                   <div
                     className="flex items-center justify-between p-4 rounded-[12px]"
                     style={{ background: "#CCDAD1", border: "1px solid #FF99A8" }}
@@ -392,10 +448,7 @@ export function HeroSection() {
                             className="inline-block w-[2px] h-[12px] ml-[1px] align-middle"
                             style={{
                               background: "#8A8A8A",
-                              animation: typedText.length >= TYPEWRITER_TEXT.length
-                                ? "blink-cursor 1s step-end infinite"
-                                : "none",
-                              opacity: typedText.length < TYPEWRITER_TEXT.length ? 1 : undefined,
+                              animation: typingDone ? "blink-cursor 0.9s step-end infinite" : "none",
                             }}
                           />
                         </p>
@@ -410,7 +463,6 @@ export function HeroSection() {
                     </div>
                   </div>
 
-                  {/* Scout — Car Reseller Intel */}
                   <div
                     className="flex items-center justify-between p-4 rounded-[12px]"
                     style={{ background: "#CCDAD1" }}
@@ -428,15 +480,11 @@ export function HeroSection() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ background: "#10b981" }}
-                      />
+                      <span className="w-2 h-2 rounded-full" style={{ background: "#10b981" }} />
                       <span className="text-[12px] font-bold" style={{ color: "#10b981" }}>Done</span>
                     </div>
                   </div>
 
-                  {/* Brief — Doctor Morning Briefing */}
                   <div
                     className="flex items-center justify-between p-4 rounded-[12px]"
                     style={{ background: "#CCDAD1" }}
@@ -463,7 +511,6 @@ export function HeroSection() {
                   </div>
                 </div>
 
-                {/* Bottom stat */}
                 <div
                   className="mt-6 pt-5 flex justify-between items-end"
                   style={{ borderTop: "1px solid #B5C9C0" }}
@@ -476,7 +523,6 @@ export function HeroSection() {
                       Tasks completed today
                     </p>
                   </div>
-                  {/* Mini bar chart — animated */}
                   <div
                     ref={barsRef}
                     className="flex items-end gap-1 p-2 rounded-[8px]"
@@ -493,7 +539,6 @@ export function HeroSection() {
                 </div>
               </div>
 
-              {/* Decorative blur */}
               <div
                 className="absolute -z-10 pointer-events-none rounded-full"
                 style={{

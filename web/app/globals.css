@@ -194,6 +194,74 @@
     50%       { opacity: 0; }
   }
 
+  @keyframes shimmer-sweep {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Aurora mesh — slow drifting blobs behind hero */
+  .aurora-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(60px);
+    opacity: 0.55;
+    will-change: transform;
+  }
+  .aurora-blob-1 {
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle, rgba(235,0,67,0.32) 0%, transparent 70%);
+    top: -180px;
+    left: -120px;
+    animation: aurora-float-1 18s ease-in-out infinite;
+  }
+  .aurora-blob-2 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255,153,168,0.45) 0%, transparent 70%);
+    top: 20%;
+    right: -200px;
+    animation: aurora-float-2 22s ease-in-out infinite;
+  }
+  .aurora-blob-3 {
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, rgba(44,105,78,0.22) 0%, transparent 70%);
+    bottom: -160px;
+    left: 30%;
+    animation: aurora-float-3 26s ease-in-out infinite;
+  }
+  @keyframes aurora-float-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(80px, 60px) scale(1.1); }
+  }
+  @keyframes aurora-float-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(-100px, 40px) scale(0.95); }
+  }
+  @keyframes aurora-float-3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(60px, -50px) scale(1.08); }
+  }
+
+  /* Animated SVG underline draw */
+  @keyframes draw-underline {
+    to { stroke-dashoffset: 0; }
+  }
+  .underline-draw {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    animation: draw-underline 1.4s ease-out 1.2s forwards;
+  }
+
+  /* Hide native cursor on devices with our custom cursor active */
+  @media (hover: hover) and (pointer: fine) {
+    body.has-custom-cursor,
+    body.has-custom-cursor * {
+      cursor: none !important;
+    }
+  }
+
   /* Fade in */
   .fade-in {
     animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
