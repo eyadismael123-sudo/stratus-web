@@ -193,13 +193,13 @@ export function HeroSection() {
         className="relative overflow-hidden pt-[60px]"
         style={{ background: "#CCDAD1" }}
       >
-        {/* Mascot — octopus peeking up from bottom-right corner */}
+        {/* Mascot — octopus sitting at bottom-right corner */}
         <img
-          src="/mascot-peeking.png"
+          src="/mascot-front.png"
           alt=""
           aria-hidden="true"
           className="absolute bottom-0 right-10 pointer-events-none select-none hidden md:block"
-          style={{ width: "200px", transform: "translateY(45%)", zIndex: 0 }}
+          style={{ width: "180px", transform: "translateY(20%)", zIndex: 0 }}
         />
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-12 pt-20 pb-24">
           <div className="grid md:grid-cols-2 gap-12 items-center">
