@@ -317,7 +317,7 @@
     },
     {
       "name": "Plastic and Reconstructive Surgery",
-      "aliases": ["plastic surgery", "reconstructive surgery", "reconstructive plastic surgery", "plastic and reconstructive", "microsurgery", "hand surgery", "burns surgery", "craniofacial", "aesthetic surgery", "cosmetic surgery"],
+      "aliases": ["plastics", "plastic surgery", "reconstructive surgery", "reconstructive plastic surgery", "plastic and reconstructive", "microsurgery", "hand surgery", "burns surgery", "craniofacial", "aesthetic surgery", "cosmetic surgery"],
       "journals": [
         { "display": "Plastic and Reconstructive Surgery", "pubmed": "Plast Reconstr Surg" },
         { "display": "Journal of Plastic, Reconstructive & Aesthetic Surgery", "pubmed": "J Plast Reconstr Aesthet Surg" },

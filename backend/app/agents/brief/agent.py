@@ -17,7 +17,7 @@ from anthropic import Anthropic
 
 from app.agents.base import BaseAgent
 from app.agents.brief.formatter import format_morning_briefing, update_memory_with_haiku
-from app.agents.brief.journals import display_names, pubmed_abbrevs, resolve_journals
+from app.agents.brief.journals import display_names, pubmed_abbrevs, resolve_journals_multi
 from app.agents.brief.research import fetch_grok_signals, fetch_pubmed
 from app.agents.human_feel import familiarity_prefix
 from app.config import settings
@@ -189,8 +189,9 @@ Keep it under 150 words. Telegram-native: you may use *bold* for emphasis, but k
         trusted_journals = memory.get("trusted_journals", [])
         dislikes = memory.get("dislikes", [])
 
-        # Resolve curated journals for this specialty
-        specialty_journals = resolve_journals(specialty)
+        # Resolve curated journals for this specialty (merges multiple
+        # specialties if the doctor named more than one, e.g. "ortho and plastics")
+        specialty_journals = resolve_journals_multi(specialty)
         spec_pubmed = pubmed_abbrevs(specialty_journals)
         spec_display = display_names(specialty_journals)
         logger.info(

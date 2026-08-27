@@ -13,12 +13,14 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from functools import lru_cache
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 _DATA_FILE = Path(__file__).parent / "journals.json"
+_SPLIT_PATTERN = re.compile(r"\s*(?:,|/|&|\band\b)\s*", re.IGNORECASE)
 
 
 @lru_cache(maxsize=1)
@@ -72,6 +74,32 @@ def resolve_journals(specialty: str) -> list[dict]:
 
     logger.info("No journal match for specialty=%r — using general medicine", specialty)
     return _fallback_journals()
+
+
+def resolve_journals_multi(specialty: str) -> list[dict]:
+    """Resolve journals for a specialty string that may name more than one
+    specialty (e.g. "orthopedics and plastics", "cardiology, nephrology").
+
+    Splits on "and"/","/"/"/"&", resolves each part independently, and merges
+    the results (deduped by PubMed abbreviation). Doctors with a single
+    specialty get identical behaviour to resolve_journals().
+    """
+    if not specialty:
+        return _fallback_journals()
+
+    parts = [p for p in _SPLIT_PATTERN.split(specialty) if p.strip()]
+    if len(parts) <= 1:
+        return resolve_journals(specialty)
+
+    merged: list[dict] = []
+    seen: set[str] = set()
+    for part in parts:
+        for journal in resolve_journals(part):
+            if journal["pubmed"] not in seen:
+                merged.append(journal)
+                seen.add(journal["pubmed"])
+
+    return merged or _fallback_journals()
 
 
 def _fallback_journals() -> list[dict]:
