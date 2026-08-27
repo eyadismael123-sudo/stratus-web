@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # Grok API (xAI — real-time X/Twitter signals)
     grok_api_key: str = ""
 
+    # Google Form intake (Brief agent onboarding) — shared secret checked
+    # against the X-Form-Secret header sent by the Apps Script trigger
+    form_webhook_secret: str = ""
+
     # LinkedIn Ghostwriter OAuth
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""
