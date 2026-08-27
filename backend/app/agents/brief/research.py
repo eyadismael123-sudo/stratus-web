@@ -96,8 +96,17 @@ def _run_per_journal_query(
     would only ever see ortho, since it's listed first. Round-robin gives
     every journal a slot in the cap regardless of list order.
     """
+    import time
+
+    # NCBI's unauthenticated limit is 3 req/s; pace requests to stay under it
+    # even under scheduler load (many doctors' journal batches back-to-back).
+    # With an API key the limit is 10 req/s, so pacing can relax.
+    pace = 0.1 if settings.ncbi_api_key else 0.34
+
     per_journal_ids: list[list[str]] = []
-    for jour in pubmed_abbrevs:
+    for i, jour in enumerate(pubmed_abbrevs):
+        if i > 0:
+            time.sleep(pace)
         query = f'"{jour}"[jour]{dislike_sfx}'
         results = _run_pubmed_query(query, per_journal_max, reldate=reldate)
         per_journal_ids.append(results)
@@ -119,27 +128,56 @@ def _build_focus_terms(clinical_focus: list[str]) -> str:
     return " OR ".join(f'"{f}"[Title/Abstract]' for f in clinical_focus)
 
 
+def _ncbi_params(**params: object) -> dict:
+    """Attach the NCBI API key when configured (raises the rate limit from
+    3 req/s to 10 req/s). Safe to omit — E-utilities works without one."""
+    if settings.ncbi_api_key:
+        params["api_key"] = settings.ncbi_api_key
+    return params
+
+
 def _run_pubmed_query(query: str, max_results: int, reldate: int = 30) -> list[str]:
-    """Return a list of PubMed IDs for the given query."""
-    try:
-        resp = httpx.get(
-            _PUBMED_SEARCH,
-            params={
-                "db": "pubmed",
-                "term": query,
-                "retmax": max_results,
-                "sort": "pub+date",
-                "retmode": "json",
-                "datetype": "pdat",
-                "reldate": reldate,
-            },
-            timeout=12.0,
-        )
-        resp.raise_for_status()
-        return resp.json().get("esearchresult", {}).get("idlist", [])
-    except Exception:
-        logger.exception("PubMed query failed: %r", query[:120])
-        return []
+    """Return a list of PubMed IDs for the given query.
+
+    Retries up to 3 times on 429 (rate-limit) with exponential back-off —
+    same pattern as _fetch_summaries. Without this, a doctor with several
+    curated journals (or a scheduler tick processing many doctors) reliably
+    outruns NCBI's 3 req/s unauthenticated limit, and journals silently drop
+    out of the briefing instead of just waiting a beat and retrying.
+    """
+    import time
+
+    for attempt in range(3):
+        try:
+            resp = httpx.get(
+                _PUBMED_SEARCH,
+                params=_ncbi_params(
+                    db="pubmed",
+                    term=query,
+                    retmax=max_results,
+                    sort="pub+date",
+                    retmode="json",
+                    datetype="pdat",
+                    reldate=reldate,
+                ),
+                timeout=12.0,
+            )
+            if resp.status_code == 429:
+                wait = 2 ** attempt  # 1s, 2s, 4s
+                logger.warning(
+                    "PubMed esearch 429 — retrying in %ds (attempt %d/3): %r",
+                    wait, attempt + 1, query[:80],
+                )
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            return resp.json().get("esearchresult", {}).get("idlist", [])
+        except Exception:
+            logger.exception("PubMed query failed: %r", query[:120])
+            return []
+
+    logger.warning("PubMed esearch still 429 after 3 retries — skipping: %r", query[:80])
+    return []
 
 
 def _fetch_summaries(pmids: list[str]) -> dict:
@@ -156,7 +194,7 @@ def _fetch_summaries(pmids: list[str]) -> dict:
     for attempt in range(3):
         resp = httpx.get(
             _PUBMED_SUMMARY,
-            params={"db": "pubmed", "id": ",".join(pmids), "retmode": "json"},
+            params=_ncbi_params(db="pubmed", id=",".join(pmids), retmode="json"),
             timeout=12.0,
         )
         if resp.status_code == 429:
