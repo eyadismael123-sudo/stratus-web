@@ -7,6 +7,10 @@ Two sources:
 PubMed strategy (4-layer cascade — all layers run, guaranteed results):
   Layer 1: Specialty journals + focus terms, 60 days
   Layer 2: Specialty journals only, 60 days  (always runs — supplements layer 1)
+             Queried per-journal, not as one merged OR filter — a prolific
+             journal (e.g. one that runs a weekly correspondence column)
+             would otherwise fill the whole date-sorted cap and starve out
+             quieter journals in the same doctor's list.
   Layer 3: Any journal, specialty name + focus terms in text, 90 days
              (triggers if total < 4 after layers 1+2)
   Layer 4: Free-text keyword fallback, 180 days
@@ -16,11 +20,17 @@ Why broader windows are correct:
   - Monthly specialty journals publish 4-8 papers/month — 30 days often yields 0
   - Layer 1 AND logic (focus AND journals) is strict; Layer 2 always fills the gap
   - 180-day fallback guarantees at least a couple results for any specialty
+
+Non-research filtering: PubMed's [pt] (publication type) tag is unreliable for
+correspondence — journals like Plast Reconstr Surg tag "Reply:", "Discussion:"
+and "Journal Club:" pieces as plain "Journal Article", same as primary research.
+_looks_like_correspondence() filters these out by title pattern instead.
 """
 
 from __future__ import annotations
 
 import logging
+import re
 
 import httpx
 
@@ -48,6 +58,49 @@ def _dislike_suffix(dislikes: list[str]) -> str:
 
 def _build_journal_filter(pubmed_abbrevs: list[str]) -> str:
     return " OR ".join(f'"{j}"[jour]' for j in pubmed_abbrevs)
+
+
+# Correspondence/digest pieces that PubMed's [pt] tag doesn't reliably flag —
+# these journals index them as plain "Journal Article", so filtering has to
+# happen on the title itself. Two patterns:
+#  - _CORRESPONDENCE_PREFIX_RE: the title itself starts with the marker
+#    ("Reply: ...", "Discussion: ...")
+#  - _CORRESPONDENCE_LABEL_RE: the marker appears as a colon-terminated label
+#    after a journal-branded prefix ("PRS Journal Club: ...", "... Highlights: ...")
+_CORRESPONDENCE_PREFIX_RE = re.compile(
+    r"^(reply|response to|re:|discussion|comment on|letter to the editor|"
+    r"erratum|corrigendum)\b",
+    re.IGNORECASE,
+)
+_CORRESPONDENCE_LABEL_RE = re.compile(r"\b(journal club|highlights?)\s*:", re.IGNORECASE)
+
+
+def _looks_like_correspondence(title: str) -> bool:
+    stripped = title.strip()
+    return bool(_CORRESPONDENCE_PREFIX_RE.match(stripped) or _CORRESPONDENCE_LABEL_RE.search(stripped))
+
+
+def _run_per_journal_query(
+    pubmed_abbrevs: list[str],
+    dislike_sfx: str,
+    reldate: int,
+    per_journal_max: int,
+) -> list[str]:
+    """Query each journal individually so no single prolific journal can
+    crowd every slot in a shared, date-sorted, capped result set."""
+    ids: list[str] = []
+    seen: set[str] = set()
+    for jour in pubmed_abbrevs:
+        query = f'"{jour}"[jour]{dislike_sfx}'
+        results = _run_pubmed_query(query, per_journal_max, reldate=reldate)
+        added = 0
+        for pid in results:
+            if pid not in seen:
+                ids.append(pid)
+                seen.add(pid)
+                added += 1
+        logger.info("PubMed layer 2 journal=%r: %d results", jour, added)
+    return ids
 
 
 def _build_focus_terms(clinical_focus: list[str]) -> str:
@@ -119,7 +172,10 @@ def _parse_articles(
 
     for pmid in pmids:
         item = result_data.get(pmid, {})
-        if not item or not item.get("title"):
+        title = item.get("title", "")
+        if not item or not title:
+            continue
+        if _looks_like_correspondence(title):
             continue
         journal = item.get("source", "")
         journal_lower = journal.lower()
@@ -180,14 +236,14 @@ def fetch_pubmed(
             added = _add_unique(all_pmids, seen, layer1_ids)
             logger.info("PubMed layer 1 (journals+focus, 60d): %d results", added)
 
-        # Layer 2: journals only, 60 days — always runs to supplement layer 1
-        # Monthly journals publish infrequently; combining both layers fills the pool.
+        # Layer 2: journals only, 60 days — always runs to supplement layer 1.
+        # Queried per-journal (see _run_per_journal_query) so a prolific journal
+        # can't fill the entire cap and starve out quieter ones in the same list.
         if specialty_pubmed:
-            journal_filter = _build_journal_filter(specialty_pubmed)
-            layer2_q = f"({journal_filter}){dislike_sfx}"
-            layer2_ids = _run_pubmed_query(layer2_q, max_results, reldate=60)
+            per_journal_max = max(3, max_results // len(specialty_pubmed))
+            layer2_ids = _run_per_journal_query(specialty_pubmed, dislike_sfx, 60, per_journal_max)
             added = _add_unique(all_pmids, seen, layer2_ids)
-            logger.info("PubMed layer 2 (journals only, 60d): %d new results", added)
+            logger.info("PubMed layer 2 (journals only, per-journal, 60d): %d new results", added)
 
         # Layer 3: any journal, specialty name + focus in text, 90 days
         if len(all_pmids) < 4:
