@@ -86,20 +86,31 @@ def _run_per_journal_query(
     reldate: int,
     per_journal_max: int,
 ) -> list[str]:
-    """Query each journal individually so no single prolific journal can
-    crowd every slot in a shared, date-sorted, capped result set."""
-    ids: list[str] = []
-    seen: set[str] = set()
+    """Query each journal individually, then interleave round-robin.
+
+    Querying per-journal stops one prolific journal from crowding every slot
+    in a shared, date-sorted cap. Interleaving matters just as much as the
+    per-journal query itself: appending journal-by-journal would still let a
+    downstream cap (articles[:8]) exhaust the first journal in the list
+    before ever reaching the next — e.g. a doctor with "ortho and plastics"
+    would only ever see ortho, since it's listed first. Round-robin gives
+    every journal a slot in the cap regardless of list order.
+    """
+    per_journal_ids: list[list[str]] = []
     for jour in pubmed_abbrevs:
         query = f'"{jour}"[jour]{dislike_sfx}'
         results = _run_pubmed_query(query, per_journal_max, reldate=reldate)
-        added = 0
-        for pid in results:
-            if pid not in seen:
-                ids.append(pid)
-                seen.add(pid)
-                added += 1
-        logger.info("PubMed layer 2 journal=%r: %d results", jour, added)
+        per_journal_ids.append(results)
+        logger.info("PubMed layer 2 journal=%r: %d results", jour, len(results))
+
+    ids: list[str] = []
+    seen: set[str] = set()
+    max_len = max((len(lst) for lst in per_journal_ids), default=0)
+    for i in range(max_len):
+        for lst in per_journal_ids:
+            if i < len(lst) and lst[i] not in seen:
+                ids.append(lst[i])
+                seen.add(lst[i])
     return ids
 
 
