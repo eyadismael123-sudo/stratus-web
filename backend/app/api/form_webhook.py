@@ -60,7 +60,7 @@ def _get_or_create_client(name: str, telegram_username: str, timezone_str: str) 
         .maybe_single()
         .execute()
     )
-    if existing.data:
+    if existing is not None and existing.data:
         client_id = existing.data["id"]
         db.table("clients").update({
             "name": name,
@@ -91,7 +91,7 @@ def _activate_brief_subscription(client_id: str) -> None:
         .maybe_single()
         .execute()
     )
-    if existing.data:
+    if existing is not None and existing.data:
         db.table("client_agents").update({"is_active": True}).eq("id", existing.data["id"]).execute()
     else:
         db.table("client_agents").insert({
